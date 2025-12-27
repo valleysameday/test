@@ -7,7 +7,7 @@ export function initUIRouter() {
     signup: document.getElementById('signupModal'),
     forgot: document.getElementById('forgotPasswordModal'),
     resetConfirm: document.getElementById('resetConfirmModal'),
-sellerprofile: document.getElementById('sellerProfilePage')
+    sellerprofile: document.getElementById('sellerProfilePage')
   };
 
   function openScreen(name) {
@@ -27,43 +27,17 @@ sellerprofile: document.getElementById('sellerProfilePage')
   window.openScreen = openScreen;
   window.closeScreens = closeAll;
 
-  /* -------------------- CATEGORY + SUBCATEGORY (HOMEPAGE) -------------------- */
-  const subcategoryMap = {
-    forsale: ['Appliances','Furniture','Electronics','Baby & Kids','Garden','Tools','Mobility','Misc'],
-    jobs: ['Plumber','Electrician','Cleaner','Gardener','Handyman','Beauty & Hair','Mechanic','Tutor'],
-    property: ['To Rent','To Buy','Rooms','Commercial'],
-    events: ['Music','Charity','Sport','Classes','Markets'],
-    all: null,
-    community: null,
-    free: null
-  };
-
+  /* -------------------- CATEGORY FILTER (HOMEPAGE ONLY) -------------------- */
   const categories = document.querySelectorAll('#categories .category-btn');
-  const subcategoriesContainer = document.getElementById('subcategories');
-
-  function showSubcategories(category) {
-    if (!subcategoriesContainer) return;
-    subcategoriesContainer.innerHTML = '';
-    const subs = subcategoryMap[category];
-    if (!subs) {
-      subcategoriesContainer.style.display = 'none';
-      return;
-    }
-    subs.forEach(sub => {
-      const btn = document.createElement('button');
-      btn.className = 'subcategory-btn';
-      btn.textContent = sub;
-      btn.onclick = () => console.log(`Filter feed: ${category} > ${sub}`);
-      subcategoriesContainer.appendChild(btn);
-    });
-    subcategoriesContainer.style.display = 'flex';
-  }
 
   categories.forEach(btn => {
     btn.addEventListener('click', () => {
       categories.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      showSubcategories(btn.dataset.category);
+
+      const category = btn.dataset.category;
+      console.log(`Filter feed by category: ${category}`);
+      // hook feed filtering here
     });
   });
 
@@ -107,18 +81,11 @@ sellerprofile: document.getElementById('sellerProfilePage')
     openScreen('signup');
   });
 
-  /* -------------------- MY ACCOUNT BUTTON (SPA VERSION) -------------------- */
+  /* -------------------- MY ACCOUNT BUTTON (SPA) -------------------- */
   document.getElementById('openAccountModal')?.addEventListener('click', async e => {
     e.preventDefault();
 
-    if (!window.firebaseAuthReady) {
-      openScreen('login');
-      return;
-    }
-
-    const user = window.currentUser;
-
-    if (!user) {
+    if (!window.firebaseAuthReady || !window.currentUser) {
       openScreen('login');
       return;
     }
@@ -138,44 +105,27 @@ sellerprofile: document.getElementById('sellerProfilePage')
   });
 
   /* ---------------------------------------------------------
-     ✅ POST MODAL CATEGORY + SUBCATEGORY + PRICE LOGIC
+     ✅ POST MODAL CATEGORY + PRICE LOGIC (NO SUBCATEGORIES)
      --------------------------------------------------------- */
   const postCategory = document.getElementById("postCategory");
-  const postSubcategory = document.getElementById("postSubcategory");
   const priceWrapper = document.querySelector(".price-wrapper");
+  const postPrice = document.getElementById("postPrice");
 
   if (postCategory) {
     postCategory.addEventListener("change", e => {
       const category = e.target.value;
 
-      // ✅ Load subcategories into modal dropdown
-      const subs = subcategoryMap[category];
-      postSubcategory.innerHTML = "<option value=''>Select subcategory</option>";
-
-      if (subs) {
-        subs.forEach(sub => {
-          const opt = document.createElement("option");
-          opt.value = sub.toLowerCase().replace(/\s+/g, "-");
-          opt.textContent = sub;
-          postSubcategory.appendChild(opt);
-        });
-        postSubcategory.parentElement.style.display = "block";
-      } else {
-        postSubcategory.parentElement.style.display = "none";
-      }
-
-      // ✅ Show price only for For Sale + Property
+      // Show price only where relevant
       if (category === "forsale" || category === "property") {
         priceWrapper.style.display = "block";
       } else {
         priceWrapper.style.display = "none";
       }
 
-      // ✅ Auto-set FREE category price to 0
-      if (category === "free") {
-        document.getElementById("postPrice").value = 0;
+      // Auto-set FREE price
+      if (category === "free" && postPrice) {
+        postPrice.value = 0;
       }
     });
   }
-
-    }
+}
