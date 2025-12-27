@@ -35,8 +35,8 @@ body {
 
 /* 2. HEADER & SEARCH AREA */
 header {
-    background: linear-gradient(135deg, #FF7EB3, #FF758C);
-    color: #fff;
+    background: #00D2D3;
+    color: #0f172a;
     text-align: center;
     padding: 15px 10px 45px;
     position: relative;
