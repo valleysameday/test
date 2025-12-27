@@ -4,76 +4,96 @@ import '/index/js/post-gate.js';
 
 let auth, db, storage;
 
-/* ---------------- SPA VIEW LOADER ---------------- */
+/* =====================================================
+   VIEW SCRIPT CACHE (prevents re-importing)
+===================================================== */
+const loadedViews = new Set();
+
+async function loadViewScript(view) {
+  if (loadedViews.has(view)) return;
+  loadedViews.add(view);
+  await import(`/views/${view}.js`);
+}
+
+/* =====================================================
+   SPA VIEW LOADER
+===================================================== */
 export async function loadView(view) {
-  const app = document.getElementById("app");
+  const app = document.getElementById('app');
+  if (!app) return;
 
-  // Load HTML fragment
-  const html = await fetch(`/views/${view}.html`).then(r => r.text());
-  app.innerHTML = html;
+  /* Load HTML fragment */
+  const res = await fetch(`/views/${view}.html`);
+  app.innerHTML = await res.text();
 
-  // ✅ Attach search listener ONLY on home view
-  if (view === "home") {
-    const searchInput = document.getElementById("searchInput");
-    if (searchInput) {
-      searchInput.addEventListener("input", e => {
-        window.currentSearch = e.target.value;
-        initFeed(); // reload feed with search applied
+  /* Home-only search (debounced) */
+  if (view === 'home') {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && !searchInput.dataset.bound) {
+      let searchTimer;
+
+      searchInput.addEventListener('input', e => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          window.currentSearch = e.target.value;
+          window.initFeed?.();
+        }, 300);
       });
+
+      searchInput.dataset.bound = 'true';
     }
   }
 
-  // ✅ Force re-run of view JS every time
-  import(`/views/${view}.js?cache=${Date.now()}`)
-    .catch(err => console.error("View JS error:", err));
+  /* Load view JS ONCE */
+  loadViewScript(view).catch(err =>
+    console.error(`View JS error (${view}):`, err)
+  );
 }
 
-// ✅ Make loadView available globally
+/* Expose SPA loader globally */
 window.loadView = loadView;
 
-/* ---------------- INITIALISE APP ---------------- */
+/* =====================================================
+   APP INITIALISATION
+===================================================== */
+function startApp() {
+  initUIRouter();     // guarded internally
+  loadView('home');
+}
+
 getFirebase().then(fb => {
   auth = fb.auth;
   db = fb.db;
   storage = fb.storage;
 
-  console.log("✅ Firebase ready in main.js");
+  if (location.hostname === 'localhost') {
+    console.log('✅ Firebase ready');
+  }
 
-  const start = () => {
-    initUIRouter();      // ✅ global modals + action bar
-    loadView("home");    // ✅ load homepage view
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp, { once: true });
   } else {
-    start();
+    startApp();
   }
 });
 
-/* ---------------- GLOBAL NAVIGATION HOOKS ---------------- */
-
-// ✅ Load correct dashboard based on account type
-window.navigateToDashboard = function () {
+/* =====================================================
+   GLOBAL NAVIGATION HELPERS
+===================================================== */
+window.navigateToDashboard = () => {
   if (!window.currentUser) {
-    openScreen("login");
+    window.openScreen?.('login');
     return;
   }
 
-  if (window.firebaseUserDoc?.isBusiness) {
-    loadView("business-dashboard");
-  } else {
-    loadView("customer-dashboard");
-  }
+  loadView(
+    window.firebaseUserDoc?.isBusiness
+      ? 'business-dashboard'
+      : 'customer-dashboard'
+  );
 };
 
-// ✅ Proper SPA home navigation (used after logout)
-window.navigateToHome = function () {
-  loadView("home").then(() => {
-    // ✅ Re-run homepage logic
-    import(`/views/home.js?cache=${Date.now()}`).then(() => {
-      initUIRouter();        // ✅ rebind modals + action bar
-      window.closeScreens?.();
-    });
-  });
+window.navigateToHome = () => {
+  window.closeScreens?.();
+  loadView('home');
 };
