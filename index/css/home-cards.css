@@ -248,3 +248,12 @@
         height: 180px;
     }
 }
+
+.post-card {
+  border-radius: 0; /* optional: remove rounding so they touch perfectly */
+  border-left: none;
+  border-right: none;
+}
+.posts-grid {
+  row-gap: 16px;
+}
