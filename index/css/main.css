@@ -34,6 +34,23 @@ header img.logo {
     /* Subtle drop shadow to make the logo pop against the vibrant header */
     filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.1));
 }
+.search-wrapper {
+    max-width: 600px;
+    margin: -25px auto 10px;
+    padding: 0 12px;
+    position: relative;
+    z-index: 20;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 1rem 1.2rem;
+    border-radius: 14px;
+    border: none;
+    font-size: 1rem;
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+}
 
 /* =====================================================
    WEATHER SNIPPET (2026 SLIM & MODERN)
