@@ -94,17 +94,7 @@ header img.logo {
 }
 
 
-/* 4. THE FORCED 2-COLUMN BENTO GRID */
-.posts-grid {
-    display: grid;
-    /* Forces 2 columns on ALL screen sizes */
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 12px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 12px;
-    flex: 1; /* Pushes footer down */
-}
+
 
 /* 6. FLOATING ACTION BAR (BOTTOM NAV) */
 
