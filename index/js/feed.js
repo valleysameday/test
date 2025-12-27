@@ -83,8 +83,7 @@ function renderPosts(category) {
 
     if (!searchTerm) return true;
 
-    const priceText =
-      p.price === 0 ? "free" : p.price ? `£${p.price}` : "";
+    const priceText = p.price === 0 ? "free" : p.price ? `£${p.price}` : "";
 
     return (
       p.title?.toLowerCase().includes(searchTerm) ||
@@ -100,35 +99,44 @@ function renderPosts(category) {
   }
 
   postsContainer.innerHTML = "";
-
   const fragment = document.createDocumentFragment();
 
   filtered.forEach(post => {
     const card = document.createElement("div");
-    card.className = "post-card";
-
-    card.onclick = () => {
-      window.selectedPostId = post.id;
-      window.loadView("view-post");
-    };
+    card.className = `post-card ${post.type || ''}`;
 
     const imgSrc = post.imageUrl || "/images/post-placeholder.jpg";
-    const priceText =
-      post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+    const area = post.area || "Rhondda";
+    const priceText = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
 
     card.innerHTML = `
       <div class="post-image">
-        <img src="${imgSrc}" loading="lazy"
-             onerror="this.src='/index/images/image-webholder.webp'">
+        <img src="${imgSrc}" alt="${post.title}" loading="lazy"
+             onerror="this.src='/images/post-placeholder.jpg'">
         ${post.businessId ? `<div class="business-overlay">Business</div>` : ""}
         ${priceText ? `<div class="price-badge">${priceText}</div>` : ""}
       </div>
+
       <div class="post-body">
-        <h3>${post.title}</h3>
-        <p class="post-desc">${post.description}</p>
-        <small class="post-category">${post.category}</small>
+        <h3 class="post-title">${post.title}</h3>
+        <p class="post-teaser">${post.description || ''}</p>
+        <div class="post-meta">
+          ${post.price ? `<span class="post-price">${priceText}</span>` : ''}
+          <span class="post-area">📍 ${area}</span>
+          <span class="post-category">${post.categoryLabel || post.category}</span>
+        </div>
+        ${post.type === "business" && post.cta ? `<button class="cta-btn">${post.cta}</button>` : ''}
       </div>
+
+      <button class="report-btn" title="Report this post" data-post-id="${post.id}">⚑</button>
     `;
+
+    // Make the card clickable but ignore report button
+    card.addEventListener("click", e => {
+      if (e.target.closest(".report-btn")) return;
+      sessionStorage.setItem("viewPostId", post.id);
+      window.loadView("view-post");
+    });
 
     fragment.appendChild(card);
   });
