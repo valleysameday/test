@@ -1,3 +1,4 @@
+// index/js/feed.js
 import { getFirebase } from "/index/js/firebase/init.js";
 import {
   collection,
@@ -9,6 +10,8 @@ import {
 let db;
 let allPosts = [];
 let weatherLoaded = false;
+let currentCategory = 'all';
+let lastScrollY = 0;
 
 /* =====================================================
    INIT FEED (called once per view)
@@ -16,7 +19,6 @@ let weatherLoaded = false;
 export async function initFeed() {
   const postsContainer = document.getElementById("postsContainer");
   const categoriesEl = document.getElementById("categories");
-
   if (!postsContainer) return;
 
   /* Init Firebase once */
@@ -25,14 +27,17 @@ export async function initFeed() {
     db = fb.db;
   }
 
-  /* Load data once */
+  /* Load posts once */
   if (!allPosts.length) {
     postsContainer.innerHTML = "<p>Loading…</p>";
     await fetchPosts();
   }
 
-  /* Initial render */
-  renderPosts("all");
+  /* Render feed with remembered category */
+  renderPosts(currentCategory);
+
+  /* Restore scroll */
+  if (lastScrollY) window.scrollTo(0, lastScrollY);
 
   /* Category filter (delegated) */
   if (categoriesEl && !categoriesEl.dataset.bound) {
@@ -40,14 +45,15 @@ export async function initFeed() {
       const btn = e.target.closest(".category-btn");
       if (!btn) return;
 
-      categoriesEl
-        .querySelectorAll(".category-btn")
-        .forEach(b => b.classList.remove("active"));
-
+      categoriesEl.querySelectorAll(".category-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      renderPosts(btn.dataset.category);
-    });
 
+      currentCategory = btn.dataset.category;
+      renderPosts(currentCategory);
+
+      // scroll to top when changing category
+      window.scrollTo(0, 0);
+    });
     categoriesEl.dataset.bound = "true";
   }
 
@@ -75,16 +81,16 @@ async function fetchPosts() {
    RENDER POSTS (FAST, LOCAL FILTER)
 ===================================================== */
 function renderPosts(category) {
+  currentCategory = category;
+
   const postsContainer = document.getElementById("postsContainer");
   const searchTerm = (window.currentSearch || "").toLowerCase();
 
   const filtered = allPosts.filter(p => {
     if (category !== "all" && p.category !== category) return false;
-
     if (!searchTerm) return true;
 
     const priceText = p.price === 0 ? "free" : p.price ? `£${p.price}` : "";
-
     return (
       p.title?.toLowerCase().includes(searchTerm) ||
       p.description?.toLowerCase().includes(searchTerm) ||
@@ -131,9 +137,11 @@ function renderPosts(category) {
       <button class="report-btn" title="Report this post" data-post-id="${post.id}">⚑</button>
     `;
 
-    // Make the card clickable but ignore report button
+    // Click card but ignore report
     card.addEventListener("click", e => {
       if (e.target.closest(".report-btn")) return;
+
+      lastScrollY = window.scrollY;       // save scroll
       sessionStorage.setItem("viewPostId", post.id);
       window.loadView("view-post");
     });
@@ -158,7 +166,6 @@ async function loadWeather() {
     );
 
     const data = await res.json();
-
     const temp = Math.round(data.current_weather.temperature);
     const feels = Math.round(data.hourly.apparent_temperature[0]);
 
