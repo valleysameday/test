@@ -2,17 +2,20 @@ import { getFirebase } from '/index/js/firebase/init.js';
 import { initUIRouter } from '/index/js/ui-router.js';
 import '/index/js/post-gate.js';
 
-let auth, db, storage;
+/* =====================================================
+   VIEW SCRIPT REGISTRY
+===================================================== */
+const viewModules = {};
 
 /* =====================================================
-   VIEW SCRIPT CACHE (prevents re-importing)
+   LOAD VIEW SCRIPT ONCE
 ===================================================== */
-const loadedViews = new Set();
+async function ensureViewScript(view) {
+  if (viewModules[view]) return viewModules[view];
 
-async function loadViewScript(view) {
-  if (loadedViews.has(view)) return;
-  loadedViews.add(view);
-  await import(`/views/${view}.js`);
+  const mod = await import(`/views/${view}.js`);
+  viewModules[view] = mod;
+  return mod;
 }
 
 /* =====================================================
@@ -22,52 +25,30 @@ export async function loadView(view) {
   const app = document.getElementById('app');
   if (!app) return;
 
-  /* Load HTML fragment */
+  // Load HTML
   const res = await fetch(`/views/${view}.html`);
   app.innerHTML = await res.text();
 
-  /* Home-only search (debounced) */
-  if (view === 'home') {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput && !searchInput.dataset.bound) {
-      let searchTimer;
+  // Load JS module (once)
+  const mod = await ensureViewScript(view);
 
-      searchInput.addEventListener('input', e => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-          window.currentSearch = e.target.value;
-          window.initFeed?.();
-        }, 300);
-      });
-
-      searchInput.dataset.bound = 'true';
-    }
+  // 🔑 Run init EVERY time DOM is injected
+  if (typeof mod.init === 'function') {
+    mod.init();
   }
-
-  /* Load view JS ONCE */
-  loadViewScript(view).catch(err =>
-    console.error(`View JS error (${view}):`, err)
-  );
 }
 
-/* Expose SPA loader globally */
 window.loadView = loadView;
 
 /* =====================================================
-   APP INITIALISATION
+   APP START
 ===================================================== */
 function startApp() {
-  initUIRouter(); // guarded internally
+  initUIRouter();
   loadView('home');
 }
 
-getFirebase().then(fb => {
-  auth = fb.auth;
-  db = fb.db;
-  storage = fb.storage;
-
-  if (location.hostname === 'localhost') console.log('✅ Firebase ready');
-
+getFirebase().then(() => {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startApp, { once: true });
   } else {
@@ -76,30 +57,9 @@ getFirebase().then(fb => {
 });
 
 /* =====================================================
-   GLOBAL NAVIGATION HELPERS
+   GLOBAL NAV
 ===================================================== */
-window.navigateToDashboard = () => {
-  if (!window.currentUser) {
-    window.openScreen?.('login');
-    return;
-  }
-
-  loadView(
-    window.firebaseUserDoc?.isBusiness
-      ? 'business-dashboard'
-      : 'customer-dashboard'
-  );
-};
-
 window.navigateToHome = () => {
   window.closeScreens?.();
-
-  loadView('home').then(() => {
-    // Re-render feed if cached
-    window.initFeed?.();
-
-    // Restore scroll
-    const savedScroll = sessionStorage.getItem('homeScroll');
-    if (savedScroll) window.scrollTo(0, parseInt(savedScroll, 10));
-  });
+  loadView('home');
 };
