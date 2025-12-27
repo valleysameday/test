@@ -11,7 +11,7 @@ let allPosts = [];
 let weatherLoaded = false;
 
 /* =====================================================
-   INIT FEED (called once per view)
+   INIT FEED (called per home view)
 ===================================================== */
 export async function initFeed() {
   const postsContainer = document.getElementById("postsContainer");
@@ -32,9 +32,9 @@ export async function initFeed() {
   }
 
   /* Initial render */
-  renderPosts(sessionStorage.getItem('homeCategory') || "all");
+  renderPosts(sessionStorage.getItem("homeCategory") || "all");
 
-  /* Category filter (delegated) */
+  /* Category filter (delegated, once) */
   if (categoriesEl && !categoriesEl.dataset.bound) {
     categoriesEl.addEventListener("click", e => {
       const btn = e.target.closest(".category-btn");
@@ -45,8 +45,9 @@ export async function initFeed() {
         .forEach(b => b.classList.remove("active"));
 
       btn.classList.add("active");
+
       const cat = btn.dataset.category;
-      sessionStorage.setItem('homeCategory', cat);
+      sessionStorage.setItem("homeCategory", cat);
       renderPosts(cat);
     });
 
@@ -74,10 +75,12 @@ async function fetchPosts() {
 }
 
 /* =====================================================
-   RENDER POSTS (FAST, LOCAL FILTER)
+   RENDER POSTS (LOCAL FILTER ONLY)
 ===================================================== */
 function renderPosts(category) {
   const postsContainer = document.getElementById("postsContainer");
+  if (!postsContainer) return;
+
   const searchTerm = (window.currentSearch || "").toLowerCase();
 
   const filtered = allPosts.filter(p => {
@@ -105,11 +108,12 @@ function renderPosts(category) {
 
   filtered.forEach(post => {
     const card = document.createElement("div");
-    card.className = `post-card ${post.type || ''}`;
+    card.className = `post-card ${post.type || ""}`;
 
     const imgSrc = post.imageUrl || "/index/images/image-webholder.webp";
     const area = post.area || "Rhondda";
-    const priceText = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+    const priceText =
+      post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
 
     card.innerHTML = `
       <div class="post-image">
@@ -121,29 +125,37 @@ function renderPosts(category) {
 
       <div class="post-body">
         <h3 class="post-title">${post.title}</h3>
-        <p class="post-teaser">${post.description || ''}</p>
+        <p class="post-teaser">${post.description || ""}</p>
         <div class="post-meta">
-          ${post.price ? `<span class="post-price">${priceText}</span>` : ''}
+          ${post.price ? `<span class="post-price">${priceText}</span>` : ""}
           <span class="post-area">📍 ${area}</span>
           <span class="post-category">${post.categoryLabel || post.category}</span>
         </div>
-        ${post.type === "business" && post.cta ? `<button class="cta-btn">${post.cta}</button>` : ''}
+        ${post.type === "business" && post.cta
+          ? `<button class="cta-btn">${post.cta}</button>`
+          : ""}
       </div>
 
-      <button class="report-btn" title="Report this post" data-post-id="${post.id}">⚑</button>
+      <button class="report-btn" title="Report this post">⚑</button>
     `;
 
-    // Save scroll before navigating
     card.addEventListener("click", e => {
-  if (e.target.closest(".report-btn")) return;
+      if (e.target.closest(".report-btn")) return;
 
-  sessionStorage.setItem("viewPostId", post.id);
-  sessionStorage.setItem("homeScroll", window.scrollY);
-  sessionStorage.setItem("homeCategory", category);
-  sessionStorage.setItem("homeSearch", window.currentSearch || "");
+      sessionStorage.setItem("viewPostId", post.id);
+      sessionStorage.setItem("homeScroll", window.scrollY);
+      sessionStorage.setItem("homeCategory", category);
+      sessionStorage.setItem("homeSearch", window.currentSearch || "");
 
-  window.loadView("view-post");
-});
+      window.loadView("view-post");
+    });
+
+    fragment.appendChild(card);
+  });
+
+  postsContainer.appendChild(fragment);
+}
+
 /* =====================================================
    WEATHER (SESSION-CACHED)
 ===================================================== */
@@ -158,7 +170,6 @@ async function loadWeather() {
     );
 
     const data = await res.json();
-
     const temp = Math.round(data.current_weather.temperature);
     const feels = Math.round(data.hourly.apparent_temperature[0]);
 
@@ -169,15 +180,16 @@ async function loadWeather() {
   }
 }
 
+/* =====================================================
+   HOME VIEW ENTRY POINT (SPA SAFE)
+===================================================== */
 export function init() {
   console.log("🏠 Home feed init");
 
-  // Restore search
   window.currentSearch = sessionStorage.getItem("homeSearch") || "";
 
   initFeed();
 
-  // Restore scroll AFTER render
   const scrollY = sessionStorage.getItem("homeScroll");
   if (scrollY) {
     requestAnimationFrame(() => {
