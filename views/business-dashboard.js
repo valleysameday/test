@@ -6,7 +6,7 @@ import { ref, deleteObject, uploadBytes, getDownloadURL } from "https://www.gsta
 let auth, db, storage;
 
 const PLACEHOLDER_AVATAR = "/images/avatar-placeholder.jpg";
-const PLACEHOLDER_POST = "/images/post-placeholder.jpg";
+const PLACEHOLDER_POST = "/index/images/image-webholder2.webp";
 
 const $ = id => document.getElementById(id);
 const show = el => el && (el.style.display = "block");
