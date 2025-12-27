@@ -9,7 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 /* ---------------- CONSTANTS ---------------- */
-const PLACEHOLDER_IMG = "images/post-placeholder.jpg";
+const PLACEHOLDER_IMG = "index/images/image-webholder.webp";
 
 let auth, db;
 
