@@ -9,8 +9,8 @@
         content="Local offers, events and services across Rhondda. A community noticeboard for residents and businesses." />
 
   <link rel="stylesheet" href="/index/css/main.css">
- <link rel="stylesheet" href="/index/css/home-cards.css">
-  <link rel="stylesheet" href="/index/css/modals.css">
+<link rel="stylesheet" href="/index/css/index-cards.css">
+<link rel="stylesheet" href="/index/css/modals.css">
 </head>
 
 <body>
@@ -26,12 +26,17 @@
   </div>
 </header>
 <!-- ================= MAIN (SPA CONTAINER) ================= -->
-<main id="app"></main>
+<main id="app">
+  <div id="view-home" class="view"></div>
+</main>
 
 <!-- ================= LOGIN MODAL ================= -->
-<div id="loginModal" class="modal">
+<div id="login" class="modal">
   <div class="modal-content">
-    <button class="close" aria-label="Close">&times;</button>
+    <button class="close"
+            aria-label="Close"
+            data-action="close-screens">&times;</button>
+
     <h2>Log in</h2>
 
     <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
@@ -39,22 +44,28 @@
 
     <button id="loginSubmit">Log in</button>
 
-    <!-- LOGIN FEEDBACK -->
     <p id="loginFeedback" class="feedback-text"></p>
 
     <p class="modal-switch">
       No account?
-      <span onclick="openScreen('signup')">Create one</span>
+      <span data-action="open-screen" data-value="signup">Create one</span>
     </p>
 
-    <p id="forgotPasswordLink" class="modal-link">Forgot password?</p>
+    <p class="modal-link"
+       data-action="open-screen"
+       data-value="forgot">
+      Forgot password?
+    </p>
   </div>
 </div>
 
 <!-- ================= FORGOT PASSWORD MODAL ================= -->
-<div id="forgotPasswordModal" class="modal">
+<div id="forgot" class="modal">
   <div class="modal-content">
-    <button class="close" aria-label="Close">&times;</button>
+    <button class="close"
+            aria-label="Close"
+            data-action="close-screens">&times;</button>
+
     <h2>Reset Password</h2>
 
     <input type="email" id="forgotEmail" placeholder="Enter your email" autocomplete="email">
@@ -63,26 +74,34 @@
 
     <p class="modal-switch">
       Remembered your password?
-      <span onclick="openScreen('login')">Back to login</span>
+      <span data-action="open-screen" data-value="login">Back to login</span>
     </p>
   </div>
 </div>
 
 <!-- ================= PASSWORD RESET CONFIRMATION MODAL ================= -->
-<div id="resetConfirmModal" class="modal">
+<div id="resetConfirm" class="modal">
   <div class="modal-content">
-    <button class="close" aria-label="Close">&times;</button>
+    <button class="close"
+            aria-label="Close"
+            data-action="close-screens">&times;</button>
+
     <h2>Email Sent ✅</h2>
     <p>Check your inbox for a password reset link.</p>
 
-    <button onclick="openScreen('login')">Back to Login</button>
+    <button data-action="open-screen" data-value="login">
+      Back to Login
+    </button>
   </div>
 </div>
 
 <!-- ================= SIGNUP MODAL ================= -->
-<div id="signupModal" class="modal">
+<div id="signup" class="modal">
   <div class="modal-content">
-    <button class="close" aria-label="Close">&times;</button>
+    <button class="close"
+            aria-label="Close"
+            data-action="close-screens">&times;</button>
+
     <h2>Create account</h2>
 
     <input type="email" id="signupEmail" placeholder="Email" autocomplete="email">
@@ -105,75 +124,125 @@
 
     <button id="signupSubmit">Create account</button>
 
-    <!-- SIGNUP FEEDBACK -->
     <p id="signupFeedback" class="feedback-text"></p>
 
     <p class="modal-switch">
       Already have an account?
-      <span onclick="openScreen('login')">Log in</span>
+      <span data-action="open-screen" data-value="login">Log in</span>
     </p>
   </div>
 </div>
 
 <!-- ================= POST MODAL ================= -->
-<div id="postModal" class="modal">
+<div id="posts-grid" class="modal">
   <div class="modal-content">
-    <button class="close" aria-label="Close">&times;</button>
+
+    <button class="close"
+            aria-label="Close"
+            data-action="close-screens">&times;</button>
+
+    <!-- Progress dots -->
+    <div class="post-progress">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
 
     <div id="postFlow">
 
-      <!-- STEP 1: CATEGORY -->
-      <div class="post-step" data-step="1">
-        <h2>Select a Category</h2>
-        <select id="postCategory">
-          <option value="">Choose category</option>
-          <option value="forsale">For Sale</option>
-          <option value="jobs">Jobs & Services</option>
-          <option value="property">Property</option>
-          <option value="events">Events</option>
-          <option value="community">Community</option>
-          <option value="free">Free</option>
-        </select>
-        <button class="post-next">Next</button>
+      <!-- ========== STEP 1: CATEGORY ========== -->
+      <div class="post-step active" data-step="1">
+        <h2>What are you posting?</h2>
+
+        <div class="category-grid">
+          <button type="button" data-category="forsale">🛋 For Sale</button>
+          <button type="button" data-category="jobs">💼 Jobs & Services</button>
+          <button type="button" data-category="property">🏠 Property</button>
+          <button type="button" data-category="events">📅 Events</button>
+          <button type="button" data-category="community">👥 Community</button>
+          <button type="button" data-category="free">🎁 Free</button>
+        </div>
       </div>
 
-      <!-- STEP 2: SUBCATEGORY -->
+      <!-- ========== STEP 2: CORE DETAILS ========== -->
       <div class="post-step" data-step="2">
-        <h2>Select a Subcategory</h2>
-        <select id="postSubcategory"></select>
-        <button class="post-prev">Back</button>
-        <button class="post-next">Next</button>
+        <h2>Tell people about it</h2>
+
+        <input
+          type="text"
+          id="postTitle"
+          placeholder="Ad title"
+          maxlength="70"
+          required
+        >
+
+        <textarea
+          id="postDescription"
+          rows="5"
+          placeholder="Add a description"
+          required
+        ></textarea>
+
+        <div class="post-nav">
+          <button type="button" class="post-prev ghost-btn">Back</button>
+          <button type="button" class="post-next primary-btn" disabled>
+            Continue
+          </button>
+        </div>
       </div>
 
-      <!-- STEP 3: AD DETAILS -->
+      <!-- ========== STEP 3: OPTIONAL DETAILS ========== -->
       <div class="post-step" data-step="3">
-        <h2>Ad Details</h2>
+        <h2>Optional details</h2>
 
-        <input type="text" id="postTitle" placeholder="Title" required>
+        <input
+          type="number"
+          id="postPrice"
+          placeholder="Price (optional)"
+          min="0"
+          step="0.01"
+        >
 
-        <textarea id="postDescription" rows="4" placeholder="Description" required></textarea>
+        <input
+          type="text"
+          id="postArea"
+          placeholder="Area (optional)"
+        >
 
-        <label>Price (optional)</label>
-        <input type="number" id="postPrice" placeholder="0" min="0" step="0.01">
+        <div class="photo-uploader">
+          <input
+            type="file"
+            id="postImages"
+            accept="image/*"
+            multiple
+            hidden
+          >
 
-        <label>Your Area</label>
-        <input type="text" id="postArea" placeholder="e.g. Ferndale, Pentre, Tonypandy">
+          <button type="button" id="addPhotosBtn" class="ghost-btn">
+            + Add photos
+          </button>
 
-        <label>Add Photos</label>
-        <button id="chooseImageBtn">Choose Photo</button>
-        <input type="file" id="postImage" accept="image/*" style="display:none;">
-        <div id="imagePreview"></div>
+          <small class="hint-text">
+            Add up to 4 photos. First photo becomes the cover.
+          </small>
 
-        <button class="post-prev">Back</button>
-        <button id="postSubmitBtn">Submit Ad</button>
+          <div id="imagePreview" class="image-preview-grid"></div>
+        </div>
+
+        <div class="post-nav">
+          <button type="button" class="post-prev ghost-btn">Back</button>
+          <button type="button" id="postSubmitBtn" class="primary-btn">
+            Post ad
+          </button>
+        </div>
       </div>
 
     </div>
 
     <p id="postFeedback" class="feedback-text"></p>
+
   </div>
 </div>
-
 <!-- ================= FIXED ACTION BAR ================= -->
 <div class="action-bar">
 
