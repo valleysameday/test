@@ -11,7 +11,8 @@
     border: 1px solid #e5e7eb;
     box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     transition: transform .18s ease, box-shadow .18s ease;
-    height: 340px;
+    height: auto; /* mobile-friendly */
+    margin: 0 auto; /* center cards on mobile */
 }
 
 .post-card:hover {
@@ -24,7 +25,7 @@
 ===================================================== */
 .post-image {
     width: 100%;
-    height: 170px;
+    height: 200px; /* slightly bigger on mobile */
     background: #f1f1f1;
     position: relative;
 }
@@ -50,7 +51,7 @@
    BODY
 ===================================================== */
 .post-body {
-    padding: 12px 14px;
+    padding: 14px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -58,10 +59,10 @@
 
 /* Title */
 .post-title {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: #0f172a;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -69,10 +70,10 @@
 
 /* Teaser text */
 .post-teaser {
-    font-size: .9rem;
+    font-size: .95rem;
     color: #374151;
-    line-height: 1.35;
-    margin-bottom: 8px;
+    line-height: 1.4;
+    margin-bottom: 10px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -98,20 +99,17 @@
     gap: 4px;
 }
 
-/* Price */
 .post-price {
     font-size: .95rem;
     font-weight: 700;
     color: #16a34a;
 }
 
-/* Area */
 .post-area {
     font-weight: 500;
     color: #374151;
 }
 
-/* Category pill */
 .post-category {
     background: #f1f5f9;
     color: #334155;
@@ -152,7 +150,7 @@
 ===================================================== */
 .post-card.business {
     grid-column: span 2;
-    height: 360px;
+    height: auto;
     border-radius: 16px;
     border: 2px solid #ff4f8b;
     background: linear-gradient(180deg, #fff7fb, #ffffff);
@@ -184,7 +182,7 @@
 
 /* Business image */
 .post-card.business .post-image {
-    height: 200px;
+    height: 240px;
 }
 
 /* Business body */
@@ -220,7 +218,11 @@
 ===================================================== */
 @media (min-width: 1024px) {
     .posts-grid {
-        grid-template-columns: repeat(4, 1fr);
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin: 0 auto;
+        max-width: 1440px;
     }
 
     .post-card {
@@ -237,14 +239,23 @@
 }
 
 /* =====================================================
-   MOBILE
+   MOBILE EDGE-TO-EDGE
 ===================================================== */
 @media (max-width: 640px) {
+    .posts-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0 12px; /* cards go edge-to-edge */
+    }
+
     .post-card {
-        height: auto;
+        width: 100%;
+        border-radius: 0; /* edge-to-edge effect */
+        margin: 0;
     }
 
     .post-image {
-        height: 180px;
+        height: 220px; /* slightly bigger image on mobile */
     }
 }
