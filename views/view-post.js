@@ -19,11 +19,16 @@ getFirebase().then(fb => {
   db = fb.db;
   console.log("🔥 Firebase ready in view-post");
 
-  if (window.selectedPostId) {
-    console.log("▶ Auto-loading post:", window.selectedPostId);
+  // Use window.selectedPostId or fallback to sessionStorage
+  const postId = window.selectedPostId || sessionStorage.getItem("viewPostId");
+
+  if (postId) {
+    console.log("▶ Auto-loading post:", postId);
+    window.selectedPostId = postId; // ensure global is set
     loadPost();
   } else {
-    console.warn("⚠ No selectedPostId set when view-post loaded");
+    console.warn("⚠ No selectedPostId set when view-post loaded, redirecting home");
+    window.navigateToHome(); // redirect or load home view
   }
 });
 
