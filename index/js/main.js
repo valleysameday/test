@@ -57,7 +57,7 @@ window.loadView = loadView;
    APP INITIALISATION
 ===================================================== */
 function startApp() {
-  initUIRouter();     // guarded internally
+  initUIRouter(); // guarded internally
   loadView('home');
 }
 
@@ -66,9 +66,7 @@ getFirebase().then(fb => {
   db = fb.db;
   storage = fb.storage;
 
-  if (location.hostname === 'localhost') {
-    console.log('✅ Firebase ready');
-  }
+  if (location.hostname === 'localhost') console.log('✅ Firebase ready');
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startApp, { once: true });
@@ -95,5 +93,13 @@ window.navigateToDashboard = () => {
 
 window.navigateToHome = () => {
   window.closeScreens?.();
-  loadView('home');
+
+  loadView('home').then(() => {
+    // Re-render feed if cached
+    window.initFeed?.();
+
+    // Restore scroll
+    const savedScroll = sessionStorage.getItem('homeScroll');
+    if (savedScroll) window.scrollTo(0, parseInt(savedScroll, 10));
+  });
 };
