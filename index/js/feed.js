@@ -135,21 +135,15 @@ function renderPosts(category) {
 
     // Save scroll before navigating
     card.addEventListener("click", e => {
-      if (e.target.closest(".report-btn")) return;
+  if (e.target.closest(".report-btn")) return;
 
-      sessionStorage.setItem("viewPostId", post.id);
-      sessionStorage.setItem("homeScroll", window.scrollY);
-      sessionStorage.setItem("homeCategory", category);
+  sessionStorage.setItem("viewPostId", post.id);
+  sessionStorage.setItem("homeScroll", window.scrollY);
+  sessionStorage.setItem("homeCategory", category);
+  sessionStorage.setItem("homeSearch", window.currentSearch || "");
 
-      window.loadView("view-post");
-    });
-
-    fragment.appendChild(card);
-  });
-
-  postsContainer.appendChild(fragment);
-}
-
+  window.loadView("view-post");
+});
 /* =====================================================
    WEATHER (SESSION-CACHED)
 ===================================================== */
@@ -175,4 +169,19 @@ async function loadWeather() {
   }
 }
 
-window.initFeed = initFeed;
+export function init() {
+  console.log("🏠 Home feed init");
+
+  // Restore search
+  window.currentSearch = sessionStorage.getItem("homeSearch") || "";
+
+  initFeed();
+
+  // Restore scroll AFTER render
+  const scrollY = sessionStorage.getItem("homeScroll");
+  if (scrollY) {
+    requestAnimationFrame(() => {
+      window.scrollTo(0, parseInt(scrollY, 10));
+    });
+  }
+}
