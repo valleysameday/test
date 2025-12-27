@@ -1,0 +1,143 @@
+<link rel="stylesheet" href="/index/css/business-dashboard.css">
+<input type="file" id="avatarUploadInput" accept="image/*" style="display:none;">
+
+<header class="biz-header">
+  <div class="biz-header-left">
+    <h1 id="bizHeaderName">Your Business</h1>
+    <p id="bizHeaderTagline" class="biz-tagline">Manage your ads, brand, and customers</p>
+  </div>
+  <div class="biz-header-right">
+    <span id="bizHeaderTypeBadge" class="biz-type-badge">Business Account</span>
+    <button id="bizLogoutBtn" class="biz-logout-btn">Log out</button>
+  </div>
+</header>
+
+<section class="biz-section">
+
+  <!-- STATS BAR -->
+  <div class="biz-stats-box">
+    <h2>Your Business Stats</h2>
+    <div class="biz-stats-grid">
+      <div class="biz-stat-pill">
+        <span id="bizStatAdsCount" class="biz-stat-number">0</span>
+        <span class="biz-stat-label">Active Ads</span>
+      </div>
+      <div class="biz-stat-pill">
+        <span id="bizStatTotalViews" class="biz-stat-number">0</span>
+        <span class="biz-stat-label">Total Views</span>
+      </div>
+      <div class="biz-stat-pill">
+        <span id="bizStatLeads" class="biz-stat-number">0</span>
+        <span class="biz-stat-label">Leads</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUSINESS PROFILE -->
+  <div class="biz-profile-box">
+    <!-- AVATAR SECTION -->
+    <div class="biz-avatar-section">
+      <div id="bizAvatarClickArea" class="biz-avatar-wrapper">
+        <div id="bizDashboardAvatar" class="biz-avatar-circle"></div>
+      </div>
+      <p class="biz-avatar-edit-hint">Tap to change business photo</p>
+    </div>
+
+    <div class="biz-profile-header">
+      <h2>Your Business Profile</h2>
+      <button id="bizToggleEditProfile" class="biz-edit-profile-btn">Edit</button>
+    </div>
+
+    <!-- VIEW MODE -->
+    <div id="bizProfileViewMode" class="biz-profile-view">
+      <div class="biz-profile-line">
+        <span class="biz-profile-label">Business Name</span>
+        <span id="bizViewName" class="biz-profile-value">Add your business name</span>
+      </div>
+      <div class="biz-profile-line">
+        <span class="biz-profile-label">Phone</span>
+        <span id="bizViewPhone" class="biz-profile-value">Add your phone</span>
+      </div>
+      <div class="biz-profile-line">
+        <span class="biz-profile-label">Area</span>
+        <span id="bizViewArea" class="biz-profile-value">Add your area</span>
+      </div>
+      <div class="biz-profile-line">
+        <span class="biz-profile-label">Website</span>
+        <span id="bizViewWebsite" class="biz-profile-value">Add your website</span>
+      </div>
+      <div class="biz-profile-line biz-profile-line-bio">
+        <span class="biz-profile-label">About Your Business</span>
+        <p id="bizViewBio" class="biz-profile-value biz-bio-value">
+          Tell customers what you offer and why they should choose you.
+        </p>
+      </div>
+    </div>
+
+    <!-- EDIT MODE -->
+    <div id="bizProfileEditMode" class="biz-profile-edit" style="display:none;">
+      <div class="biz-profile-row">
+        <label>Business Name</label>
+        <input id="bizNameInput" type="text" placeholder="Your business name">
+      </div>
+      <div class="biz-profile-row">
+        <label>Phone</label>
+        <input id="bizPhoneInput" type="text" placeholder="Your phone number">
+      </div>
+      <div class="biz-profile-row" style="position: relative;">
+        <label>Area</label>
+        <input id="bizAreaInput" type="text" placeholder="e.g. Treorchy, Tonypandy">
+        <div id="bizAreaSuggestions" class="biz-suggestions-box"></div>
+      </div>
+      <div class="biz-profile-row">
+        <label>Website</label>
+        <input id="bizWebsiteInput" type="text" placeholder="https://yourbusiness.com">
+      </div>
+      <div class="biz-profile-row">
+        <label>About Your Business</label>
+        <textarea id="bizBioInput" placeholder="Tell customers what you offer"></textarea>
+      </div>
+      <div class="biz-profile-edit-actions">
+        <button id="bizSaveProfileBtn" class="biz-save-btn">Save changes</button>
+        <button id="bizCancelEditProfileBtn" class="biz-cancel-edit-btn">Cancel</button>
+      </div>
+    </div>
+
+    <p id="bizProfileFeedback" class="biz-feedback-text"></p>
+  </div>
+
+  <!-- POST BUTTON -->
+  <button id="bizNewPostBtn" class="biz-new-post">
+    <span class="biz-new-post-label">+ Create Business Ad</span>
+    <span class="biz-new-post-tag">PREMIUM</span>
+  </button>
+
+  <!-- BUSINESS ADS -->
+  <h2 class="biz-section-title">Your Business Ads</h2>
+  <div id="bizPosts" class="biz-posts-grid">
+    <!-- Example of a single ad card -->
+    <div class="biz-card">
+      <img src="/images/post-placeholder.jpg" alt="Ad Image" class="biz-card-img" loading="lazy">
+      <div class="biz-info">
+        <h3>Ad Title</h3>
+        <p>Ad description goes here...</p>
+      </div>
+      <div class="biz-actions">
+        <button class="biz-btn biz-view">View</button>
+        <button class="biz-btn biz-edit">Edit</button>
+        <button class="biz-btn biz-repost">Repost</button>
+        <button class="biz-btn biz-share">Share</button>
+        <button class="biz-btn biz-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- LOGOUT OVERLAY -->
+<div id="bizLogoutOverlay" class="biz-logout-overlay">
+  <div class="biz-logout-card">
+    <p>Logging you out...</p>
+    <small>Please wait</small>
+  </div>
+</div>
