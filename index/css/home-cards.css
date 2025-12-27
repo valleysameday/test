@@ -258,9 +258,14 @@
   row-gap: 16px;
 }
 
-
-    .posts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 16px;
+/* 4. THE FORCED 2-COLUMN BENTO GRID */
+.posts-grid {
+    display: grid;
+    /* Forces 2 columns on ALL screen sizes */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px;
+    flex: 1; /* Pushes footer down */
 }
