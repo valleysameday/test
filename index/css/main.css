@@ -136,7 +136,9 @@ header img.logo {
     font-weight: 600;
     transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
+.action-link {
+    -webkit-tap-highlight-color: transparent;
+}
 .action-link:hover {
     /* Electric Lavender highlight for attention */
     color: #E0B1FF; 
@@ -166,7 +168,7 @@ header img.logo {
 .site-footer {
   background: #0f172a;
   color: #e5e7eb;
-  padding: 32px 16px;
+  padding: 80px 16px;
   text-align: center;
   font-family: 'Poppins', sans-serif;
   line-height: 1.4;
