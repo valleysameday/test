@@ -89,33 +89,6 @@ getFirebase().then(fb => {
     showStep(1);
 
     /* ---------------------------------------------------
-       ✅ SUBCATEGORY LOADING
-    --------------------------------------------------- */
-    const subcategories = {
-      forsale: ["Furniture", "Electronics", "Clothes", "Toys", "Other"],
-      jobs: ["Trades", "Cleaning", "Care Work", "Driving", "Other"],
-      property: ["To Rent", "To Buy", "Rooms", "Commercial"],
-      events: ["Music", "Sports", "Community", "Classes"],
-      community: ["Lost & Found", "Local Info", "Announcements"],
-      free: ["Giveaway", "Scrap", "Leftovers"]
-    };
-
-    document.getElementById("postCategory")?.addEventListener("change", e => {
-      const cat = e.target.value;
-      const subSelect = document.getElementById("postSubcategory");
-
-      subSelect.innerHTML = "";
-      if (!cat || !subcategories[cat]) return;
-
-      subcategories[cat].forEach(sub => {
-        const opt = document.createElement("option");
-        opt.value = sub.toLowerCase();
-        opt.textContent = sub;
-        subSelect.appendChild(opt);
-      });
-    });
-
-    /* ---------------------------------------------------
        ✅ IMAGE PICKER
     --------------------------------------------------- */
     const chooseImageBtn = document.getElementById("chooseImageBtn");
@@ -145,7 +118,6 @@ getFirebase().then(fb => {
       const title = document.getElementById("postTitle").value.trim();
       const description = document.getElementById("postDescription").value.trim();
       const category = document.getElementById("postCategory").value;
-      const subcategory = document.getElementById("postSubcategory").value;
       const area = document.getElementById("postArea").value.trim();
 
       const priceInput = document.getElementById("postPrice").value.trim();
@@ -190,7 +162,6 @@ getFirebase().then(fb => {
         title,
         description,
         category,
-        subcategory,
         area,
         price,
         imageUrl,
