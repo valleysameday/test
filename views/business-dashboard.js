@@ -5,7 +5,7 @@ import { ref, deleteObject, uploadBytes, getDownloadURL } from "https://www.gsta
 
 let auth, db, storage;
 
-const PLACEHOLDER_AVATAR = "/images/avatar-placeholder.jpg";
+const PLACEHOLDER_AVATAR = "/index/images/noImage.webp";
 const PLACEHOLDER_POST = "/index/images/image-webholder2.webp";
 
 const $ = id => document.getElementById(id);
