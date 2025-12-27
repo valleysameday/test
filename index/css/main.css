@@ -161,7 +161,14 @@ header img.logo {
     transform: rotate(12deg);
     box-shadow: 0 2px 8px rgba(255, 95, 31, 0.4);
 }
-
+.action-link,
+.action-link:visited,
+.action-link:hover,
+.action-link:active,
+.action-link:focus {
+    text-decoration: none;
+    outline: none;
+}
 /*=====================================================
    FOOTER
 ===================================================== */
