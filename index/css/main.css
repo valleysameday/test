@@ -1,113 +1,140 @@
-:root {
-    /* Modern 2025 Color Profile */
-    --brand-primary: #FF7EB3;
-    --brand-secondary: #FF7E5F;
-    --brand-dark: #1E293B;
-    --bg-main: #F2F4F5;
-    --surface: #FFFFFF;
-    --surface-glass: rgba(255, 255, 255, 0.9);
-    --border-soft: #E2E8F0;
-    --text-main: #111111;
-    --text-muted: #64748B;
-    --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.08);
-}
-
-/* 1. CORE RESET & STICKY FOOTER LOGIC */
+    /* =====================================================
+   GLOBAL RESET
+===================================================== */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-html, body {
-    height: 100%;
-}
-
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background: var(--bg-main);
-    color: var(--text-main);
-    display: flex;
-    flex-direction: column;
-    min-height: 100dvh; /* Dynamic viewport for 2025 mobile browsers */
-    -webkit-font-smoothing: antialiased;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #f2f4f5;
+    color: #111;
+    line-height: 1.5;
+    padding-bottom: 80px;
 }
 
-/* 2. HEADER & SEARCH AREA */
+a { text-decoration: none; }
+
+/* =====================================================
+   HEADER
+===================================================== */
 header {
-    background: linear-gradient(135deg, #FF7EB3, #FF758C);
+    background: #00D2D3;
     color: #fff;
     text-align: center;
-    padding: 15px 10px 45px;
-    position: relative;
-    z-index: 10;
+    padding: 15px;
+    /* Deeper shadow for a "floating" glassmorphism effect */
+    box-shadow: 0 4px 12px rgba(255, 130, 71, 0.25);
 }
 
-header img.logo { 
-    height: 60px; 
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
+header img.logo {
+    height: 50px;
+    /* Subtle drop shadow to make the logo pop against the vibrant header */
+    filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.1));
 }
 
-.search-wrapper {
-    max-width: 600px;
-    margin: -25px auto 10px;
-    padding: 0 12px;
-    position: relative;
-    z-index: 20;
-}
-
-.search-bar {
-    width: 100%;
-    padding: 1rem 1.2rem;
-    border-radius: 14px;
-    border: none;
-    font-size: 1rem;
-    background: var(--surface);
-    box-shadow: var(--shadow-md);
-}
-
-/* 3. CATEGORY SCROLLERS */
-#categories, .subcategories {
+/* =====================================================
+   WEATHER SNIPPET (2026 SLIM & MODERN)
+===================================================== */
+.weather-snippet {
+    /* 2026 Transformative Teal: Organic and Digital mix */
+    background: #008080; 
+    color: #ffffff;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    
+    /* Slimmer vertical padding (Reduced from 20px to 8px) */
+    padding: 8px 24px; 
+    margin: 12px auto;
+    
+    /* Modern 2026 Pill-shape (Increased from 12px) */
+    border-radius: 50px; 
+    
+    /* Inset width makes it feel like a "floating" badge */
+    width: fit-content;
+    min-width: 280px;
+    
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 128, 128, 0.2);
+}
+
+.weather-emoji {
+    /* Scaled down for a slimmer profile */
+    font-size: 1.6rem; 
+}
+
+.weather-info {
+    /* Slightly smaller font to keep it on one line */
+    font-size: 1rem; 
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+@media (min-width: 1024px) {
+    .weather-snippet { 
+        padding: 10px 32px; 
+        margin: 18px auto;
+    }
+    .weather-info { 
+        font-size: 1.1rem; 
+    }
+}
+
+
+/* =====================================================
+   CATEGORIES
+===================================================== */
+#categories {
+    display: flex;
+    justify-content: flex-start;
     gap: 8px;
-    padding: 12px;
+    margin: 20px 0;
+    padding: 0 16px;
     overflow-x: auto;
+    white-space: nowrap;
     scrollbar-width: none;
 }
 #categories::-webkit-scrollbar { display: none; }
 
-.category-btn, .subcategory-btn {
-    padding: 8px 18px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    white-space: nowrap;
+.category-btn {
+    padding: 10px 20px;
+    background: #fff;
+    color: #444;
+    border: 1px solid #d1d5db;
+    border-radius: 25px;
+    font-weight: 500;
+    font-size: 0.9rem;
     cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
 }
-
+.category-btn:hover { background: #f9fafb; }
 .category-btn.active {
-    background: var(--brand-dark);
+    background: #FF7EB3;
     color: #fff;
-    border-color: var(--brand-dark);
+    border-color: #FF7EB3;
+    box-shadow: 0 2px 8px rgba(255,126,179,0.3);
 }
 
-
-/* 4. THE FORCED 2-COLUMN BENTO GRID */
+/* =====================================================
+   POSTS GRID — CLEAN & BALANCED
+===================================================== */
 .posts-grid {
     display: grid;
-    /* Forces 2 columns on ALL screen sizes */
-    grid-template-columns: repeat(2, 1fr); 
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 12px;
-    flex: 1; /* Pushes footer down */
+    margin: 0;
+    padding: 6px;
 }
 
-/* 6. FLOATING ACTION BAR (BOTTOM NAV) */
 
+/* =====================================================
+   FIXED ACTION BAR
+===================================================== */
 .action-bar {
     position: fixed;
     bottom: 0;
@@ -159,6 +186,7 @@ header img.logo {
     transform: rotate(12deg);
     box-shadow: 0 2px 8px rgba(255, 95, 31, 0.4);
 }
+
 
 /*=====================================================
    FOOTER
@@ -225,414 +253,68 @@ header img.logo {
   margin-top: 10px;
 }
 
-
-/* 8. DESKTOP ENHANCEMENTS */
-@media (min-width: 1024px) {
-    .posts-grid {
-        gap: 20px;
-        padding: 20px;
-    }
-
-    .post-image {
-        height: 180px;
-    }
-
-    .post-card.business .post-image {
-        height: 300px;
-    }
-
-    .post-card h3 {
-        font-size: 1.05rem;
-    }
-}
-/* --- 2025 Smart Weather Widget --- */
-.weather-snippet {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 16px;
-    
-    /* Modern Glassmorphism */
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    
-    /* Layout & Spacing */
-    margin: 16px auto;
-    padding: 16px 24px;
-    width: calc(100% - 24px); /* Match grid padding */
-    max-width: 1200px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
-    
-    /* Transition for when data loads */
-    transition: all 0.4s ease;
-}
-
-/* The Emoji/Icon Style */
-.weather-emoji {
-    font-size: 2.2rem;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 50px;
-}
-
-/* The Text Style */
-.weather-text {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--brand-dark);
-    letter-spacing: -0.2px;
-    line-height: 1.3;
-}
-
-/* Loading State Animation */
-.weather-snippet:has(.weather-emoji:empty) .weather-text,
-.weather-text:contains('Loading') {
-    color: var(--text-muted);
-    position: relative;
-    overflow: hidden;
-}
-
-/* 2025 Subtle Shimmer for "Loading" state */
-@keyframes shimmer {
-    0% { opacity: 0.5; }
-    50% { opacity: 1; }
-    100% { opacity: 0.5; }
-}
-
-.weather-snippet span:empty, 
-.weather-text:contains('Loading') {
-    animation: shimmer 2s infinite ease-in-out;
-}
-
-/* Responsive Tweak for Desktop */
-@media (min-width: 1024px) {
-    .weather-snippet {
-        padding: 20px 32px;
-        gap: 24px;
-        margin-top: 24px;
-        border-radius: 24px;
-    }
-    
-    .weather-emoji {
-        font-size: 2.8rem;
-    }
-    
-    .weather-text {
-        font-size: 1.1rem;
-    }
-}
-
-/* Dark Mode Support (If user has dark mode active) */
-@media (prefers-color-scheme: dark) {
-    .weather-snippet {
-        background: rgba(30, 41, 59, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .weather-text {
-        color: #F8FAFC;
-    }
-}
-.post-body {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.post-body h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--brand-dark);
-}
-
-.post-desc {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-.post-category {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.price-badge {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: var(--brand-secondary);
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.business-overlay {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: var(--brand-primary);
-  color: white;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-.view-post-page {
-  max-width: 1200px;
-  margin: 16px auto 80px;
-  padding: 0 12px;
-}
-
-.view-post-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.view-post-left,
-.view-post-right {
-  background: var(--surface);
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid var(--border-soft);
-}
-
-.gallery {
-  position: relative;
-  width: 100%;
-  max-height: 380px;
+/* ===== FEATURED ADS ===== */
+.featured-ads {
+  margin: 12px 0 6px;
   overflow: hidden;
-  border-radius: 14px;
 }
 
-.gallery-slide {
-  width: 100%;
-  height: 100%;
-}
-
-.gallery-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 14px;
-}
-
-.gallery-thumbs {
+.featured-track {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
   overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 12px;
 }
 
-.thumb-btn {
-  border: none;
-  padding: 0;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 10px;
-  overflow: hidden;
-  flex: 0 0 auto;
-}
-
-.thumb-btn img {
-  width: 70px;
-  height: 70px;
-  object-fit: cover;
-  display: block;
-}
-
-.thumb-btn.active {
-  outline: 2px solid var(--brand-primary);
-}
-
-.view-post-right h1 {
-  font-size: 1.5rem;
-  margin-bottom: 4px;
-}
-
-.view-post-desc {
-  margin: 10px 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: var(--text-main);
-}
-
-.view-post-meta p {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin: 2px 0;
-}
-
-.seller-box {
-  margin-top: 16px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--surface-glass);
-  border: 1px solid var(--border-soft);
-}
-
-.seller-box h3 {
-  margin-bottom: 4px;
-}
-
-.biz-tag {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: var(--brand-primary);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.seller-actions {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.primary-btn,
-.secondary-btn {
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  border: none;
-  cursor: pointer;
-}
-
-.primary-btn {
-  background: var(--brand-primary);
-  color: #fff;
-}
-
-.secondary-btn {
-  background: #e2e8f0;
-  color: #111;
-}
-
-.view-post-actions {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-@media (min-width: 900px) {
-  .view-post-layout {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-
-  .view-post-left {
-    flex: 1.1;
-  }
-
-  .view-post-right {
-    flex: 1;
-  }
-}
-.seller-profile-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding-bottom: 60px;
-}
-
-.seller-banner {
-  height: 140px;
-  background: linear-gradient(135deg, #ff7eb3, #ff758c);
-  border-radius: 0 0 20px 20px;
-}
-
-.seller-header {
-  text-align: center;
-  margin-top: 10px;
-}
-
-.seller-reliability {
-  color: var(--brand-dark);
-  font-weight: 600;
-  margin-top: 4px;
-}
-
-.seller-stats {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin: 14px 0;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-.seller-bio {
-  background: #fff;
-  padding: 14px;
-  border-radius: 12px;
-  margin: 10px;
-  font-size: 0.95rem;
-  color: var(--text-main);
-}
-
-.seller-ads-title {
-  margin: 20px 12px 10px;
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-/* ------------------------------
-   BADGE ROW (scrollable)
------------------------------- */
-.badge-row {
-  display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.badge-row::-webkit-scrollbar {
+.featured-track::-webkit-scrollbar {
   display: none;
 }
 
-/* ------------------------------
-   BADGE PILL
------------------------------- */
-.badge-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f3f4f6;
-  border-radius: 20px;
-  padding: 6px 10px;
-  white-space: nowrap;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+.featured-card {
+  min-width: 80%;
+  max-width: 80%;
+  height: 100px;
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
 }
 
-/* ------------------------------
-   BADGE ICON (SVG)
------------------------------- */
-.badge-pill svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  fill: #444;
+.featured-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* optional: fills the empty space */
 }
 
-/* ------------------------------
-   BADGE LABEL
------------------------------- */
-.badge-label {
-  font-size: 0.75rem;
+.featured-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: gold;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.greeting-snippet {
+  margin: 12px 0 6px;
+  font-size: 18px;
   font-weight: 600;
-  color: #333;
-    }
+  padding: 0 12px;
+}
+
+.greeting-welsh {
+  display: block;
+  color: #444;
+}
+
+.greeting-english {
+  display: block;
+  color: #000;
+}
