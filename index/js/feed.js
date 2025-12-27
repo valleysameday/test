@@ -119,7 +119,7 @@ function renderPosts(category) {
     card.innerHTML = `
       <div class="post-image">
         <img src="${imgSrc}" loading="lazy"
-             onerror="this.src='/images/post-placeholder.jpg'">
+             onerror="this.src='/index/images/image-webholder.webp'">
         ${post.businessId ? `<div class="business-overlay">Business</div>` : ""}
         ${priceText ? `<div class="price-badge">${priceText}</div>` : ""}
       </div>
