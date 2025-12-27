@@ -1,0 +1,496 @@
+/* ============================
+   BASE
+============================ */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f7f7f9;
+  margin: 0;
+  padding: 0;
+  color: #222;
+}
+
+.section-title {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+}
+
+/* ============================
+   HEADER (VALLEY SUNSET)
+============================ */
+.dash-header {
+  padding: 1.1rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.dash-header.sunset {
+  background: linear-gradient(135deg, #ff7e5f, #fd3a84, #6a0572);
+}
+
+.dash-hello {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.dash-header h1 {
+  margin: 0.1rem 0;
+  font-size: 1.4rem;
+}
+
+.dash-tagline {
+  margin: 0.1rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.dash-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.area-badge {
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.8rem;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+
+/* ============================
+   LOGOUT BUTTON
+============================ */
+.logout-btn {
+  background: rgba(0,0,0,0.2);
+  border: none;
+  padding: 0.45rem 0.9rem;
+  color: white;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+
+/* ============================
+   MAIN SECTION
+============================ */
+.dash-section {
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto 2.5rem;
+}
+
+/* ============================
+   STATS BOX
+============================ */
+.stats-box {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+  margin-top: -1.2rem;
+  margin-bottom: 1.3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.stats-box h2 {
+  margin: 0 0 0.7rem;
+  font-size: 1.05rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.stat-pill {
+  background: linear-gradient(135deg, #fff8f4, #ffe9f4);
+  border-radius: 999px;
+  padding: 0.5rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(253,58,132,0.25);
+}
+
+.stat-number {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #fd3a84;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+/* ============================
+   PROFILE BOX
+============================ */
+.profile-box {
+  background: #fff;
+  padding: 1.1rem;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  margin-bottom: 1.5rem;
+}
+
+.profile-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+}
+
+.profile-box h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Edit profile button */
+.edit-profile-btn {
+  background: #f3f3ff;
+  color: #333;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.edit-profile-btn::before {
+  content: "✏️";
+  font-size: 0.85rem;
+}
+
+.edit-profile-btn:hover {
+  background: #e7e7ff;
+}
+
+/* VIEW MODE */
+.profile-view {
+  border-top: 1px solid #f1f1f1;
+  padding-top: 0.8rem;
+}
+
+.profile-line {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.6rem;
+}
+
+.profile-label {
+  font-size: 0.8rem;
+  color: #777;
+  margin-bottom: 0.1rem;
+}
+
+.profile-value {
+  font-size: 0.95rem;
+  color: #222;
+  background: #fafafa;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+}
+
+.profile-line-bio .profile-value {
+  min-height: 40px;
+}
+
+/* EDIT MODE */
+.profile-edit {
+  border-top: 1px solid #f1f1f1;
+  padding-top: 0.8rem;
+}
+
+.profile-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.8rem;
+}
+
+.profile-row label {
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+  color: #555;
+}
+
+.profile-row input,
+.profile-row textarea {
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.profile-row input:focus,
+.profile-row textarea:focus {
+  border-color: #fd3a84;
+  box-shadow: 0 0 0 3px rgba(253,58,132,0.15);
+  outline: none;
+}
+
+.profile-row textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.hint-text {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+/* EDIT MODE ACTIONS */
+.profile-edit-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.dash-save-btn {
+  background: linear-gradient(135deg, #ff7e5f, #fd3a84);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  flex: 1;
+  transition: all 0.15s ease;
+}
+
+.dash-save-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.cancel-edit-btn {
+  background: #f3f3f3;
+  color: #555;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* FEEDBACK TEXT */
+.feedback-text {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  min-height: 18px;
+}
+
+.feedback-success {
+  color: #2a8f2a;
+}
+
+.feedback-error {
+  color: #d33;
+}
+
+/* ============================
+   AREA AUTOCOMPLETE
+============================ */
+.suggestions-box {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  margin-top: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+  display: none;
+  position: absolute;
+  width: 100%;
+  z-index: 10;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.suggestion-item:hover {
+  background: #ffe9f4;
+}
+
+/* ============================
+   NEW POST BUTTON
+============================ */
+.dash-new-post {
+  background: #222;
+  color: #fff;
+  padding: 0.75rem 0.9rem;
+  border-radius: 999px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-bottom: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.new-post-label {
+  font-weight: 600;
+}
+
+.new-post-tag {
+  background: linear-gradient(135deg, #ff7e5f, #fd3a84);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+/* ============================
+   POSTS GRID
+============================ */
+.dash-posts-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.dash-card {
+  background: white;
+  border-radius: 12px;
+  padding: 0.7rem;
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.04);
+}
+
+.dash-img {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.dash-info h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.98rem;
+}
+
+.dash-info p {
+  margin: 0 0 0.3rem;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.dash-info small {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.dash-actions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dash-btn {
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.dash-edit {
+  background: #ffc107;
+}
+
+.dash-delete {
+  background: #ff4d4d;
+  color: white;
+}
+
+/* EMPTY STATE */
+.empty-msg {
+  color: #666;
+  padding: 1rem 0.3rem;
+  font-size: 0.9rem;
+}
+
+/* ============================
+   LOGOUT OVERLAY
+============================ */
+.logout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.logout-card {
+  background: #fff;
+  padding: 1rem 1.3rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.logout-card p {
+  margin: 0 0 0.2rem;
+}
+.avatar-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.avatar-wrapper {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid #ff7b00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-circle {
+  width: 100%;
+  height: 100%;
+  background-color: #ddd;
+  background-size: cover;
+  background-position: center;
+}
+
+.avatar-edit-hint {
+  font-size: 12px;
+  color: #777;
+  margin-top: 6px;
+  }
