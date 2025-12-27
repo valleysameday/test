@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rhondda Noticeboard</title>
+
+  <meta name="description"
+        content="Local offers, events and services across Rhondda. A community noticeboard for residents and businesses." />
+
+  <link rel="stylesheet" href="/index/css/main.css">
+  <link rel="stylesheet" href="/index/css/modals.css">
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="header-inner">
+    <a href="/">
+      <img src="/images/logo.svg"
+           alt="Rhondda Noticeboard logo"
+           class="logo" />
+    </a>
+  </div>
+</header>
+<!-- ================= MAIN (SPA CONTAINER) ================= -->
+<main id="app"></main>
+
+<!-- ================= LOGIN MODAL ================= -->
+<div id="loginModal" class="modal">
+  <div class="modal-content">
+    <button class="close" aria-label="Close">&times;</button>
+    <h2>Log in</h2>
+
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+
+    <button id="loginSubmit">Log in</button>
+
+    <!-- LOGIN FEEDBACK -->
+    <p id="loginFeedback" class="feedback-text"></p>
+
+    <p class="modal-switch">
+      No account?
+      <span onclick="openScreen('signup')">Create one</span>
+    </p>
+
+    <p id="forgotPasswordLink" class="modal-link">Forgot password?</p>
+  </div>
+</div>
+
+<!-- ================= FORGOT PASSWORD MODAL ================= -->
+<div id="forgotPasswordModal" class="modal">
+  <div class="modal-content">
+    <button class="close" aria-label="Close">&times;</button>
+    <h2>Reset Password</h2>
+
+    <input type="email" id="forgotEmail" placeholder="Enter your email" autocomplete="email">
+
+    <button id="forgotSubmit">Send Reset Email</button>
+
+    <p class="modal-switch">
+      Remembered your password?
+      <span onclick="openScreen('login')">Back to login</span>
+    </p>
+  </div>
+</div>
+
+<!-- ================= PASSWORD RESET CONFIRMATION MODAL ================= -->
+<div id="resetConfirmModal" class="modal">
+  <div class="modal-content">
+    <button class="close" aria-label="Close">&times;</button>
+    <h2>Email Sent ✅</h2>
+    <p>Check your inbox for a password reset link.</p>
+
+    <button onclick="openScreen('login')">Back to Login</button>
+  </div>
+</div>
+
+<!-- ================= SIGNUP MODAL ================= -->
+<div id="signupModal" class="modal">
+  <div class="modal-content">
+    <button class="close" aria-label="Close">&times;</button>
+    <h2>Create account</h2>
+
+    <input type="email" id="signupEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="signupPassword" placeholder="Password" autocomplete="new-password">
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="isBusinessAccount">
+      This is a business account
+    </label>
+
+    <div id="businessBenefits" class="business-benefits">
+      <h4>Business Account Benefits</h4>
+      <ul>
+        <li>Post featured ads</li>
+        <li>Get premium visibility</li>
+        <li>Access business analytics</li>
+        <li>Priority support</li>
+      </ul>
+    </div>
+
+    <button id="signupSubmit">Create account</button>
+
+    <!-- SIGNUP FEEDBACK -->
+    <p id="signupFeedback" class="feedback-text"></p>
+
+    <p class="modal-switch">
+      Already have an account?
+      <span onclick="openScreen('login')">Log in</span>
+    </p>
+  </div>
+</div>
+
+<!-- ================= POST MODAL ================= -->
+<div id="postModal" class="modal">
+  <div class="modal-content">
+    <button class="close" aria-label="Close">&times;</button>
+
+    <div id="postFlow">
+
+      <!-- STEP 1: CATEGORY -->
+      <div class="post-step" data-step="1">
+        <h2>Select a Category</h2>
+        <select id="postCategory">
+          <option value="">Choose category</option>
+          <option value="forsale">For Sale</option>
+          <option value="jobs">Jobs & Services</option>
+          <option value="property">Property</option>
+          <option value="events">Events</option>
+          <option value="community">Community</option>
+          <option value="free">Free</option>
+        </select>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- STEP 2: SUBCATEGORY -->
+      <div class="post-step" data-step="2">
+        <h2>Select a Subcategory</h2>
+        <select id="postSubcategory"></select>
+        <button class="post-prev">Back</button>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- STEP 3: AD DETAILS -->
+      <div class="post-step" data-step="3">
+        <h2>Ad Details</h2>
+
+        <input type="text" id="postTitle" placeholder="Title" required>
+
+        <textarea id="postDescription" rows="4" placeholder="Description" required></textarea>
+
+        <label>Price (optional)</label>
+        <input type="number" id="postPrice" placeholder="0" min="0" step="0.01">
+
+        <label>Your Area</label>
+        <input type="text" id="postArea" placeholder="e.g. Ferndale, Pentre, Tonypandy">
+
+        <label>Add Photos</label>
+        <button id="chooseImageBtn">Choose Photo</button>
+        <input type="file" id="postImage" accept="image/*" style="display:none;">
+        <div id="imagePreview"></div>
+
+        <button class="post-prev">Back</button>
+        <button id="postSubmitBtn">Submit Ad</button>
+      </div>
+
+    </div>
+
+    <p id="postFeedback" class="feedback-text"></p>
+  </div>
+</div>
+
+<!-- ================= FIXED ACTION BAR ================= -->
+<div class="action-bar">
+
+  <a href="#" id="openPostModal" class="action-link post-free">
+    <div class="icon-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
+      <span class="free-ribbon">FREE</span>
+    </div>
+    <span>Post an Ad</span>
+  </a>
+
+  <a href="#" id="openLoginModal" class="action-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+      <polyline points="10 17 15 12 10 7"></polyline>
+      <line x1="15" y1="12" x2="3" y2="12"></line>
+    </svg>
+    <span class="label-main">Login</span>
+  </a>
+
+  <a href="#" id="openAccountModal" class="action-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" 
+         viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+    <span class="label-main">My Account</span>
+  </a>
+
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <p>&copy; 2025 Rhondda Noticeboard</p>
+  <p class="footer-links">
+    <a href="/about.html">About</a> ·
+    <a href="/terms.html">Terms</a> ·
+    <a href="/contact.html">Contact</a>
+  </p>
+</footer>
+
+<!-- SPA + App Logic -->
+<script type="module" src="/index/js/main.js"></script>
+
+</body>
+</html>
