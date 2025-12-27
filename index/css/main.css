@@ -227,28 +227,71 @@ header img.logo {
     box-shadow: 0 2px 8px rgba(255, 95, 31, 0.4);
 }
 
-/* 7. FOOTER & SAFE ZONE */
-footer {
-    margin-top: auto;
-    background: #fff;
-    border-top: 1px solid var(--border-soft);
-    padding: 40px 20px 120px; /* 120px bottom padding protects against Action Bar overlap */
-    text-align: center;
+/*=====================================================
+   FOOTER
+===================================================== */
+.site-footer {
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 32px 16px;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.4;
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-brand {
+  margin-bottom: 12px;
+}
+
+.footer-tagline {
+  font-size: 1rem;
+  color: #94a3b8;
+  display: block;
+  margin: 4px 0;
+}
+
+.footer-subline {
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
 .footer-links {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 10px;
+  margin: 12px 0;
+  font-size: 0.95rem;
 }
 
 .footer-links a {
-    color: var(--brand-primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-decoration: none;
+  color: #f97316; /* warm orange */
+  text-decoration: none;
+  margin: 0 6px;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
+
+.footer-links a:hover {
+  color: #fb923c; /* lighter orange */
+  text-decoration: underline;
+}
+
+.footer-links span {
+  color: #64748b; /* separator color */
+}
+
+.footer-links a:active {
+  opacity: 0.7; /* subtle tap feedback */
+}
+
+.footer-copy {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  margin-top: 10px;
+}
+
 
 /* 8. DESKTOP ENHANCEMENTS */
 @media (min-width: 1024px) {
