@@ -1,0 +1,128 @@
+<link rel="stylesheet" href="/index/css/dashboard.css">
+<input type="file" id="avatarUploadInput" accept="image/*" style="display:none;">
+<header class="dash-header sunset">
+  <div>
+    <p class="dash-hello">Shwmae,</p>
+    <h1 id="headerName">Your Account</h1>
+    <p id="headerTagline" class="dash-tagline">Let’s get your Rhondda profile looking tidy</p>
+  </div>
+  <div class="dash-header-right">
+    <span id="headerAreaBadge" class="area-badge">Add your area</span>
+    <button id="logoutBtn" class="logout-btn">Log out</button>
+  </div>
+</header>
+
+<section class="dash-section">
+
+  <!-- STATS BAR -->
+  <div class="stats-box">
+    <h2>Your stats</h2>
+    <div class="stats-grid">
+      <div class="stat-pill">
+        <span id="statAdsCount" class="stat-number">0</span>
+        <span class="stat-label">Ads posted</span>
+      </div>
+      <div class="stat-pill">
+        <span id="statTotalViews" class="stat-number">0</span>
+        <span class="stat-label">Total views</span>
+      </div>
+      <div class="stat-pill">
+        <span id="statUnlocks" class="stat-number">0</span>
+        <span class="stat-label">Contact unlocks</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SECTION -->
+  <div class="profile-box">
+    <!-- ✅ AVATAR SECTION -->
+<div class="avatar-section">
+  <div id="avatarClickArea" class="avatar-wrapper">
+    <div id="dashboardAvatar" class="avatar-circle"></div>
+  </div>
+  <p class="avatar-edit-hint">Tap to change photo</p>
+</div>
+    <div class="profile-box-header">
+      <h2>Your Profile</h2>
+      <button id="toggleEditProfile" class="edit-profile-btn">Edit profile</button>
+    </div>
+
+    <!-- VIEW MODE -->
+    <div id="profileViewMode" class="profile-view">
+      <div class="profile-line">
+        <span class="profile-label">Name</span>
+        <span id="viewName" class="profile-value">Add your name</span>
+      </div>
+      <div class="profile-line">
+        <span class="profile-label">Phone (private)</span>
+        <span id="viewPhone" class="profile-value">Add your phone</span>
+      </div>
+      <div class="profile-line">
+        <span class="profile-label">Area</span>
+        <span id="viewArea" class="profile-value">Add your area</span>
+      </div>
+      <div class="profile-line profile-line-bio">
+        <span class="profile-label">Bio</span>
+        <p id="viewBio" class="profile-value bio-value">
+          Tell locals a bit about yourself and what you’re selling.
+        </p>
+      </div>
+    </div>
+
+    <!-- EDIT MODE -->
+    <div id="profileEditMode" class="profile-edit" style="display:none;">
+      <!-- NAME -->
+      <div class="profile-row">
+        <label for="profileNameInput">Name</label>
+        <input id="profileNameInput" type="text" placeholder="Your name">
+      </div>
+
+      <!-- PHONE (PRIVATE) -->
+      <div class="profile-row">
+        <label for="profilePhoneInput">Phone (private)</label>
+        <input id="profilePhoneInput" type="text" placeholder="Your phone number">
+        <small class="hint-text">This is for buyers to contact you. We never show it publicly without your say‑so.</small>
+      </div>
+
+      <!-- AREA WITH AUTOCOMPLETE -->
+      <div class="profile-row" style="position: relative;">
+        <label for="profileAreaInput">Area</label>
+        <input id="profileAreaInput" type="text" placeholder="e.g. Treorchy, Tonypandy, Porth">
+        <div id="areaSuggestions" class="suggestions-box"></div>
+      </div>
+
+      <!-- BIO -->
+      <div class="profile-row">
+        <label for="profileBioInput">Bio</label>
+        <textarea id="profileBioInput" placeholder="Tell locals who you are, what you sell, and how you like to deal."></textarea>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="profile-edit-actions">
+        <button id="saveProfileBtn" class="dash-save-btn">Save changes</button>
+        <button id="cancelEditProfileBtn" class="cancel-edit-btn">Cancel</button>
+      </div>
+    </div>
+
+    <p id="profileFeedback" class="feedback-text"></p>
+  </div>
+
+  <!-- POST BUTTON -->
+  <button id="newPostBtn" class="dash-new-post">
+    <span class="new-post-label">+ Post an Ad</span>
+    <span class="new-post-tag">FREE</span>
+  </button>
+
+  <!-- USER ADS -->
+  <h2 class="section-title">Your ads</h2>
+  <div id="userPosts" class="dash-posts-grid"></div>
+
+</section>
+
+<!-- LOGOUT OVERLAY -->
+<div id="logoutOverlay" class="logout-overlay">
+  <div class="logout-card">
+    <p>Logging you out...</p>
+    <small>Please wait</small>
+  </div>
+</div>
