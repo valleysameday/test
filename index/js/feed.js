@@ -105,7 +105,7 @@ function renderPosts(category) {
     const card = document.createElement("div");
     card.className = `post-card ${post.type || ''}`;
 
-    const imgSrc = post.imageUrl || "/images/post-placeholder.jpg";
+    const imgSrc = post.imageUrl || "/index/images/image-webholder.webp";
     const area = post.area || "Rhondda";
     const priceText = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
 
