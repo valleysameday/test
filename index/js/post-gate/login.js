@@ -2,7 +2,7 @@ import { getFirebase } from "/index/js/firebase/init.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export function initLogin() {
-  const loginBtn = document.getElementById("loginBtn");
+  const loginBtn = document.getElementById("loginSubmit"); // ✅ matches HTML
   const feedback = document.getElementById("loginFeedback");
   const emailInput = document.getElementById("loginEmail");
   const passwordInput = document.getElementById("loginPassword");
@@ -10,7 +10,15 @@ export function initLogin() {
   function showFeedback(message, type = "info") {
     if (!feedback) return;
     feedback.textContent = message;
-    feedback.className = `login-feedback ${type}`;
+    feedback.className = `feedback-text ${type}`;
+  }
+
+  function focusEmptyInput() {
+    if (!emailInput.value.trim()) {
+      emailInput.focus();
+    } else if (!passwordInput.value) {
+      passwordInput.focus();
+    }
   }
 
   // Clear feedback when typing
@@ -24,9 +32,11 @@ export function initLogin() {
 
     if (!email || !password) {
       showFeedback("⚠️ Please enter both email and password.", "error");
+      focusEmptyInput();
       return;
     }
 
+    loginBtn.disabled = true;
     showFeedback("⏳ Logging in…", "loading");
 
     try {
@@ -47,6 +57,7 @@ export function initLogin() {
       const userDocSnap = await getDoc(doc(db, "users", cred.user.uid));
       if (!userDocSnap.exists()) {
         showFeedback("❌ User record not found. Contact support.", "error");
+        loginBtn.disabled = false;
         return;
       }
 
@@ -61,10 +72,13 @@ export function initLogin() {
       setTimeout(() => {
         window.closeScreens?.();
 
-        // Ensure correct dashboard is loaded
         if (typeof window.navigateToDashboard === "function") {
           window.navigateToDashboard();
         }
+
+        loginBtn.disabled = false;
+        emailInput.value = "";
+        passwordInput.value = "";
       }, 800);
 
     } catch (err) {
@@ -79,6 +93,8 @@ export function initLogin() {
       }
 
       showFeedback(message, "error");
+      loginBtn.disabled = false;
+      focusEmptyInput();
     }
   });
 }
