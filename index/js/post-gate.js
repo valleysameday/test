@@ -284,7 +284,11 @@ const postcodeInput = document.getElementById('postPostcode');
 const rhonddaWarning = document.getElementById('rhondda-warning');
 const rhonddaThanks = document.getElementById('rhondda-thanks');
 
-const rhonddaAreas = ['CF42', 'CF43', 'CF44', 'CF45']; // add all CF Rhondda codes
+const rctPostcodes = [
+  'CF15', 'CF35', 'CF37', 'CF38', 'CF39',
+  'CF40', 'CF41', 'CF42', 'CF43', 'CF44',
+  'CF45', 'CF72'
+];
 
 // Don't show info again if user has been thanked this session
 if (sessionStorage.getItem('rhonddaThanksShown')) {
