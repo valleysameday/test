@@ -121,25 +121,29 @@
     <button class="close" aria-label="Close">&times;</button>
 
     <div id="postFlow">
-<div class="post-location-wrapper">
-  <div id="rhondda-info" class="rhondda-info">
-    <p>📍 We ask for the first part of your postcode to help keep Rhondda Noticeboard local. This helps connect people with nearby services and posts!</p>
-  </div>
 
-  <label for="postPostcode">Postcode</label>
-  <input type="text" id="postPostcode" placeholder="e.g. CF42" maxlength="6">
+      <!-- ================= LOCATION CHECK ================= -->
+      <div class="post-location-wrapper">
+        <div id="rhondda-info" class="rhondda-info">
+          <p>📍 We ask for the first part of your postcode to help keep Rhondda Noticeboard local. This helps connect people with nearby services and posts!</p>
+        </div>
 
-  <div id="rhondda-warning" class="rhondda-warning hidden">
-    <p>⚠️ This website is intended for the Rhondda area. You can still post, but posts outside Rhondda may not reach local users.</p>
-  </div>
+        <label for="postPostcode">Postcode</label>
+        <input type="text" id="postPostcode" placeholder="e.g. CF42" maxlength="6">
 
-  <div id="rhondda-thanks" class="rhondda-thanks hidden">
-    <p>✅ Thank you! You won’t be asked for your postcode again during this session.</p>
-  </div>
-</div>
-      <!-- STEP 1: CATEGORY -->
+        <div id="rhondda-warning" class="rhondda-warning hidden">
+          <p>⚠️ This website is intended for the Rhondda area. You can still post, but posts outside Rhondda may not reach local users.</p>
+        </div>
+
+        <div id="rhondda-thanks" class="rhondda-thanks hidden">
+          <p>✅ Thank you! You won’t be asked for your postcode again during this session.</p>
+        </div>
+      </div>
+
+      <!-- ================= STEP 1: CATEGORY ================= -->
       <div class="post-step" data-step="1">
         <h2>Select a Category</h2>
+
         <select id="postCategory">
           <option value="">Choose category</option>
           <option value="forsale">For Sale</option>
@@ -149,10 +153,50 @@
           <option value="community">Community</option>
           <option value="free">Free</option>
         </select>
+
         <button class="post-next">Next</button>
       </div>
 
-      <!-- STEP 3: AD DETAILS -->
+      <!-- ================= STEP 2: BADGES (NEW) ================= -->
+      <div class="post-step" data-step="2">
+        <h2>Extra Options</h2>
+        <p class="hint-text">Choose any that apply. These show as icons on your card.</p>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="delivery">
+          🚚 Delivery Available
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="collection">
+          📦 Collection Only
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="assembly">
+          🛠️ Assembly / Setup Help
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="heavy">
+          🏋️ Heavy Item
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="boxed">
+          🎁 Boxed / Sealed
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="new">
+          🆕 New Condition
+        </label>
+
+        <button class="post-prev">Back</button>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- ================= STEP 3: AD DETAILS ================= -->
       <div class="post-step" data-step="3">
         <h2>Ad Details</h2>
 
@@ -167,9 +211,9 @@
         <input type="text" id="postArea" placeholder="e.g. Ferndale, Pentre, Tonypandy">
 
         <label>Add Photos</label>
-        <button id="chooseImageBtn">Choose Photo</button>
-        <input type="file" id="postImage" accept="image/*" style="display:none;">
-        <div id="imagePreview"></div>
+        <button id="chooseImageBtn" class="ghost-btn">Choose Photos</button>
+        <input type="file" id="postImage" accept="image/*" multiple style="display:none;">
+        <div id="imagePreview" class="image-preview-grid"></div>
 
         <button class="post-prev">Back</button>
         <button id="postSubmitBtn">Submit Ad</button>
@@ -180,7 +224,6 @@
     <p id="postFeedback" class="feedback-text"></p>
   </div>
 </div>
-
 <!-- ================= FIXED ACTION BAR ================= -->
 <div class="action-bar">
 
