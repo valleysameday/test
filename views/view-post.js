@@ -16,7 +16,6 @@ let db;
 ===================================================== */
 export async function init() {
   console.log("🔁 view-post init()");
-
   const fb = await getFirebase();
   db = fb.db;
 
@@ -49,81 +48,116 @@ async function loadPost(postId) {
   }
 
   const post = snap.data();
+  updateDoc(doc(db, "posts", postId), { views: increment(1) }).catch(() => {});
 
-  updateDoc(doc(db, "posts", postId), {
-    views: increment(1)
-  }).catch(() => {});
-
-  renderPost(container, post, postId);
+  renderPost(container, post);
 }
 
 /* =====================================================
    RENDER POST
 ===================================================== */
-function renderPost(container, post, postId) {
+function renderPost(container, post) {
   container.innerHTML = "";
 
-  const images =
-    post.imageUrls?.length
-      ? post.imageUrls
-      : post.imageUrl
-      ? [post.imageUrl]
-      : [PLACEHOLDER_IMG];
+  const images = post.imageUrls?.length
+    ? post.imageUrls
+    : post.imageUrl
+    ? [post.imageUrl]
+    : [PLACEHOLDER_IMG];
 
-  /* ---------- Layout ---------- */
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
-  /* ---------- Gallery ---------- */
-  const gallery = document.createElement("div");
-  gallery.className = "gallery";
+  /* ---------- LEFT (Gallery) ---------- */
+  const left = document.createElement("div");
+  left.className = "view-post-left gallery";
 
-  images.forEach(src => {
+  images.forEach((src) => {
+    const slide = document.createElement("div");
+    slide.className = "gallery-slide";
     const img = document.createElement("img");
     img.src = src;
     img.onerror = () => (img.src = PLACEHOLDER_IMG);
-    gallery.appendChild(img);
+    slide.appendChild(img);
+    left.appendChild(slide);
   });
 
-  /* ---------- Content ---------- */
-  const content = document.createElement("div");
-  content.className = "view-post-right";
+  /* ---------- RIGHT (Content) ---------- */
+  const right = document.createElement("div");
+  right.className = "view-post-right";
 
-  content.innerHTML = `
-    <h1>${post.title || "Untitled post"}</h1>
-
-    ${post.price !== null ? `<h2 class="price">£${post.price}</h2>` : ""}
-
-    <div class="meta">
-      ${post.category ? `<span class="badge">${post.category}</span>` : ""}
-      ${post.location ? `<span class="badge">${post.location}</span>` : ""}
-    </div>
-
-    <p class="description">${post.description || ""}</p>
-
-    <div class="actions">
-      ${post.phone ? `<a href="tel:${post.phone}" class="primary-btn">Call</a>` : ""}
-      ${post.phone ? `<a href="https://wa.me/${post.phone}" class="secondary-btn">WhatsApp</a>` : ""}
+  // Seller header (fake seller for now, can fetch later)
+  const sellerHeader = document.createElement("div");
+  sellerHeader.className = "post-seller-header";
+  sellerHeader.innerHTML = `
+    <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
+    <div class="seller-header-info">
+      <p class="posted-by"><strong>Local Seller</strong></p>
+      <p class="posted-on">Rhondda Noticeboard</p>
     </div>
   `;
+  right.appendChild(sellerHeader);
 
-  /* ---------- Footer ---------- */
+  // Title
+  const h1 = document.createElement("h1");
+  h1.textContent = post.title || "Untitled post";
+  right.appendChild(h1);
+
+  // Price
+  if (post.price !== undefined) {
+    const price = document.createElement("h2");
+    price.className = "post-price";
+    price.textContent = post.price === 0 ? "FREE" : `£${post.price}`;
+    right.appendChild(price);
+  }
+
+  // Meta / badges
+  const meta = document.createElement("div");
+  meta.className = "view-post-meta";
+  meta.innerHTML = `
+    ${post.category ? `<p><strong>Category</strong>${post.category}</p>` : ""}
+    ${post.location ? `<p><strong>Location</strong>${post.location}</p>` : ""}
+  `;
+  right.appendChild(meta);
+
+  // Description
+  const desc = document.createElement("p");
+  desc.className = "view-post-desc";
+  desc.textContent = post.description || "";
+  right.appendChild(desc);
+
+  // Actions
+  if (post.phone) {
+    const callBtn = document.createElement("a");
+    callBtn.href = `tel:${post.phone}`;
+    callBtn.className = "engage-btn";
+    callBtn.textContent = "Call";
+    right.appendChild(callBtn);
+
+    const waBtn = document.createElement("a");
+    waBtn.href = `https://wa.me/${post.phone}`;
+    waBtn.className = "secondary-btn";
+    waBtn.textContent = "WhatsApp";
+    right.appendChild(waBtn);
+  }
+
+  // Footer buttons
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
 
   const backBtn = document.createElement("button");
-  backBtn.textContent = "← Back";
   backBtn.className = "secondary-btn";
+  backBtn.textContent = "← Back";
   backBtn.onclick = () => window.loadView("home");
 
   const reportBtn = document.createElement("button");
-  reportBtn.textContent = "Report";
   reportBtn.className = "ghost-btn";
+  reportBtn.textContent = "Report";
 
   footer.append(backBtn, reportBtn);
 
-  layout.append(gallery, content);
+  layout.append(left, right);
   container.append(layout, footer);
 
-  console.log("✅ Post rendered:", postId);
+  console.log("✅ Post rendered correctly");
 }
