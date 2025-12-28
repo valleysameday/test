@@ -1,4 +1,3 @@
-// /index/js/post-gate/login.js
 import { getFirebase } from '/index/js/firebase/init.js';
 import {
   browserLocalPersistence,
@@ -19,7 +18,6 @@ const show = el => el && (el.style.display = "block");
 const hide = el => el && (el.style.display = "none");
 
 /* ---------------- SESSION + IDLE LOGOUT ---------------- */
-
 const IDLE_TIMEOUT = 30 * 60 * 1000;
 let idleTimer;
 
@@ -39,7 +37,6 @@ function resetIdleTimer() {
 );
 
 /* ---------------- SESSION STATE ---------------- */
-
 function setSession(user, type) {
   window.currentUser = user;
   window.currentAccountType = type;
@@ -51,7 +48,6 @@ function clearSession() {
 }
 
 /* ---------------- LOGIN ---------------- */
-
 async function loginUser() {
   const email = $("loginEmail")?.value.trim();
   const password = $("loginPassword")?.value;
@@ -72,7 +68,6 @@ async function loginUser() {
 }
 
 /* ---------------- SIGNUP ---------------- */
-
 async function signupUser() {
   const email = $("signupEmail")?.value.trim();
   const password = $("signupPassword")?.value;
@@ -98,7 +93,6 @@ async function signupUser() {
 }
 
 /* ---------------- PASSWORD RESET ---------------- */
-
 async function sendResetEmail() {
   const email = $("forgotEmail")?.value.trim();
   if (!email) return;
@@ -112,7 +106,6 @@ async function sendResetEmail() {
 }
 
 /* ---------------- LOGOUT ---------------- */
-
 async function logoutUser() {
   await signOut(auth);
   clearSession();
@@ -120,7 +113,6 @@ async function logoutUser() {
 }
 
 /* ---------------- INIT ---------------- */
-
 export async function initLogin() {
   if (initialised) return;
   initialised = true;
@@ -154,5 +146,4 @@ export async function initLogin() {
 }
 
 /* ---------------- GLOBALS ---------------- */
-
 window.logoutUser = logoutUser;
