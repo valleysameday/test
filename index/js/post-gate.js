@@ -125,7 +125,7 @@ getFirebase().then(fb => {
 
       const postFeedback = document.getElementById("postFeedback");
 
-      if (!title || !description || !category || !subcategory) {
+      if (!title || !description || !category) {
         postFeedback.textContent = "❌ Please complete all required fields.";
         postFeedback.classList.add("feedback-error");
         return;
