@@ -49,37 +49,31 @@
 .engage-btn:active { transform:scale(0.97); }
 .secondary-btn { width:100%; padding:12px; border-radius:12px; background:#f1f5f9; color:var(--brand-dark); font-weight:600; border:1px solid var(--border-soft); cursor:pointer; margin-bottom:8px; }
 
-/* FULL-WIDTH IMAGE ON ALL DEVICES */
-.view-post-left {
-  padding: 0;
-  border: none;
-  box-shadow: none;
-  background: transparent;
-}
-
+/* TRUE FULL-WIDTH GALLERY */
 .gallery {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-
-  aspect-ratio: auto;
+  padding: 0;
   border-radius: 0;
-  overflow: hidden;
   background: #000;
+  overflow: hidden;
 }
 
-/* FORCE IMAGES TO GO FULL WIDTH */
-.gallery-slide,
-.gallery-slide img {
-  width: 100vw !important;
-  max-width: 100vw !important;
-  margin-left: calc(50% - 50vw) !important;
-  margin-right: calc(50% - 50vw) !important;
-  border-radius: 0 !important;
+/* The sliding container */
+.gallery-track {
+  display: flex;
+  width: 100vw;
+  height: auto;
+  overflow: hidden;
 }
 
-.gallery-slide img {
-  height: auto !important;
-  object-fit: cover !important;
+/* Each image */
+.gallery-track img {
+  width: 100vw;
+  height: auto;
+  object-fit: cover;
+  flex-shrink: 0;
   display: block;
+  border-radius: 0;
 }
