@@ -161,7 +161,38 @@
           <option value="community">Community</option>
           <option value="free">Free</option>
         </select>
+<div id="propertyBlock" style="display:none;">
+  <h2>Property details</h2>
 
+  <p class="hint-text">Is this place for sale or for rent?</p>
+
+  <label class="checkbox-label">
+    <input type="radio" name="propertyListingType" value="sale">
+    🏡 For Sale
+  </label>
+
+  <label class="checkbox-label">
+    <input type="radio" name="propertyListingType" value="rent">
+    🏘️ For Rent
+  </label>
+
+  <div id="propertySaleGroup">
+    <label>Sale price</label>
+    <input type="number" id="postPropertySalePrice" placeholder="e.g. 120000" min="0" step="1000">
+  </div>
+
+  <div id="propertyRentGroup">
+    <label>Rent amount</label>
+    <input type="number" id="postPropertyRentAmount" placeholder="e.g. 650" min="0" step="10">
+
+    <label>Frequency</label>
+    <select id="postPropertyRentFrequency">
+      <option value="">Choose</option>
+      <option value="pcm">Per month (PCM)</option>
+      <option value="pw">Per week</option>
+    </select>
+  </div>
+</div>
         <button class="post-prev">Back</button>
         <button class="post-next">Next</button>
       </div>
