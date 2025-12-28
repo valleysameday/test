@@ -1,82 +1,120 @@
-import { getFirebase } from "/index/js/firebase/init.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+// /index/js/login.js
+import { getFirebase } from '/index/js/firebase/init.js';
+import {
+  setPersistence,
+  browserLocalPersistence,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-export function initLogin() {
-  const loginBtn = document.getElementById("loginSubmit");
-  const feedback = document.getElementById("loginFeedback");
-  const emailInput = document.getElementById("loginEmail");
-  const passwordInput = document.getElementById("loginPassword");
+let auth;
+const $ = id => document.getElementById(id);
 
-  function showFeedback(message, type = "info") {
-    if (!feedback) return;
-    feedback.textContent = message;
-    feedback.className = `feedback-text ${type}`;
+let idleTimer;
+
+/* ------------------ IDLE LOGOUT ------------------ */
+function setupIdleLogout(timeoutMinutes = 30) {
+  const timeoutMs = timeoutMinutes * 60 * 1000;
+
+  function resetTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (auth.currentUser) {
+        signOut(auth).then(() => {
+          alert("Logged out due to inactivity");
+          window.location.reload();
+        });
+      }
+    }, timeoutMs);
   }
 
-  loginBtn?.addEventListener("click", async () => {
-    const email = emailInput?.value.trim();
-    const password = passwordInput?.value;
+  ["mousemove", "keydown", "click", "touchstart"].forEach(evt => window.addEventListener(evt, resetTimer));
+  resetTimer();
+}
 
-    if (!email || !password) {
-      showFeedback("⚠️ Please enter both email and password.", "error");
-      return;
-    }
+/* ------------------ LOGIN ------------------ */
+async function loginUser() {
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
 
-    loginBtn.disabled = true;
-    showFeedback("⏳ Logging in…", "loading");
+  if (!email || !password) {
+    $("loginFeedback").textContent = "Please enter email and password";
+    return;
+  }
 
-    try {
-      const { auth, db } = await getFirebase();
+  $("loginFeedback").textContent = "Logging in...";
 
-      // Log out previous user first
-      if (auth.currentUser) {
-        await signOut(auth);
-        window.currentUser = null;
-        window.firebaseUserDoc = null;
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithEmailAndPassword(auth, email, password);
+    $("loginFeedback").textContent = "✅ Logged in!";
+    setupIdleLogout(30); // 30 min idle logout
+    // Redirect to dashboard after login
+    window.location.href = "/business-dashboard.html";
+  } catch (err) {
+    console.error("Login failed:", err);
+    if (err.code === "auth/user-not-found") $("loginFeedback").textContent = "User not found";
+    else if (err.code === "auth/wrong-password") $("loginFeedback").textContent = "Incorrect password";
+    else $("loginFeedback").textContent = "Login failed: " + err.message;
+  }
+}
+
+/* ------------------ SIGNUP ------------------ */
+async function signupUser() {
+  const email = $("signupEmail").value.trim();
+  const password = $("signupPassword").value;
+
+  if (!email || !password) {
+    $("signupFeedback").textContent = "Please enter email and password";
+    return;
+  }
+
+  $("signupFeedback").textContent = "Creating account...";
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    $("signupFeedback").textContent = "✅ Account created!";
+    setupIdleLogout(30);
+    window.location.href = "/business-dashboard.html";
+  } catch (err) {
+    console.error("Signup failed:", err);
+    $("signupFeedback").textContent = "Signup failed: " + err.message;
+  }
+}
+
+/* ------------------ FORGOT PASSWORD ------------------ */
+async function resetPassword() {
+  const email = $("forgotEmail").value.trim();
+  if (!email) return alert("Enter your email");
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    openScreen("resetConfirm"); // Show confirmation modal
+  } catch (err) {
+    console.error("Password reset failed:", err);
+    alert("Error sending reset email: " + err.message);
+  }
+}
+
+/* ------------------ INIT ------------------ */
+getFirebase().then(fb => {
+  auth = fb.auth;
+
+  // Login button
+  $("loginSubmit")?.addEventListener("click", loginUser);
+  $("signupSubmit")?.addEventListener("click", signupUser);
+  $("forgotSubmit")?.addEventListener("click", resetPassword);
+
+  // Auto redirect if already logged in
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      setupIdleLogout(30);
+      if (window.location.pathname.includes("/login.html") || window.location.pathname.includes("/index.html")) {
+        window.location.href = "/business-dashboard.html";
       }
-
-      // ✅ Modular API usage
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      window.currentUser = cred.user;
-
-      const userDocSnap = await getDoc(doc(db, "users", cred.user.uid));
-      if (!userDocSnap.exists()) {
-        showFeedback("❌ User record not found. Contact support.", "error");
-        loginBtn.disabled = false;
-        return;
-      }
-
-      window.firebaseUserDoc = userDocSnap.data();
-
-      showFeedback(
-        `✅ Welcome back, ${window.firebaseUserDoc.name || "there"}! Redirecting…`,
-        "success"
-      );
-
-      setTimeout(() => {
-        window.closeScreens?.();
-        if (typeof window.navigateToDashboard === "function") {
-          window.navigateToDashboard();
-        }
-        loginBtn.disabled = false;
-        emailInput.value = "";
-        passwordInput.value = "";
-      }, 800);
-
-    } catch (err) {
-      console.error("Login failed:", err);
-      let message = "❌ Login failed. Please try again.";
-
-      switch (err.code) {
-        case "auth/wrong-password": message = "❌ Wrong password. Try again."; break;
-        case "auth/user-not-found": message = "❌ No account found with this email."; break;
-        case "auth/too-many-requests": message = "⚠️ Too many attempts. Try later."; break;
-        case "auth/invalid-email": message = "❌ Invalid email format."; break;
-      }
-
-      showFeedback(message, "error");
-      loginBtn.disabled = false;
     }
   });
-}
+});
