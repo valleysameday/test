@@ -1,44 +1,63 @@
 import { getFirebase } from "/index/js/firebase/init.js";
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-let auth, db;
+let auth;
 
 export function initLogin() {
-  const form = document.getElementById("loginForm");
-  const feedback = document.getElementById("loginFeedback");
-  if (!form) return;
+  console.log("🔑 Login module init");
+
+  if (auth) return; // already initialized
 
   getFirebase().then(fb => {
     auth = fb.auth;
-    db = fb.db;
+
+    // Monitor auth state
+    onAuthStateChanged(auth, async user => {
+      window.currentUser = user || null;
+
+      if (user) {
+        // Load user doc from Firestore if needed
+        try {
+          const db = fb.db;
+          const docSnap = await db.collection("users").doc(user.uid).get();
+          window.firebaseUserDoc = docSnap.exists ? docSnap.data() : null;
+        } catch (e) {
+          console.warn("Failed to load user doc", e);
+        }
+      } else {
+        window.firebaseUserDoc = null;
+      }
+    });
   });
 
-  form.addEventListener("submit", async (e) => {
+  const loginForm = document.getElementById("loginForm");
+  const feedback = document.getElementById("loginFeedback");
+
+  loginForm?.addEventListener("submit", async e => {
     e.preventDefault();
-    const email = form.email.value.trim();
-    const password = form.password.value;
+
+    const email = loginForm.email.value.trim();
+    const password = loginForm.password.value;
+
+    if (!email || !password) {
+      feedback.textContent = "❌ Fill in email and password.";
+      return;
+    }
 
     feedback.textContent = "Logging in…";
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-
-      // Fetch user doc
-      const userSnap = await getDoc(doc(db, "users", cred.user.uid));
-      const userDoc = userSnap.exists() ? userSnap.data() : {};
-
-      window.currentUser = cred.user;
-      window.firebaseUserDoc = userDoc;
-
+      await signInWithEmailAndPassword(auth, email, password);
       feedback.textContent = "✅ Logged in!";
-      window.closeScreens?.();
-
-      // Automatically go to dashboard
-      window.navigateToDashboard?.();
+      setTimeout(() => {
+        window.closeScreens(); // close login modal
+        if (typeof window.navigateToDashboard === "function") {
+          window.navigateToDashboard();
+        }
+      }, 500);
     } catch (err) {
       console.error(err);
-      feedback.textContent = "❌ Invalid login credentials";
+      feedback.textContent = "❌ Login failed. Check credentials.";
     }
   });
 }
