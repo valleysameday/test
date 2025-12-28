@@ -121,7 +121,22 @@
     <button class="close" aria-label="Close">&times;</button>
 
     <div id="postFlow">
+<div class="post-location-wrapper">
+  <div id="rhondda-info" class="rhondda-info">
+    <p>📍 We ask for the first part of your postcode to help keep Rhondda Noticeboard local. This helps connect people with nearby services and posts!</p>
+  </div>
 
+  <label for="postPostcode">Postcode</label>
+  <input type="text" id="postPostcode" placeholder="e.g. CF42" maxlength="6">
+
+  <div id="rhondda-warning" class="rhondda-warning hidden">
+    <p>⚠️ This website is intended for the Rhondda area. You can still post, but posts outside Rhondda may not reach local users.</p>
+  </div>
+
+  <div id="rhondda-thanks" class="rhondda-thanks hidden">
+    <p>✅ Thank you! You won’t be asked for your postcode again during this session.</p>
+  </div>
+</div>
       <!-- STEP 1: CATEGORY -->
       <div class="post-step" data-step="1">
         <h2>Select a Category</h2>
