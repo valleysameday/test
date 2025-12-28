@@ -280,4 +280,31 @@ getFirebase().then(fb => {
     startPostGate();
   }
 
+const postcodeInput = document.getElementById('postPostcode');
+const rhonddaWarning = document.getElementById('rhondda-warning');
+const rhonddaThanks = document.getElementById('rhondda-thanks');
+
+const rhonddaAreas = ['CF42', 'CF43', 'CF44', 'CF45']; // add all CF Rhondda codes
+
+// Don't show info again if user has been thanked this session
+if (sessionStorage.getItem('rhonddaThanksShown')) {
+  rhonddaThanks.classList.remove('hidden');
+  rhonddaWarning.classList.add('hidden');
+  document.getElementById('rhondda-info').classList.add('hidden');
+}
+
+postcodeInput?.addEventListener('input', (e) => {
+  const value = e.target.value.toUpperCase().trim().slice(0, 4); // first part
+
+  if (!window.currentUser && !rhonddaAreas.includes(value)) {
+    rhonddaWarning.classList.remove('hidden');
+    rhonddaThanks.classList.add('hidden');
+  } else if (rhonddaAreas.includes(value) || window.currentUser) {
+    rhonddaWarning.classList.add('hidden');
+    rhonddaThanks.classList.remove('hidden');
+    document.getElementById('rhondda-info').classList.add('hidden');
+
+    // Set flag so user won't be asked again this session
+    sessionStorage.setItem('rhonddaThanksShown', 'true');
+  }
 });
