@@ -1,5 +1,11 @@
+console.log("🏠 home.js loaded");
+
 import { initFeed } from "/index/js/feed.js";
 import { initUI } from "/index/js/ui.js";
 
-initFeed();       // ✅ Weather, categories, posts
-initUI();   // ✅ Modals, action bar, category buttons
+export function init() {
+  console.log("🏠 home.init() called");
+
+  initFeed();   // 🔁 MUST run every time home loads
+  initUI();     // 🔁 safe to re-run
+}
