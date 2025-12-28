@@ -113,8 +113,8 @@ export async function initLogin() {
     if (!user) return;
 
     const businessSnap = await getDoc(doc(db, "businesses", user.uid));
-    if (businessSnap.exists()) location.href = "/views/business-dashboard.html";
-    else location.href = "/views/customer-dashboard.html"; // regular user dashboard
+    if (businessSnap.exists()) location.href = "/views/business-dashboard";
+    else location.href = "/views/customer-dashboard"; // regular user dashboard
   });
 }
 
