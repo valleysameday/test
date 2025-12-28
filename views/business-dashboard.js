@@ -56,7 +56,10 @@ function setupAvatarUpload(uid) {
       const url = await getDownloadURL(refPath);
       await updateDoc(doc(db, "businesses", uid), { avatarUrl: url });
       avatar.style.backgroundImage = `url('${url}')`;
-    } catch (err) { console.error("Avatar upload failed:", err); avatar.style.backgroundImage = `url('${PLACEHOLDER_AVATAR}')`; }
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      avatar.style.backgroundImage = `url('${PLACEHOLDER_AVATAR}')`;
+    }
   };
   avatar.onerror = () => { avatar.style.backgroundImage = `url('${PLACEHOLDER_AVATAR}')`; };
 }
@@ -83,9 +86,12 @@ function setupProfileEditToggle(uid) {
 /* ------------------ POSTS ------------------ */
 async function deletePostAndImages(post) {
   const urls = [...(post.imageUrl ? [post.imageUrl] : []), ...(post.imageUrls || [])];
-  for (const url of urls) {
-    try { const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]); await deleteObject(ref(storage, path)); } catch {}
-  }
+  try {
+    await Promise.all(urls.map(url => {
+      const path = decodeURIComponent(url.split("/o/")[1].split("?")[0]);
+      return deleteObject(ref(storage, path));
+    }));
+  } catch {}
   await deleteDoc(doc(db, "posts", post.id));
 }
 
@@ -100,19 +106,19 @@ async function loadBusinessPosts(uid) {
       return;
     }
 
-    const ads = [];
-    snap.forEach(docSnap => ads.push({ id: docSnap.id, ...docSnap.data() }));
+    const ads = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
     ads.sort((a,b)=>(a.title||"").localeCompare(b.title||""));
 
-    let totalViews=0, totalLeads=0;
-    $("bizStatAdsCount").textContent = ads.length;
+    let totalViews = 0, totalLeads = 0;
+    const fragment = document.createDocumentFragment();
 
     ads.forEach(post => {
-      totalViews += post.views||0;
-      totalLeads += post.leads||0;
+      totalViews += post.views || 0;
+      totalLeads += post.leads || 0;
 
       const card = document.createElement("div");
       card.className = "biz-card";
+      card.dataset.postId = post.id;
 
       card.innerHTML = `
         <img src="${post.imageUrl || PLACEHOLDER_POST}" class="biz-card-img" alt="${post.title||"Ad"}" loading="lazy" onerror="this.src='${PLACEHOLDER_POST}'">
@@ -125,18 +131,33 @@ async function loadBusinessPosts(uid) {
         </div>
       `;
 
-      card.querySelector(".biz-delete").onclick = async () => { if(!confirm("Delete this ad?")) return; await deletePostAndImages(post); loadBusinessPosts(uid); };
-      card.querySelector(".biz-edit").onclick = () => openEditModal(post);
-      card.querySelector(".biz-repost").onclick = () => openRepostModal(post);
+      card.querySelector(".biz-delete").onclick = async () => {
+        if (!confirm("Delete this ad?")) return;
+        await deletePostAndImages(post);
+        fragment.removeChild(card); // remove card immediately
+        updateStats(-1, -(post.views||0), -(post.leads||0));
+      };
+      card.querySelector(".biz-edit").onclick = () => openEditModal(post, card);
+      card.querySelector(".biz-repost").onclick = () => openRepostModal(post, fragment);
       card.querySelector(".biz-share").onclick = () => { alert("Copy link to share: "+window.location.href+"#"+post.id); };
 
-      box.appendChild(card);
+      fragment.appendChild(card);
     });
 
-    $("bizStatTotalViews").textContent = totalViews;
-    $("bizStatLeads").textContent = totalLeads;
+    box.appendChild(fragment);
+    updateStats(0, totalViews, totalLeads, ads.length); // initial stats
 
-  } catch (err) { console.error(err); $("bizPosts").innerHTML=`<p class="biz-empty-msg">Error loading ads.</p>`; }
+  } catch (err) {
+    console.error(err);
+    $("bizPosts").innerHTML=`<p class="biz-empty-msg">Error loading ads.</p>`;
+  }
+}
+
+function updateStats(adDelta=0, viewsDelta=0, leadsDelta=0, totalAds=null){
+  if(totalAds!==null) $("bizStatAdsCount").textContent = totalAds;
+  else $("bizStatAdsCount").textContent = parseInt($("bizStatAdsCount").textContent) + adDelta;
+  $("bizStatTotalViews").textContent = parseInt($("bizStatTotalViews").textContent) + viewsDelta;
+  $("bizStatLeads").textContent = parseInt($("bizStatLeads").textContent) + leadsDelta;
 }
 
 /* ------------------ MODAL ------------------ */
@@ -144,11 +165,10 @@ const modal = document.createElement("div");
 modal.id="bizModal"; modal.className="biz-modal"; modal.style.display="none";
 modal.innerHTML=`<div class="biz-modal-content"><span id="bizModalClose" style="cursor:pointer;font-size:20px">×</span><div id="bizModalBody"></div></div>`;
 document.body.appendChild(modal);
-
 const modalBody = $("bizModalBody");
 $("bizModalClose").onclick = ()=> hide(modal);
 
-function openEditModal(post){
+function openEditModal(post, card){
   modalBody.innerHTML = `
     <h3>Edit Ad</h3>
     <input id="editAdTitle" type="text" value="${post.title||''}" style="width:100%"/>
@@ -157,12 +177,17 @@ function openEditModal(post){
   `;
   show(modal);
   $("saveEditAdBtn").onclick = async ()=>{
-    await updateDoc(doc(db,"posts",post.id),{title:$("editAdTitle").value, description:$("editAdDesc").value});
-    hide(modal); loadBusinessPosts(auth.currentUser.uid);
+    const title = $("editAdTitle").value;
+    const desc = $("editAdDesc").value;
+    await updateDoc(doc(db,"posts",post.id),{title, description:desc});
+    hide(modal);
+    // update card in-place
+    card.querySelector(".biz-info h3").textContent = title;
+    card.querySelector(".biz-info p").textContent = desc;
   };
 }
 
-function openRepostModal(post){
+function openRepostModal(post, fragment){
   modalBody.innerHTML = `
     <h3>Repost Ad</h3>
     <input id="repostAdTitle" type="text" value="${post.title||''}" style="width:100%"/>
@@ -171,14 +196,17 @@ function openRepostModal(post){
   `;
   show(modal);
   $("saveRepostAdBtn").onclick = async ()=>{
-    await addDoc(collection(db,"posts"),{
+    const newPost = await addDoc(collection(db,"posts"),{
       businessId: auth.currentUser.uid,
       title:$("repostAdTitle").value,
       description:$("repostAdDesc").value,
       views:0,
       leads:0
     });
-    hide(modal); loadBusinessPosts(auth.currentUser.uid);
+    hide(modal);
+    const card = createPostCard({ id:newPost.id, title:$("repostAdTitle").value, description:$("repostAdDesc").value, views:0, leads:0 });
+    $("bizPosts").appendChild(card);
+    updateStats(1, 0, 0);
   };
 }
 
