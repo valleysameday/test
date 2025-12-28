@@ -63,7 +63,7 @@ const BADGE_KEYS = [
 ];
 
 /* --------------------------------------------------
-   POSTCODE HELPERS
+   RHONDDA POSTCODES
 -------------------------------------------------- */
 const RCT_POSTCODES = [
   "CF15","CF35","CF37","CF38","CF39","CF40","CF41",
@@ -71,13 +71,13 @@ const RCT_POSTCODES = [
 ];
 
 function hidePostcodeSection() {
-  const wrapper = document.querySelector(".post-location-wrapper");
-  if (wrapper) wrapper.style.display = "none";
+  const step0 = document.querySelector('.post-step[data-step="0"]');
+  if (step0) step0.style.display = "none";
 }
 
 function showPostcodeSection() {
-  const wrapper = document.querySelector(".post-location-wrapper");
-  if (wrapper) wrapper.style.display = "block";
+  const step0 = document.querySelector('.post-step[data-step="0"]');
+  if (step0) step0.style.display = "block";
 }
 
 /* --------------------------------------------------
@@ -124,10 +124,10 @@ function startPostGate() {
   const rhonddaThanks = document.getElementById("rhondda-thanks");
   const rhonddaInfo = document.getElementById("rhondda-info");
 
-  /* ---------- Determine if postcode step is needed ---------- */
-  const postcodeAlreadyOk =
-    sessionStorage.getItem("rhonddaThanksShown") === "true";
+  const categorySelect = document.getElementById("postCategory");
 
+  /* ---------- Decide if Step 0 is needed ---------- */
+  const postcodeAlreadyOk = sessionStorage.getItem("rhonddaThanksShown") === "true";
   const needsPostcodeStep = !window.currentUser && !postcodeAlreadyOk;
 
   if (!needsPostcodeStep) {
@@ -140,19 +140,104 @@ function startPostGate() {
 
   currentStep = firstStep;
 
-  /* ---------- Step navigation ---------- */
+  /* ---------- Step helpers depending on category ---------- */
+  function getCategory() {
+    return (categorySelect?.value || "").toLowerCase();
+  }
+
+  function getNextStep(step) {
+    const cat = getCategory();
+
+    if (step === 0) return 1;
+
+    if (step === 1) {
+      // For Sale / Free / Property → go to step 2
+      if (cat === "forsale" || cat === "free" || cat === "property") {
+        return 2;
+      }
+      // Jobs, Events, Community → jump straight to Ad Details
+      return 4;
+    }
+
+    if (step === 2) {
+      // Step 2 meaning:
+      // - For Sale / Free: Condition
+      // - Property: property-specific options (sale / rent)
+      if (cat === "property") {
+        // Property: after property options, go straight to Ad Details
+        return 4;
+      }
+      // For Sale / Free: go to Badges step
+      return 3;
+    }
+
+    if (step === 3) return 4; // Badges → Ad Details
+
+    return step;
+  }
+
+  function getPrevStep(step) {
+    const cat = getCategory();
+
+    if (step === 4) {
+      if (cat === "property") return 2;
+      if (cat === "forsale" || cat === "free") return 3;
+      return 1;
+    }
+
+    if (step === 3) {
+      // Coming back from Badges
+      return 2;
+    }
+
+    if (step === 2) {
+      // From Condition/Property → Category
+      return 1;
+    }
+
+    if (step === 1) {
+      // Back from Category → either Step 0 or stay
+      return firstStep;
+    }
+
+    return firstStep;
+  }
+
   function showStep(step) {
     steps.forEach((s) => {
       const stepNum = Number(s.dataset.step);
       s.style.display = stepNum === step ? "block" : "none";
     });
+
+    // Optional: hide condition section inside Step 2 for non-ForSale categories
+    const cat = getCategory();
+    const conditionBlock = document.getElementById("conditionBlock");
+    const propertyBlock = document.getElementById("propertyBlock");
+    const badgesStep = document.querySelector('.post-step[data-step="3"]');
+
+    if (conditionBlock) {
+      conditionBlock.style.display =
+        (cat === "forsale" || cat === "free") ? "block" : "none";
+    }
+
+    if (propertyBlock) {
+      propertyBlock.style.display =
+        cat === "property" ? "block" : "none";
+    }
+
+    if (badgesStep) {
+      // Only show Badges step for For Sale / Free
+      badgesStep.style.display =
+        (cat === "forsale" || cat === "free") && step === 3 ? "block" : "none";
+    }
+
     currentStep = step;
   }
 
-  // Next buttons
+  /* ---------- Bind Next / Prev buttons ---------- */
   nextBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      // Special handling: when leaving postcode step, validate it
+      // Special validation for postcode on Step 0
       if (currentStep === 0 && needsPostcodeStep) {
         const raw = (postcodeInput?.value || "").toUpperCase().trim();
         const outward = raw.slice(0, 4);
@@ -162,28 +247,32 @@ function startPostGate() {
           rhonddaWarning?.classList.remove("hidden");
           rhonddaThanks?.classList.add("hidden");
           rhonddaInfo?.classList.remove("hidden");
-          return; // don't advance
+          return; // Stay on Step 0
         } else {
           rhonddaWarning?.classList.add("hidden");
           rhonddaThanks?.classList.remove("hidden");
           rhonddaInfo?.classList.add("hidden");
           sessionStorage.setItem("rhonddaThanksShown", "true");
-
-          // gentle delay then hide section
           setTimeout(() => hidePostcodeSection(), 800);
         }
       }
 
-      showStep(currentStep + 1);
+      const next = getNextStep(currentStep);
+      showStep(next);
     });
   });
 
-  // Previous buttons
   prevBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const targetStep = Math.max(firstStep, currentStep - 1);
-      showStep(targetStep);
+      const prev = getPrevStep(currentStep);
+      showStep(prev);
     });
+  });
+
+  // When category changes, re-evaluate step layout if user navigates back/forward
+  categorySelect?.addEventListener("change", () => {
+    // If user changes category mid-flow, send them back to Step 1
+    showStep(1);
   });
 
   showStep(firstStep);
@@ -224,31 +313,64 @@ function startPostGate() {
   postSubmitBtn?.addEventListener("click", async () => {
     if (!postFeedback) return;
 
+    const category = getCategory();
     const title = document.getElementById("postTitle")?.value.trim() || "";
     const description =
       document.getElementById("postDescription")?.value.trim() || "";
-    const category = document.getElementById("postCategory")?.value || "";
     const area = document.getElementById("postArea")?.value.trim() || "";
+
+    // Standard price (for non-property)
     const priceInput =
       document.getElementById("postPrice")?.value.trim() || "";
-    const price =
-      priceInput === ""
-        ? null
-        : Number.isNaN(Number(priceInput))
-        ? null
-        : Number(priceInput);
 
-    // Condition (radio)
+    // Property-specific fields (if present in HTML)
+    const propertyListingType =
+      document.querySelector('input[name="propertyListingType"]:checked')
+        ?.value || null;
+    const salePriceInput =
+      document.getElementById("postPropertySalePrice")?.value.trim() || "";
+    const rentAmountInput =
+      document.getElementById("postPropertyRentAmount")?.value.trim() || "";
+    const rentFrequency =
+      document.getElementById("postPropertyRentFrequency")?.value || "";
+
+    // Condition only for For Sale / Free
     const condition =
-      document.querySelector('input[name="postCondition"]:checked')?.value ||
-      null;
+      (category === "forsale" || category === "free")
+        ? (document.querySelector('input[name="postCondition"]:checked')?.value || null)
+        : null;
 
-    // Badges (checkboxes)
-    const badgeEls = document.querySelectorAll('input[name="postBadge"]:checked');
-    const badges = Array.from(badgeEls)
-      .map((el) => el.value)
-      .filter((v) => BADGE_KEYS.includes(v));
+    // Badges only for For Sale / Free
+    let badges = [];
+    if (category === "forsale" || category === "free") {
+      const badgeEls = document.querySelectorAll('input[name="postBadge"]:checked');
+      badges = Array.from(badgeEls)
+        .map((el) => el.value)
+        .filter((v) => BADGE_KEYS.includes(v));
+    }
 
+    // WORK OUT PRICE LOGIC
+    let price = null;
+    let rentAmount = null;
+
+    if (category === "property") {
+      if (propertyListingType === "sale") {
+        price = salePriceInput === "" ? null : Number(salePriceInput) || null;
+      } else if (propertyListingType === "rent") {
+        rentAmount = rentAmountInput === "" ? null : Number(rentAmountInput) || null;
+        price = rentAmount; // used for cards
+      }
+    } else {
+      // For normal categories
+      price =
+        priceInput === ""
+          ? null
+          : Number.isNaN(Number(priceInput))
+          ? null
+          : Number(priceInput);
+    }
+
+    // Basic validation
     if (!title || !description || !category) {
       postFeedback.textContent = "❌ Please complete all required fields.";
       postFeedback.classList.remove("feedback-success");
@@ -258,6 +380,21 @@ function startPostGate() {
 
     if (!auth.currentUser) {
       postFeedback.textContent = "❌ Please log in first.";
+      postFeedback.classList.remove("feedback-success");
+      postFeedback.classList.add("feedback-error");
+      return;
+    }
+
+    // For property, make sure listing type is chosen
+    if (category === "property" && !propertyListingType) {
+      postFeedback.textContent = "❌ Please choose if the property is for sale or for rent.";
+      postFeedback.classList.remove("feedback-success");
+      postFeedback.classList.add("feedback-error");
+      return;
+    }
+
+    if (category === "property" && propertyListingType === "rent" && (!rentAmount || !rentFrequency)) {
+      postFeedback.textContent = "❌ Please enter the rent amount and whether it's weekly or monthly.";
       postFeedback.classList.remove("feedback-success");
       postFeedback.classList.add("feedback-error");
       return;
@@ -295,11 +432,14 @@ function startPostGate() {
         description,
         category,
         area,
-        price,
-        condition, // <-- NEW
+        price,                 // unified price field for cards
+        condition,             // only for sale/free
+        badges,                // only for sale/free
+        propertyListingType: category === "property" ? propertyListingType : null,
+        rentAmount: category === "property" ? rentAmount : null,
+        rentFrequency: category === "property" ? rentFrequency || null : null,
         imageUrl,
         imageUrls,
-        badges,
         createdAt: serverTimestamp(),
         userId: auth.currentUser.uid,
         businessId: window.firebaseUserDoc?.isBusiness
@@ -436,4 +576,4 @@ function startPostGate() {
 
     window.firebaseAuthReady = true;
   });
-}
+        }
