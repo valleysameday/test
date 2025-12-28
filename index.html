@@ -115,7 +115,9 @@
   </div>
 </div>
 
-<!-- ================= POST MODAL ================= -->
+
+
+      <!-- ================= POST MODAL ================= -->
 <div id="postModal" class="modal">
   <div class="modal-content">
     <button class="close" aria-label="Close">&times;</button>
@@ -129,7 +131,7 @@
         </div>
 
         <label for="postPostcode">Postcode</label>
-        <input type="text" id="postPostcode" placeholder="e.g. CF42" maxlength="6">
+        <input type="text" id="postPostcode" placeholder="e.g. First Part CF43" maxlength="6">
 
         <div id="rhondda-warning" class="rhondda-warning hidden">
           <p>⚠️ This website is intended for the Rhondda area. You can still post, but posts outside Rhondda may not reach local users.</p>
@@ -142,7 +144,7 @@
 
       <!-- ================= STEP 1: CATEGORY ================= -->
       <div class="post-step" data-step="1">
-        <h2>Select a Category</h2>
+        <h2>What are you posting?</h2>
 
         <select id="postCategory">
           <option value="">Choose category</option>
@@ -157,10 +159,49 @@
         <button class="post-next">Next</button>
       </div>
 
-      <!-- ================= STEP 2: BADGES (NEW) ================= -->
+      <!-- ================= STEP 2: CONDITION (NEW) ================= -->
       <div class="post-step" data-step="2">
+        <h2>Condition</h2>
+        <p class="hint-text">Helps buyers understand the item quickly.</p>
+
+        <label class="checkbox-label">
+          <input type="radio" name="postCondition" value="brandnew">
+          🆕 Brand New
+        </label>
+
+        <label class="checkbox-label">
+          <input type="radio" name="postCondition" value="likenew">
+          ✨ Like New
+        </label>
+
+        <label class="checkbox-label">
+          <input type="radio" name="postCondition" value="good">
+          👍 Good Condition
+        </label>
+
+        <label class="checkbox-label">
+          <input type="radio" name="postCondition" value="fair">
+          🙂 Fair Condition
+        </label>
+
+        <label class="checkbox-label">
+          <input type="radio" name="postCondition" value="needswork">
+          🔧 Needs Attention
+        </label>
+
+        <label class="checkbox-label">
+          <input type="radio" name="postCondition" value="refurbished">
+          ♻️ Refurbished / Upcycled
+        </label>
+
+        <button class="post-prev">Back</button>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- ================= STEP 3: BADGES ================= -->
+      <div class="post-step" data-step="3">
         <h2>Extra Options</h2>
-        <p class="hint-text">Choose any that apply. These show as icons on your card.</p>
+        <p class="hint-text">These show as icons on your card.</p>
 
         <label class="checkbox-label">
           <input type="checkbox" name="postBadge" value="delivery">
@@ -196,8 +237,8 @@
         <button class="post-next">Next</button>
       </div>
 
-      <!-- ================= STEP 3: AD DETAILS ================= -->
-      <div class="post-step" data-step="3">
+      <!-- ================= STEP 4: AD DETAILS ================= -->
+      <div class="post-step" data-step="4">
         <h2>Ad Details</h2>
 
         <input type="text" id="postTitle" placeholder="Title" required>
@@ -224,6 +265,8 @@
     <p id="postFeedback" class="feedback-text"></p>
   </div>
 </div>
+
+      
 <!-- ================= FIXED ACTION BAR ================= -->
 <div class="action-bar">
 
