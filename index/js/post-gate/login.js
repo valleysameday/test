@@ -114,7 +114,7 @@ export async function initLogin() {
 
     const businessSnap = await getDoc(doc(db, "businesses", user.uid));
     if (businessSnap.exists()) location.href = "/business-dashboard.html";
-    else location.href = "/customer-dashboard"; // regular user dashboard
+    else location.href = "/customer-dashboard.html"; // regular user dashboard
   });
 }
 
