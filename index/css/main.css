@@ -385,10 +385,12 @@ header img.logo {
   font-size: 0.8rem;
   font-weight: 600;
 }
+/* Allow full‑bleed gallery */
 .view-post-page {
-  max-width: 1200px;
-  margin: 16px auto 80px;
-  padding: 0 12px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
 }
 
 .view-post-layout {
