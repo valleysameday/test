@@ -8,56 +8,59 @@ import {
   increment
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-/* ---------------- CONSTANTS ---------------- */
-const PLACEHOLDER_IMG = "index/images/image-webholder.webp";
+/* ============================
+   CONSTANTS
+============================ */
+const PLACEHOLDER_IMG = "/index/images/image-webholder.webp";
 
-let auth, db;
+let auth;
+let db;
 
-/* ---------------- INIT ---------------- */
+/* ============================
+   INIT
+============================ */
 getFirebase().then(fb => {
   auth = fb.auth;
   db = fb.db;
+
   console.log("🔥 Firebase ready in view-post");
 
-  // Use window.selectedPostId or fallback to sessionStorage
-  const postId = window.selectedPostId || sessionStorage.getItem("viewPostId");
+  // Prefer global, fallback to sessionStorage
+  const postId =
+    window.selectedPostId ||
+    sessionStorage.getItem("viewPostId");
 
-  if (postId) {
-    console.log("▶ Auto-loading post:", postId);
-    window.selectedPostId = postId; // ensure global is set
-    loadPost();
-  } else {
-    console.warn("⚠ No selectedPostId set when view-post loaded, redirecting home");
-    window.navigateToHome(); // redirect or load home view
+  if (!postId) {
+    console.warn("⚠ No post ID found → returning home");
+    window.loadView("home");
+    return;
   }
+
+  // Lock ID globally for safety
+  window.selectedPostId = postId;
+
+  loadPost(postId);
 });
 
-/* ---------------- MAIN ---------------- */
-async function loadPost() {
-  console.log("🟢 loadPost() called");
+/* ============================
+   MAIN LOADER
+============================ */
+async function loadPost(postId) {
+  console.log("🟢 Loading post:", postId);
 
   const container = document.getElementById("viewPostContent");
   if (!container) {
-    console.error("❌ viewPostContent not found");
+    console.error("❌ #viewPostContent not found");
     return;
   }
 
   container.innerHTML = "";
 
-  if (!window.selectedPostId) {
-    console.warn("❌ No selectedPostId");
-    container.textContent = "Post not found.";
-    return;
-  }
-
-  console.log("📌 Loading post ID:", window.selectedPostId);
-
   let snap;
   try {
-    const ref = doc(db, "posts", window.selectedPostId);
-    snap = await getDoc(ref);
-  } catch (e) {
-    console.error("🔥 Firestore read failed:", e);
+    snap = await getDoc(doc(db, "posts", postId));
+  } catch (err) {
+    console.error("🔥 Firestore error:", err);
     container.textContent = "Failed to load post.";
     return;
   }
@@ -71,44 +74,48 @@ async function loadPost() {
   const post = snap.data();
   console.log("📦 Post data:", post);
 
-  /* Increment views */
-  try {
-    await updateDoc(doc(db, "posts", window.selectedPostId), {
-      views: increment(1)
-    });
-    console.log("👁️ View count incremented");
-  } catch (e) {
-    console.warn("⚠️ Failed to increment views:", e);
-  }
+  /* ============================
+     INCREMENT VIEWS (non-blocking)
+  ============================ */
+  updateDoc(doc(db, "posts", postId), {
+    views: increment(1)
+  }).catch(() => {
+    console.warn("⚠ View count update failed");
+  });
 
-  /* Images */
-  const images = post.imageUrls?.length
-    ? post.imageUrls
-    : post.imageUrl
-      ? [post.imageUrl]
-      : [PLACEHOLDER_IMG];
+  /* ============================
+     IMAGES
+  ============================ */
+  const images =
+    post.imageUrls?.length
+      ? post.imageUrls
+      : post.imageUrl
+        ? [post.imageUrl]
+        : [PLACEHOLDER_IMG];
 
-  console.log("🖼 Images:", images);
-
-  /* Seller */
+  /* ============================
+     SELLER
+  ============================ */
   let seller = null;
+
   if (post.userId) {
     try {
       const userSnap = await getDoc(doc(db, "users", post.userId));
       if (userSnap.exists()) {
         seller = userSnap.data();
-        console.log("👤 Seller loaded:", seller);
       }
-    } catch (e) {
-      console.warn("⚠️ Seller load failed:", e);
+    } catch {
+      console.warn("⚠ Seller lookup failed");
     }
   }
 
-  /* ---------------- BUILD UI ---------------- */
+  /* ============================
+     BUILD UI
+  ============================ */
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
-  /* LEFT — GALLERY */
+  /* ---------- LEFT: GALLERY ---------- */
   const left = document.createElement("div");
   left.className = "view-post-left";
 
@@ -121,9 +128,9 @@ async function loadPost() {
 
     const img = document.createElement("img");
     img.src = url || PLACEHOLDER_IMG;
-    img.onerror = () => img.src = PLACEHOLDER_IMG;
     img.alt = `${post.title || "Post"} image ${i + 1}`;
     img.loading = "lazy";
+    img.onerror = () => (img.src = PLACEHOLDER_IMG);
 
     slide.appendChild(img);
     gallery.appendChild(slide);
@@ -132,7 +139,7 @@ async function loadPost() {
   left.appendChild(gallery);
   layout.appendChild(left);
 
-  /* RIGHT — CONTENT */
+  /* ---------- RIGHT: CONTENT ---------- */
   const right = document.createElement("div");
   right.className = "view-post-right";
 
@@ -143,36 +150,39 @@ async function loadPost() {
   const avatar = document.createElement("img");
   avatar.className = "seller-header-avatar";
   avatar.src = seller?.photoURL || PLACEHOLDER_IMG;
-  avatar.onerror = () => avatar.src = PLACEHOLDER_IMG;
+  avatar.onerror = () => (avatar.src = PLACEHOLDER_IMG);
 
   const info = document.createElement("div");
   info.className = "seller-header-info";
-
   info.innerHTML = `
-    <p class="posted-by">Posted by <strong>${seller?.name || "Local Seller"}</strong></p>
-    <p class="posted-on">Posted on Rhondda Noticeboard</p>
+    <p class="posted-by">
+      Posted by <strong>${seller?.name || "Local member"}</strong>
+    </p>
+    <p class="posted-on">Rhondda Noticeboard</p>
   `;
 
   header.append(avatar, info);
   right.appendChild(header);
 
   /* Title */
-  const h1 = document.createElement("h1");
-  h1.textContent = post.title || "Untitled post";
-  right.appendChild(h1);
+  const title = document.createElement("h1");
+  title.textContent = post.title || "Untitled post";
+  right.appendChild(title);
 
   /* Price */
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
-    price.textContent = post.price === 0 ? "FREE" : `£${post.price}`;
+    price.textContent =
+      post.price === 0 ? "FREE" : `£${post.price}`;
     right.appendChild(price);
   }
 
   /* Description */
   const desc = document.createElement("p");
   desc.className = "view-post-desc";
-  desc.textContent = post.description || "No description provided.";
+  desc.textContent =
+    post.description || "No description provided.";
   right.appendChild(desc);
 
   /* Back button */
@@ -180,8 +190,8 @@ async function loadPost() {
   backBtn.className = "secondary-btn";
   backBtn.textContent = "← Back to home";
   backBtn.onclick = () => {
-    console.log("↩ Back clicked");
-    window.navigateToHome();
+    console.log("↩ Back to home");
+    window.loadView("home");
   };
 
   right.appendChild(backBtn);
@@ -189,5 +199,5 @@ async function loadPost() {
   layout.appendChild(right);
   container.appendChild(layout);
 
-  console.log("✅ Post rendered successfully");
+  console.log("✅ View post rendered");
 }
