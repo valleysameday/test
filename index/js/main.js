@@ -17,9 +17,18 @@ export async function loadView(view) {
   const app = document.getElementById("app");
   if (!app) return;
 
-  const res = await fetch(`/views/${view}.html`);
-  app.innerHTML = await res.text();
+  // Load HTML
+  try {
+    const res = await fetch(`/views/${view}.html`);
+    if (!res.ok) throw new Error("View not found");
+    app.innerHTML = await res.text();
+  } catch (err) {
+    console.error(`❌ Failed to load view: ${view}`, err);
+    app.innerHTML = `<p>View not found: ${view}</p>`;
+    return;
+  }
 
+  // Load JS module
   const mod = await ensureViewScript(view);
   if (typeof mod.init === "function") mod.init();
 }
@@ -30,8 +39,8 @@ window.loadView = loadView;
    APP START
 ========================== */
 function startApp() {
-  initUI();
-  loadView("home");
+  initUI();           // Initialize modals & UI
+  loadView("home");   // Load homepage by default
 }
 
 getFirebase().then(() => {
@@ -43,17 +52,19 @@ getFirebase().then(() => {
 });
 
 /* ==========================
-   GLOBAL NAV
+   DASHBOARD NAVIGATION
 ========================== */
 window.navigateToDashboard = () => {
   if (!window.currentUser) {
-    loadView("home");
+    // If not logged in, fallback to home
+    window.loadView("home");
     return;
   }
 
-  loadView(
-    window.firebaseUserDoc?.isBusiness
-      ? "business-dashboard"
-      : "customer-dashboard"
-  );
+  // Decide which dashboard to load
+  const view = window.firebaseUserDoc?.isBusiness
+    ? "business-dashboard"
+    : "customer-dashboard";
+
+  window.loadView(view);
 };
