@@ -1,4 +1,4 @@
-// login.js
+// index/js/post-gate/login.js
 import { getFirebase } from '/index/js/firebase/init.js';
 import { 
   browserLocalPersistence, 
@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail, 
   signOut 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let auth, db, storage;
 
@@ -23,7 +24,7 @@ let idleTimer;
 function resetIdleTimer() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(async () => {
-    if (auth.currentUser) {
+    if (auth?.currentUser) {
       alert("You have been logged out due to inactivity.");
       await signOut(auth);
       location.href = "/";
@@ -43,7 +44,7 @@ async function loginUser() {
   if (!email || !password) return $("loginFeedback").textContent = "Please enter email & password";
 
   try {
-    await setPersistence(auth, browserLocalPersistence); // persist across tabs
+    await setPersistence(auth, browserLocalPersistence);
     await signInWithEmailAndPassword(auth, email, password);
     $("loginFeedback").textContent = "";
   } catch(err) {
@@ -61,10 +62,12 @@ async function signupUser() {
   if (!email || !password) return $("signupFeedback").textContent = "Please enter email & password";
 
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    // Optional: create default Firestore user doc
-    const user = auth.currentUser;
-    await db.collection(isBusiness ? "businesses" : "users").doc(user.uid).set({ email, createdAt: Date.now() });
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    const userData = { email, createdAt: Date.now() };
+    await setDoc(doc(db, isBusiness ? "businesses" : "users", user.uid), userData);
+
     $("signupFeedback").textContent = "Account created ✅";
   } catch(err) {
     console.error("Signup failed:", err);
@@ -79,7 +82,7 @@ async function sendResetEmail() {
 
   try {
     await sendPasswordResetEmail(auth, email);
-    openScreen('resetConfirm'); // show confirmation modal
+    openScreen('resetConfirm');
   } catch(err) {
     console.error("Reset failed:", err);
     alert("Password reset failed: " + err.message);
@@ -93,7 +96,8 @@ async function logoutUser() {
 }
 
 // ---------------- INIT ----------------
-getFirebase().then(fb => {
+export async function initLogin() {
+  const fb = await getFirebase();
   auth = fb.auth;
   db = fb.db;
   storage = fb.storage;
@@ -104,20 +108,15 @@ getFirebase().then(fb => {
   $("forgotSubmit")?.addEventListener("click", sendResetEmail);
 
   // auto redirect if logged in
-  onAuthStateChanged(auth, user => {
-    resetIdleTimer(); // start idle timer
+  onAuthStateChanged(auth, async user => {
+    resetIdleTimer();
     if (!user) return;
 
-    // redirect logic
-    if (window.location.pathname.includes("login") || window.location.pathname === "/" || window.location.pathname.includes("signup")) {
-      // For business accounts, redirect to dashboard
-      db.collection("businesses").doc(user.uid).get().then(docSnap => {
-        if (docSnap.exists()) location.href = "/business-dashboard.html";
-        else location.href = "/account"; // regular user account
-      });
-    }
+    const businessSnap = await getDoc(doc(db, "businesses", user.uid));
+    if (businessSnap.exists()) location.href = "/business-dashboard.html";
+    else location.href = "/account"; // regular user dashboard
   });
-});
+}
 
 // ---------------- UTILITY ----------------
 function openScreen(screen) {
