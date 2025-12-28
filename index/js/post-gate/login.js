@@ -1,8 +1,9 @@
 import { getFirebase } from "/index/js/firebase/init.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 export function initLogin() {
-  const loginBtn = document.getElementById("loginSubmit"); // ✅ matches HTML
+  const loginBtn = document.getElementById("loginSubmit");
   const feedback = document.getElementById("loginFeedback");
   const emailInput = document.getElementById("loginEmail");
   const passwordInput = document.getElementById("loginPassword");
@@ -13,26 +14,12 @@ export function initLogin() {
     feedback.className = `feedback-text ${type}`;
   }
 
-  function focusEmptyInput() {
-    if (!emailInput.value.trim()) {
-      emailInput.focus();
-    } else if (!passwordInput.value) {
-      passwordInput.focus();
-    }
-  }
-
-  // Clear feedback when typing
-  [emailInput, passwordInput].forEach(input => {
-    input?.addEventListener("input", () => showFeedback("", "info"));
-  });
-
   loginBtn?.addEventListener("click", async () => {
     const email = emailInput?.value.trim();
     const password = passwordInput?.value;
 
     if (!email || !password) {
       showFeedback("⚠️ Please enter both email and password.", "error");
-      focusEmptyInput();
       return;
     }
 
@@ -42,18 +29,17 @@ export function initLogin() {
     try {
       const { auth, db } = await getFirebase();
 
-      // Log out previous user first to avoid wrong dashboard
+      // Log out previous user first
       if (auth.currentUser) {
-        await auth.signOut();
+        await signOut(auth);
         window.currentUser = null;
         window.firebaseUserDoc = null;
       }
 
-      // Sign in
-      const cred = await auth.signInWithEmailAndPassword(email, password);
+      // ✅ Modular API usage
+      const cred = await signInWithEmailAndPassword(auth, email, password);
       window.currentUser = cred.user;
 
-      // Get user document
       const userDocSnap = await getDoc(doc(db, "users", cred.user.uid));
       if (!userDocSnap.exists()) {
         showFeedback("❌ User record not found. Contact support.", "error");
@@ -68,14 +54,11 @@ export function initLogin() {
         "success"
       );
 
-      // Close modal and navigate to dashboard
       setTimeout(() => {
         window.closeScreens?.();
-
         if (typeof window.navigateToDashboard === "function") {
           window.navigateToDashboard();
         }
-
         loginBtn.disabled = false;
         emailInput.value = "";
         passwordInput.value = "";
@@ -94,7 +77,6 @@ export function initLogin() {
 
       showFeedback(message, "error");
       loginBtn.disabled = false;
-      focusEmptyInput();
     }
   });
 }
