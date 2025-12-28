@@ -49,31 +49,53 @@
 .engage-btn:active { transform:scale(0.97); }
 .secondary-btn { width:100%; padding:12px; border-radius:12px; background:#f1f5f9; color:var(--brand-dark); font-weight:600; border:1px solid var(--border-soft); cursor:pointer; margin-bottom:8px; }
 
-/* TRUE FULL-WIDTH GALLERY */
+/* ============================================================
+   TRUE FULL‑BLEED GALLERY (WORKS WITH YOUR REAL HTML STRUCTURE)
+   ============================================================ */
+
+/* Remove the boxed card around the gallery */
+.view-post-left {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Make the gallery break out of the grid and fill the screen */
 .gallery {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding: 0;
-  border-radius: 0;
-  background: #000;
-  overflow: hidden;
+  width: 100vw !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: #000 !important;
+  overflow: hidden !important;
+  aspect-ratio: auto !important;
 }
 
-/* The sliding container */
-.gallery-track {
-  display: flex;
-  width: 100vw;
-  height: auto;
-  overflow: hidden;
+/* Your real structure uses .gallery-slide, not .gallery-track */
+.gallery-slide {
+  width: 100vw !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
 
-/* Each image */
-.gallery-track img {
-  width: 100vw;
-  height: auto;
-  object-fit: cover;
-  flex-shrink: 0;
-  display: block;
-  border-radius: 0;
+/* Make each image full‑bleed */
+.gallery-slide img {
+  width: 100vw !important;
+  height: auto !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure the layout above/below doesn’t clip the gallery */
+.view-post-layout {
+  overflow: visible !important;
 }
