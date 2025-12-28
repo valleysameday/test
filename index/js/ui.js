@@ -1,4 +1,8 @@
+// /index/js/ui.js
+
 let uiInit = false;
+let loginLoaded = false;
+let postGateLoaded = false;
 
 export function initUI() {
   if (uiInit) return;
@@ -15,29 +19,46 @@ export function initUI() {
   async function openScreen(name) {
     closeAll();
     if (!routes[name]) return;
+
     document.body.classList.add("modal-open");
     routes[name].style.display = "flex";
 
-    // Lazy load post-gate only for post modal
-    if (name === "post") {
-      import("/index/js/post-gate/post-gate.js").then(m => m.initPostGate());
+    // Lazy-load post gate ONCE
+    if (name === "post" && !postGateLoaded) {
+      postGateLoaded = true;
+      import("/index/js/post-gate/post-gate.js")
+        .then(m => m?.initPostGate?.())
+        .catch(err => console.error("Post gate load failed:", err));
     }
 
-    // Lazy load login logic only for login modal
-    if (name === "login") {
-      import("/index/js/post-gate/login.js").then(m => m.initLogin());
+    // Lazy-load login ONCE
+    if (name === "login" && !loginLoaded) {
+      loginLoaded = true;
+      import("/index/js/post-gate/login.js")
+        .then(m => {
+          if (typeof m.initLogin === "function") {
+            m.initLogin();
+          } else {
+            console.error("login.js loaded but initLogin not found");
+          }
+        })
+        .catch(err => console.error("Login module load failed:", err));
     }
   }
 
   function closeAll() {
     document.body.classList.remove("modal-open");
-    Object.values(routes).forEach(m => m && (m.style.display = "none"));
+    Object.values(routes).forEach(m => {
+      if (m) m.style.display = "none";
+    });
   }
 
+  // Expose globally for other modules
   window.openScreen = openScreen;
   window.closeScreens = closeAll;
 
   /* ---------------- ACTION BUTTONS ---------------- */
+
   document.getElementById("openPostModal")?.addEventListener("click", e => {
     e.preventDefault();
     openScreen("post");
@@ -48,25 +69,27 @@ export function initUI() {
     openScreen("login");
   });
 
-  document.getElementById("openAccountModal")?.addEventListener("click", async e => {
+  document.getElementById("openAccountModal")?.addEventListener("click", e => {
     e.preventDefault();
 
     if (!window.currentUser) {
-      // Not logged in → show login modal
       openScreen("login");
       return;
     }
 
-    // Logged in → navigate to dashboard
+    // SPA dashboard navigation
     if (typeof window.navigateToDashboard === "function") {
       window.navigateToDashboard();
     }
   });
 
   /* ---------------- CLOSE MODALS ---------------- */
+
   document.addEventListener("click", e => {
-    if (e.target.classList.contains("modal") ||
-        e.target.classList.contains("close")) {
+    if (
+      e.target.classList.contains("modal") ||
+      e.target.classList.contains("close")
+    ) {
       closeAll();
     }
   });
