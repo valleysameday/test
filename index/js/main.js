@@ -54,17 +54,17 @@ getFirebase().then(() => {
 /* ==========================
    DASHBOARD NAVIGATION
 ========================== */
-window.navigateToDashboard = () => {
+window.navigateToDashboard = (forcedType = null) => {
   if (!window.currentUser) {
-    // If not logged in, fallback to home
     window.loadView("home");
     return;
   }
 
-  // Decide which dashboard to load
-  const view = window.firebaseUserDoc?.isBusiness
-    ? "business-dashboard"
-    : "customer-dashboard";
+  const type = forcedType || window.currentAccountType;
 
-  window.loadView(view);
+  if (type === "business") {
+    window.loadView("business-dashboard");
+  } else {
+    window.loadView("customer-dashboard");
+  }
 };
