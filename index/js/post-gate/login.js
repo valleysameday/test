@@ -1,98 +1,81 @@
-console.log("✅ login.js loaded");
-
+// /index/js/login.js
 import { getFirebase } from "/index/js/firebase/init.js";
-import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-let auth, db;
+const loginBtn = document.getElementById("loginBtn");
+const feedback = document.getElementById("loginFeedback");
+const emailInput = document.getElementById("loginEmail");
+const passwordInput = document.getElementById("loginPassword");
 
-async function init() {
-  const fb = await getFirebase();
-  auth = fb.auth;
-  db = fb.db;
-
-  bindLoginForm();
-  monitorAuth();
+// Helper to show inline feedback
+function showFeedback(message, type = "info") {
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.className = `login-feedback ${type}`;
 }
 
-/* --------------------------
-   Bind login form submit
--------------------------- */
-function bindLoginForm() {
-  const form = document.getElementById("loginForm");
-  const feedback = document.getElementById("loginFeedback");
+// Clear feedback when user starts typing
+[emailInput, passwordInput].forEach(input => {
+  input?.addEventListener("input", () => showFeedback("", "info"));
+});
 
-  if (!form) return;
+loginBtn?.addEventListener("click", async () => {
+  const email = emailInput?.value.trim();
+  const password = passwordInput?.value;
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    feedback.textContent = "Logging in…";
+  if (!email || !password) {
+    showFeedback("⚠️ Please enter both email and password.", "error");
+    return;
+  }
 
-    const email = form.email?.value.trim();
-    const password = form.password?.value;
+  showFeedback("⏳ Logging in…", "loading");
 
-    if (!email || !password) {
-      feedback.textContent = "❌ Enter email and password.";
+  try {
+    const { auth, db } = await getFirebase();
+
+    // Sign in with Firebase Auth
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    window.currentUser = cred.user;
+
+    // Fetch user document from Firestore
+    const userDocSnap = await getDoc(doc(db, "users", cred.user.uid));
+    if (!userDocSnap.exists()) {
+      showFeedback("❌ User record not found. Contact support.", "error");
       return;
     }
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
+    window.firebaseUserDoc = userDocSnap.data();
 
-      // Fetch the user document
-      const userSnap = await getDoc(doc(db, "users", uid));
+    // Show success and redirect
+    showFeedback(`✅ Welcome back, ${window.firebaseUserDoc.name || "there"}! Redirecting…`, "success");
 
-      if (!userSnap.exists()) {
-        feedback.textContent = "❌ User doc not found.";
-        console.warn("User doc missing:", uid);
-        return;
+    setTimeout(() => {
+      window.closeScreens?.(); // Close login modal
+      if (typeof window.navigateToDashboard === "function") {
+        window.navigateToDashboard(); // Load the correct dashboard
       }
+    }, 800);
 
-      const userData = userSnap.data();
+  } catch (err) {
+    console.error("Login failed:", err);
 
-      // Store globally for SPA
-      window.currentUser = auth.currentUser;
-      window.firebaseUserDoc = userData;
+    let message = "❌ Login failed. Please try again.";
 
-      feedback.textContent = "✅ Logged in! Redirecting…";
-
-      setTimeout(() => {
-        window.closeScreens?.();
-        window.navigateToDashboard?.();
-      }, 500);
-
-    } catch (err) {
-      console.error("Login failed:", err);
-      feedback.textContent = "❌ Invalid email or password.";
+    switch (err.code) {
+      case "auth/wrong-password":
+        message = "❌ Wrong password. Check and try again.";
+        break;
+      case "auth/user-not-found":
+        message = "❌ No account found with this email.";
+        break;
+      case "auth/too-many-requests":
+        message = "⚠️ Too many attempts. Try again later.";
+        break;
+      case "auth/invalid-email":
+        message = "❌ That doesn't look like a valid email.";
+        break;
     }
-  });
-}
 
-/* --------------------------
-   Monitor auth state changes
--------------------------- */
-function monitorAuth() {
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      window.currentUser = user;
-
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) window.firebaseUserDoc = snap.data();
-      } catch (err) {
-        console.warn("Failed to load user doc:", err);
-      }
-    } else {
-      window.currentUser = null;
-      window.firebaseUserDoc = null;
-    }
-  });
-}
-
-init();
-export { init as initLogin };
+    showFeedback(message, "error");
+  }
+});
