@@ -99,3 +99,52 @@
 .view-post-layout {
   overflow: visible !important;
 }
+/* ============================================================
+   PERFECT CONSISTENT GALLERY — EVERY IMAGE SAME SIZE
+   ============================================================ */
+
+/* Remove card wrapper around gallery */
+.view-post-left {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Full-width gallery container */
+.gallery {
+  width: 100vw !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: #000;
+  overflow: hidden;
+  
+  /* This is the magic: consistent height */
+  aspect-ratio: 16 / 9; /* change to 4/3 or 1/1 if you prefer */
+}
+
+/* Each slide matches the gallery size */
+.gallery-slide {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Every image fills the exact same space */
+.gallery-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* ensures consistent size */
+  display: block;
+  border-radius: 0 !important;
+}
+
+/* Ensure layout below sits nicely */
+.view-post-layout {
+  overflow: visible !important;
+  margin-top: 20px;
+}
