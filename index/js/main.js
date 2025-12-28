@@ -1,83 +1,59 @@
-import { getFirebase } from '/index/js/firebase/init.js';
-import { initUIRouter } from '/index/js/ui-router.js';
-import '/index/js/post-gate.js';
+import { getFirebase } from "/index/js/firebase/init.js";
+import { initUI } from "/index/js/ui.js";
 
-/* =====================================================
-   VIEW SCRIPT REGISTRY
-===================================================== */
+/* ==========================
+   SPA VIEW LOADER
+========================== */
 const viewModules = {};
 
-/* =====================================================
-   LOAD VIEW SCRIPT ONCE
-===================================================== */
 async function ensureViewScript(view) {
   if (viewModules[view]) return viewModules[view];
-
   const mod = await import(`/views/${view}.js`);
   viewModules[view] = mod;
   return mod;
 }
 
-/* =====================================================
-   SPA VIEW LOADER
-===================================================== */
 export async function loadView(view) {
-  const app = document.getElementById('app');
+  const app = document.getElementById("app");
   if (!app) return;
 
-  // Load HTML
   const res = await fetch(`/views/${view}.html`);
   app.innerHTML = await res.text();
 
-  // Load JS module (once)
   const mod = await ensureViewScript(view);
-
-  // 🔑 Run init EVERY time DOM is injected
-  if (typeof mod.init === 'function') {
-    mod.init();
-  }
+  if (typeof mod.init === "function") mod.init();
 }
 
 window.loadView = loadView;
 
-/* =====================================================
+/* ==========================
    APP START
-===================================================== */
+========================== */
 function startApp() {
-  initUIRouter();
-  loadView('home');
+  initUI();
+  loadView("home");
 }
 
 getFirebase().then(() => {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startApp, { once: true });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startApp, { once: true });
   } else {
     startApp();
   }
 });
 
-/* =====================================================
+/* ==========================
    GLOBAL NAV
-===================================================== */
-window.navigateToHome = () => {
-  window.closeScreens?.();
-  loadView('home');
-};
-
-/* =====================================================
-   DASHBOARD NAVIGATION
-===================================================== */
-window.navigateToDashboard = async () => {
-  const user = window.currentUser;
-  if (!user) {
-    loadView('home');
+========================== */
+window.navigateToDashboard = () => {
+  if (!window.currentUser) {
+    loadView("home");
     return;
   }
 
-  // Example role logic (adjust field names if needed)
-  if (user.role === 'business') {
-    loadView('business-dashboard');
-  } else {
-    loadView('customer-dashboard');
-  }
+  loadView(
+    window.firebaseUserDoc?.isBusiness
+      ? "business-dashboard"
+      : "customer-dashboard"
+  );
 };
