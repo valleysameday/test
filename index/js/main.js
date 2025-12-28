@@ -63,3 +63,21 @@ window.navigateToHome = () => {
   window.closeScreens?.();
   loadView('home');
 };
+
+/* =====================================================
+   DASHBOARD NAVIGATION
+===================================================== */
+window.navigateToDashboard = async () => {
+  const user = window.currentUser;
+  if (!user) {
+    loadView('home');
+    return;
+  }
+
+  // Example role logic (adjust field names if needed)
+  if (user.role === 'business') {
+    loadView('business-dashboard');
+  } else {
+    loadView('customer-dashboard');
+  }
+};
