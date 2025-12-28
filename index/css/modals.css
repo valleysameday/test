@@ -175,3 +175,38 @@ body.modal-open main {
   color: #666;
   margin-top: 4px;
 }
+.rhondda-info {
+  background: #e0f7fa;
+  border-left: 4px solid #00bcd4;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #006064;
+}
+
+.rhondda-warning {
+  background: #fff4e5;
+  border-left: 4px solid #ff7e5f;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #7a4b00;
+  transition: all 0.3s ease;
+}
+
+.rhondda-thanks {
+  background: #e6ffed;
+  border-left: 4px solid #16a34a;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #065f46;
+  transition: all 0.3s ease;
+}
+
+.hidden {
+  display: none;
+}
