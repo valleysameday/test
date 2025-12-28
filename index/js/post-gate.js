@@ -27,7 +27,7 @@ import {
 let auth, db, storage;
 
 /* --------------------------------------------------
-   IMAGE COMPRESSION (MULTI-IMAGE SAFE)
+   IMAGE COMPRESSION
 -------------------------------------------------- */
 function compressImage(file, maxWidth = 1200, quality = 0.7) {
   return new Promise((resolve) => {
@@ -50,18 +50,35 @@ function compressImage(file, maxWidth = 1200, quality = 0.7) {
 }
 
 /* --------------------------------------------------
-   BADGES CONFIG
-   (Checkboxes in form with name="postBadge" value="delivery", etc.)
+   BADGE KEYS
 -------------------------------------------------- */
 const BADGE_KEYS = [
-  "delivery",   // 🚚 Delivery available
-  "collection", // 📦 Collection only
-  "assembly",   // 🛠️ Assembly help
-  "heavy",      // 🏋️ Heavy item
-  "trusted",    // ⭐ Trusted seller
-  "boxed",      // 🎁 Boxed / sealed
-  "new"         // 🆕 New condition
+  "delivery",
+  "collection",
+  "assembly",
+  "heavy",
+  "trusted",
+  "boxed",
+  "new"
 ];
+
+/* --------------------------------------------------
+   POSTCODE HELPERS
+-------------------------------------------------- */
+const RCT_POSTCODES = [
+  "CF15","CF35","CF37","CF38","CF39","CF40","CF41",
+  "CF42","CF43","CF44","CF45","CF72"
+];
+
+function hidePostcodeSection() {
+  const wrapper = document.querySelector(".post-location-wrapper");
+  if (wrapper) wrapper.style.display = "none";
+}
+
+function showPostcodeSection() {
+  const wrapper = document.querySelector(".post-location-wrapper");
+  if (wrapper) wrapper.style.display = "block";
+}
 
 /* --------------------------------------------------
    STARTUP
@@ -76,15 +93,14 @@ getFirebase().then((fb) => {
   } else {
     startPostGate();
   }
-
-  setupPostcodeGuard();
 });
 
 /* --------------------------------------------------
    MAIN POST GATE FLOW
 -------------------------------------------------- */
 function startPostGate() {
-  let currentStep = 1;
+  let currentStep = 0;
+  let firstStep = 0;
 
   const steps = document.querySelectorAll(".post-step");
   const nextBtns = document.querySelectorAll(".post-next");
@@ -103,29 +119,76 @@ function startPostGate() {
   const loginFeedback = document.getElementById("loginFeedback");
   const signupFeedback = document.getElementById("signupFeedback");
 
-  /* ---------- Step Navigation ---------- */
+  const postcodeInput = document.getElementById("postPostcode");
+  const rhonddaWarning = document.getElementById("rhondda-warning");
+  const rhonddaThanks = document.getElementById("rhondda-thanks");
+  const rhonddaInfo = document.getElementById("rhondda-info");
+
+  /* ---------- Determine if postcode step is needed ---------- */
+  const postcodeAlreadyOk =
+    sessionStorage.getItem("rhonddaThanksShown") === "true";
+
+  const needsPostcodeStep = !window.currentUser && !postcodeAlreadyOk;
+
+  if (!needsPostcodeStep) {
+    hidePostcodeSection();
+    firstStep = 1;
+  } else {
+    showPostcodeSection();
+    firstStep = 0;
+  }
+
+  currentStep = firstStep;
+
+  /* ---------- Step navigation ---------- */
   function showStep(step) {
     steps.forEach((s) => {
-      s.style.display = s.dataset.step == step ? "block" : "none";
+      const stepNum = Number(s.dataset.step);
+      s.style.display = stepNum === step ? "block" : "none";
     });
     currentStep = step;
   }
 
+  // Next buttons
   nextBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
+      // Special handling: when leaving postcode step, validate it
+      if (currentStep === 0 && needsPostcodeStep) {
+        const raw = (postcodeInput?.value || "").toUpperCase().trim();
+        const outward = raw.slice(0, 4);
+        const isRct = RCT_POSTCODES.includes(outward);
+
+        if (!isRct) {
+          rhonddaWarning?.classList.remove("hidden");
+          rhonddaThanks?.classList.add("hidden");
+          rhonddaInfo?.classList.remove("hidden");
+          return; // don't advance
+        } else {
+          rhonddaWarning?.classList.add("hidden");
+          rhonddaThanks?.classList.remove("hidden");
+          rhonddaInfo?.classList.add("hidden");
+          sessionStorage.setItem("rhonddaThanksShown", "true");
+
+          // gentle delay then hide section
+          setTimeout(() => hidePostcodeSection(), 800);
+        }
+      }
+
       showStep(currentStep + 1);
     });
   });
 
+  // Previous buttons
   prevBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      showStep(currentStep - 1);
+      const targetStep = Math.max(firstStep, currentStep - 1);
+      showStep(targetStep);
     });
   });
 
-  showStep(1);
+  showStep(firstStep);
 
-  /* ---------- Image Picker (Multiple) ---------- */
+  /* ---------- Image picker (multiple) ---------- */
   chooseImageBtn?.addEventListener("click", () => {
     postImageInput?.click();
   });
@@ -133,7 +196,6 @@ function startPostGate() {
   postImageInput?.addEventListener("change", () => {
     const files = Array.from(postImageInput.files || []);
     previewBox.innerHTML = "";
-
     if (!files.length) return;
 
     const info = document.createElement("p");
@@ -158,7 +220,7 @@ function startPostGate() {
     previewBox.appendChild(list);
   });
 
-  /* ---------- Submit Post ---------- */
+  /* ---------- Submit post ---------- */
   postSubmitBtn?.addEventListener("click", async () => {
     if (!postFeedback) return;
 
@@ -170,15 +232,23 @@ function startPostGate() {
     const priceInput =
       document.getElementById("postPrice")?.value.trim() || "";
     const price =
-      priceInput === "" ? null : Number.isNaN(Number(priceInput)) ? null : Number(priceInput);
+      priceInput === ""
+        ? null
+        : Number.isNaN(Number(priceInput))
+        ? null
+        : Number(priceInput);
 
-    // Badges from checkboxes
+    // Condition (radio)
+    const condition =
+      document.querySelector('input[name="postCondition"]:checked')?.value ||
+      null;
+
+    // Badges (checkboxes)
     const badgeEls = document.querySelectorAll('input[name="postBadge"]:checked');
     const badges = Array.from(badgeEls)
       .map((el) => el.value)
       .filter((v) => BADGE_KEYS.includes(v));
 
-    // Basic validation
     if (!title || !description || !category) {
       postFeedback.textContent = "❌ Please complete all required fields.";
       postFeedback.classList.remove("feedback-success");
@@ -226,9 +296,10 @@ function startPostGate() {
         category,
         area,
         price,
+        condition, // <-- NEW
         imageUrl,
         imageUrls,
-        badges, // <-- NEW: array of badge keys for cards
+        badges,
         createdAt: serverTimestamp(),
         userId: auth.currentUser.uid,
         businessId: window.firebaseUserDoc?.isBusiness
@@ -255,7 +326,8 @@ function startPostGate() {
     if (!loginFeedback) return;
 
     const email = document.getElementById("loginEmail")?.value.trim() || "";
-    const password = document.getElementById("loginPassword")?.value || "";
+    const password =
+      document.getElementById("loginPassword")?.value || "";
 
     loginFeedback.textContent = "Checking details…";
     loginFeedback.classList.remove("feedback-success", "feedback-error");
@@ -312,7 +384,8 @@ function startPostGate() {
       }, 600);
     } catch (err) {
       console.error("Signup failed:", err);
-      signupFeedback.textContent = "❌ " + (err.message || "Signup failed.");
+      signupFeedback.textContent =
+        "❌ " + (err.message || "Signup failed.");
       signupFeedback.classList.add("feedback-error");
     }
   });
@@ -320,8 +393,8 @@ function startPostGate() {
   /* ---------- FORGOT PASSWORD ---------- */
   forgotSubmit?.addEventListener("click", () => {
     if (!forgotEmail) return;
-
     const email = forgotEmail.value.trim();
+
     if (!email) {
       if (loginFeedback) {
         loginFeedback.textContent = "❌ Please enter your email.";
@@ -347,7 +420,9 @@ function startPostGate() {
   /* ---------- AUTH STATE ---------- */
   onAuthStateChanged(auth, async (user) => {
     window.currentUser = user || null;
+
     if (user) {
+      hidePostcodeSection(); // logged in → never show postcode step again
       try {
         const snap = await getDoc(doc(db, "users", user.uid));
         window.firebaseUserDoc = snap.exists() ? snap.data() : null;
@@ -358,58 +433,7 @@ function startPostGate() {
     } else {
       window.firebaseUserDoc = null;
     }
+
     window.firebaseAuthReady = true;
-  });
-}
-
-/* --------------------------------------------------
-   RHONDDA POSTCODE GATE
-   (Lock non-RCT users unless logged in or valid postcode)
--------------------------------------------------- */
-function setupPostcodeGuard() {
-  const postcodeInput = document.getElementById("postPostcode");
-  const rhonddaWarning = document.getElementById("rhondda-warning");
-  const rhonddaThanks = document.getElementById("rhondda-thanks");
-  const rhonddaInfo = document.getElementById("rhondda-info");
-
-  // RCT / Rhondda outer codes
-  const rctPostcodes = [
-    "CF15",
-    "CF35",
-    "CF37",
-    "CF38",
-    "CF39",
-    "CF40",
-    "CF41",
-    "CF42",
-    "CF43",
-    "CF44",
-    "CF45",
-    "CF72"
-  ];
-
-  // Restore "thanks" if already shown
-  if (sessionStorage.getItem("rhonddaThanksShown")) {
-    rhonddaThanks?.classList.remove("hidden");
-    rhonddaWarning?.classList.add("hidden");
-    rhonddaInfo?.classList.add("hidden");
-  }
-
-  postcodeInput?.addEventListener("input", (e) => {
-    const raw = e.target.value.toUpperCase().trim();
-    const outward = raw.slice(0, 4); // CF40, CF39, etc.
-
-    const isRct = rctPostcodes.includes(outward);
-
-    if (!window.currentUser && !isRct) {
-      rhonddaWarning?.classList.remove("hidden");
-      rhonddaThanks?.classList.add("hidden");
-      rhonddaInfo?.classList.remove("hidden");
-    } else if (isRct || window.currentUser) {
-      rhonddaWarning?.classList.add("hidden");
-      rhonddaThanks?.classList.remove("hidden");
-      rhonddaInfo?.classList.add("hidden");
-      sessionStorage.setItem("rhonddaThanksShown", "true");
-    }
   });
 }
