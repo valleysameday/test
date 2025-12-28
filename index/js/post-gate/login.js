@@ -95,3 +95,4 @@ function monitorAuth() {
 }
 
 init();
+export { init as initLogin };
