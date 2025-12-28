@@ -1,63 +1,97 @@
+console.log("✅ login.js loaded");
+
 import { getFirebase } from "/index/js/firebase/init.js";
-import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-let auth;
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-export function initLogin() {
-  console.log("🔑 Login module init");
+let auth, db;
 
-  if (auth) return; // already initialized
+async function init() {
+  const fb = await getFirebase();
+  auth = fb.auth;
+  db = fb.db;
 
-  getFirebase().then(fb => {
-    auth = fb.auth;
+  bindLoginForm();
+  monitorAuth();
+}
 
-    // Monitor auth state
-    onAuthStateChanged(auth, async user => {
-      window.currentUser = user || null;
-
-      if (user) {
-        // Load user doc from Firestore if needed
-        try {
-          const db = fb.db;
-          const docSnap = await db.collection("users").doc(user.uid).get();
-          window.firebaseUserDoc = docSnap.exists ? docSnap.data() : null;
-        } catch (e) {
-          console.warn("Failed to load user doc", e);
-        }
-      } else {
-        window.firebaseUserDoc = null;
-      }
-    });
-  });
-
-  const loginForm = document.getElementById("loginForm");
+/* --------------------------
+   Bind login form submit
+-------------------------- */
+function bindLoginForm() {
+  const form = document.getElementById("loginForm");
   const feedback = document.getElementById("loginFeedback");
 
-  loginForm?.addEventListener("submit", async e => {
-    e.preventDefault();
+  if (!form) return;
 
-    const email = loginForm.email.value.trim();
-    const password = loginForm.password.value;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    feedback.textContent = "Logging in…";
+
+    const email = form.email?.value.trim();
+    const password = form.password?.value;
 
     if (!email || !password) {
-      feedback.textContent = "❌ Fill in email and password.";
+      feedback.textContent = "❌ Enter email and password.";
       return;
     }
 
-    feedback.textContent = "Logging in…";
-
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      feedback.textContent = "✅ Logged in!";
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+
+      // Fetch the user document
+      const userSnap = await getDoc(doc(db, "users", uid));
+
+      if (!userSnap.exists()) {
+        feedback.textContent = "❌ User doc not found.";
+        console.warn("User doc missing:", uid);
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      // Store globally for SPA
+      window.currentUser = auth.currentUser;
+      window.firebaseUserDoc = userData;
+
+      feedback.textContent = "✅ Logged in! Redirecting…";
+
       setTimeout(() => {
-        window.closeScreens(); // close login modal
-        if (typeof window.navigateToDashboard === "function") {
-          window.navigateToDashboard();
-        }
+        window.closeScreens?.();
+        window.navigateToDashboard?.();
       }, 500);
+
     } catch (err) {
-      console.error(err);
-      feedback.textContent = "❌ Login failed. Check credentials.";
+      console.error("Login failed:", err);
+      feedback.textContent = "❌ Invalid email or password.";
     }
   });
 }
+
+/* --------------------------
+   Monitor auth state changes
+-------------------------- */
+function monitorAuth() {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      window.currentUser = user;
+
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) window.firebaseUserDoc = snap.data();
+      } catch (err) {
+        console.warn("Failed to load user doc:", err);
+      }
+    } else {
+      window.currentUser = null;
+      window.firebaseUserDoc = null;
+    }
+  });
+}
+
+init();
