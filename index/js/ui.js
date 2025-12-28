@@ -12,7 +12,7 @@ export function initUI() {
     resetConfirm: document.getElementById("resetConfirmModal")
   };
 
-  function openScreen(name) {
+  async function openScreen(name) {
     closeAll();
     if (!routes[name]) return;
     document.body.classList.add("modal-open");
@@ -21,6 +21,11 @@ export function initUI() {
     // Lazy load post-gate only for post modal
     if (name === "post") {
       import("/index/js/post-gate/post-gate.js").then(m => m.initPostGate());
+    }
+
+    // Lazy load login logic only for login modal
+    if (name === "login") {
+      import("/index/js/post-gate/login.js").then(m => m.initLogin());
     }
   }
 
@@ -43,16 +48,18 @@ export function initUI() {
     openScreen("login");
   });
 
-  document.getElementById("openAccountModal")?.addEventListener("click", e => {
+  document.getElementById("openAccountModal")?.addEventListener("click", async e => {
     e.preventDefault();
 
     if (!window.currentUser) {
-      openScreen("login");   // not logged in → show login
+      // Not logged in → show login modal
+      openScreen("login");
       return;
     }
 
+    // Logged in → navigate to dashboard
     if (typeof window.navigateToDashboard === "function") {
-      window.navigateToDashboard();  // logged in → go to dashboard
+      window.navigateToDashboard();
     }
   });
 
