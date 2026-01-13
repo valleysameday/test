@@ -22,15 +22,17 @@ export function initPostSubmit() {
       return;
     }
 
+    /* ============================
+       BASIC FIELDS
+    ============================ */
     const title = document.getElementById("postTitle")?.value.trim();
     const description = document.getElementById("postDescription")?.value.trim();
     const category = document.getElementById("postCategory")?.value;
     const area = document.getElementById("postArea")?.value.trim() || null;
-const phone = document.getElementById("postPhone")?.value.trim() || null;
-const allowWhatsApp = document.getElementById("postWhatsApp")?.checked || false;
 
-data.phone = phone;
-data.allowWhatsApp = allowWhatsApp;
+    const phone = document.getElementById("postPhone")?.value.trim() || null;
+    const allowWhatsApp = document.getElementById("postWhatsApp")?.checked || false;
+
     if (!title || !description || !category) {
       feedback.textContent = "❌ Complete required fields.";
       return;
@@ -62,15 +64,16 @@ data.allowWhatsApp = allowWhatsApp;
     ].map(b => b.value);
 
     /* ============================
-       CATEGORY-SPECIFIC FIELDS
+       BASE DATA OBJECT
     ============================ */
     const data = {
       title,
       description,
       category,
       area,
-      badges,
       phone,
+      allowWhatsApp,
+      badges,
       imageUrl: imageUrls[0] || null,
       imageUrls,
       createdAt: serverTimestamp(),
@@ -80,16 +83,20 @@ data.allowWhatsApp = allowWhatsApp;
         : null
     };
 
-    /* ----- FOR SALE / FREE ----- */
-    if (category === "forsale" || category === "free") {
-      const condition = document.querySelector("input[name='postCondition']:checked")?.value || null;
-      const price = document.getElementById("postPrice")?.value || null;
+    /* ============================
+       CATEGORY-SPECIFIC FIELDS
+    ============================ */
 
-      data.condition = condition;
+    // FOR SALE / FREE
+    if (category === "forsale" || category === "free") {
+      data.condition =
+        document.querySelector("input[name='postCondition']:checked")?.value || null;
+
+      const price = document.getElementById("postPrice")?.value || null;
       data.price = price ? Number(price) : null;
     }
 
-    /* ----- PROPERTY ----- */
+    // PROPERTY
     if (category === "property") {
       data.propertyListingType =
         document.querySelector("input[name='propertyListingType']:checked")?.value || null;
@@ -113,7 +120,7 @@ data.allowWhatsApp = allowWhatsApp;
         document.getElementById("propertyEPC")?.value || null;
     }
 
-    /* ----- JOBS ----- */
+    // JOBS
     if (category === "jobs") {
       data.jobType = document.getElementById("jobType")?.value || null;
       data.jobSalary = document.getElementById("jobSalary")?.value || null;
@@ -121,14 +128,14 @@ data.allowWhatsApp = allowWhatsApp;
       data.jobCompany = document.getElementById("jobCompany")?.value || null;
     }
 
-    /* ----- EVENTS ----- */
+    // EVENTS
     if (category === "events") {
       data.eventDate = document.getElementById("eventDate")?.value || null;
       data.eventTime = document.getElementById("eventTime")?.value || null;
       data.eventLocation = document.getElementById("eventLocation")?.value || null;
     }
 
-    /* ----- COMMUNITY ----- */
+    // COMMUNITY
     if (category === "community") {
       data.communityTopic = document.getElementById("communityTopic")?.value || null;
     }
