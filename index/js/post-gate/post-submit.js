@@ -26,6 +26,7 @@ export function initPostSubmit() {
     const description = document.getElementById("postDescription")?.value.trim();
     const category = document.getElementById("postCategory")?.value;
     const area = document.getElementById("postArea")?.value.trim() || null;
+const phone = document.getElementById("postPhone")?.value.trim() || null;
 
     if (!title || !description || !category) {
       feedback.textContent = "❌ Complete required fields.";
@@ -66,6 +67,7 @@ export function initPostSubmit() {
       category,
       area,
       badges,
+      phone,
       imageUrl: imageUrls[0] || null,
       imageUrls,
       createdAt: serverTimestamp(),
