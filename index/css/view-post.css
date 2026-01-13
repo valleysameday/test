@@ -167,6 +167,24 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+.view-post-badges {
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.post-badge {
+  background: #f3f3f3;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.view-post-details p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
 
 /* ============================================================
    SELLER HEADER
