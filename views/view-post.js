@@ -119,6 +119,90 @@ function renderPost(container, post) {
     ${post.location ? `<p><strong>Location</strong>${post.location}</p>` : ""}
   `;
   right.appendChild(meta);
+  /* ---------- BADGES ---------- */
+if (post.badges?.length) {
+  const badgeWrap = document.createElement("div");
+  badgeWrap.className = "view-post-badges";
+
+  const icons = {
+    garden: "🌿 Garden",
+    parking: "🚗 Parking",
+    pets: "🐾 Pets Allowed",
+    urgent: "⚡ Urgent",
+    remote: "🏠 Remote Work",
+    tickets: "🎟️ Tickets Required",
+    freeevent: "🎉 Free Event",
+    delivery: "🚚 Delivery",
+    collection: "📦 Collection Only",
+    assembly: "🛠️ Assembly",
+    heavy: "🏋️ Heavy Item",
+    boxed: "🎁 Boxed",
+    new: "🆕 New"
+  };
+
+  post.badges.forEach(b => {
+    const badge = document.createElement("span");
+    badge.className = "post-badge";
+    badge.textContent = icons[b] || b;
+    badgeWrap.appendChild(badge);
+  });
+
+  right.appendChild(badgeWrap);
+}
+
+  /* ---------- CATEGORY SPECIFIC FIELDS ---------- */
+const details = document.createElement("div");
+details.className = "view-post-details";
+
+switch (post.category) {
+
+  /* ----- PROPERTY ----- */
+  case "property":
+    details.innerHTML = `
+      ${post.propertyListingType ? `<p><strong>Listing:</strong> ${post.propertyListingType}</p>` : ""}
+      ${post.propertySalePrice ? `<p><strong>Sale Price:</strong> £${post.propertySalePrice}</p>` : ""}
+      ${post.propertyRentAmount ? `<p><strong>Rent:</strong> £${post.propertyRentAmount} ${post.propertyRentFrequency || ""}</p>` : ""}
+      ${post.propertyBedrooms ? `<p><strong>Bedrooms:</strong> ${post.propertyBedrooms}</p>` : ""}
+      ${post.propertyBathrooms ? `<p><strong>Bathrooms:</strong> ${post.propertyBathrooms}</p>` : ""}
+      ${post.propertyEPC ? `<p><strong>EPC Rating:</strong> ${post.propertyEPC}</p>` : ""}
+    `;
+    break;
+
+  /* ----- JOBS ----- */
+  case "jobs":
+    details.innerHTML = `
+      ${post.jobType ? `<p><strong>Job Type:</strong> ${post.jobType}</p>` : ""}
+      ${post.jobSalary ? `<p><strong>Salary:</strong> £${post.jobSalary} ${post.jobSalaryFrequency || ""}</p>` : ""}
+      ${post.jobCompany ? `<p><strong>Company:</strong> ${post.jobCompany}</p>` : ""}
+    `;
+    break;
+
+  /* ----- EVENTS ----- */
+  case "events":
+    details.innerHTML = `
+      ${post.eventDate ? `<p><strong>Date:</strong> ${post.eventDate}</p>` : ""}
+      ${post.eventTime ? `<p><strong>Time:</strong> ${post.eventTime}</p>` : ""}
+      ${post.eventLocation ? `<p><strong>Location:</strong> ${post.eventLocation}</p>` : ""}
+    `;
+    break;
+
+  /* ----- COMMUNITY ----- */
+  case "community":
+    details.innerHTML = `
+      ${post.communityTopic ? `<p><strong>Topic:</strong> ${post.communityTopic}</p>` : ""}
+    `;
+    break;
+
+  /* ----- FOR SALE / FREE ----- */
+  case "forsale":
+  case "free":
+    details.innerHTML = `
+      ${post.condition ? `<p><strong>Condition:</strong> ${post.condition}</p>` : ""}
+    `;
+    break;
+}
+
+right.appendChild(details);
 
   // Description
   const desc = document.createElement("p");
