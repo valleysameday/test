@@ -5,7 +5,7 @@ let loginLoaded = false;
 let postGateLoaded = false;
 
 /* ==========================
-   LOAD POSTING MODAL (HTML)
+   LOAD POSTING MODAL + CSS
 ========================== */
 async function loadPostModal() {
   // Already loaded?
@@ -18,9 +18,20 @@ async function loadPostModal() {
   }
 
   try {
+    // Load HTML
     const res = await fetch("/posting/postingModal.html");
     const html = await res.text();
     container.insertAdjacentHTML("beforeend", html);
+
+    // Load CSS once
+    if (!document.getElementById("postModalCSS")) {
+      const css = document.createElement("link");
+      css.id = "postModalCSS";
+      css.rel = "stylesheet";
+      css.href = "/posting/post.css";
+      document.head.appendChild(css);
+    }
+
   } catch (err) {
     console.error("Failed to load postingModal.html", err);
   }
@@ -34,7 +45,7 @@ export function initUI() {
   uiInit = true;
 
   const routes = {
-    post: null, // will be loaded dynamically
+    post: null, // loaded dynamically
     login: document.getElementById("loginModal"),
     signup: document.getElementById("signupModal"),
     forgot: document.getElementById("forgotPasswordModal"),
@@ -47,9 +58,9 @@ export function initUI() {
   async function openScreen(name) {
     closeAll();
 
-    /* ---- POST MODAL (dynamic) ---- */
+    /* ---- POST MODAL ---- */
     if (name === "post") {
-      await loadPostModal(); // load HTML first
+      await loadPostModal();
 
       routes.post = document.getElementById("postModal");
       if (!routes.post) {
@@ -71,7 +82,7 @@ export function initUI() {
       return;
     }
 
-    /* ---- OTHER MODALS (static) ---- */
+    /* ---- OTHER STATIC MODALS ---- */
     if (!routes[name]) return;
 
     document.body.classList.add("modal-open");
