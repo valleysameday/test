@@ -1,0 +1,35 @@
+<h2>Property Details</h2>
+
+<p class="hint-text">Is this place for sale or for rent?</p>
+
+<label class="checkbox-label">
+  <input type="radio" name="propertyListingType" value="sale">
+  🏡 For Sale
+</label>
+
+<label class="checkbox-label">
+  <input type="radio" name="propertyListingType" value="rent">
+  🏘️ For Rent
+</label>
+
+<div id="propertySaleGroup">
+  <label>Sale price</label>
+  <input type="number" id="postPropertySalePrice" placeholder="e.g. 120000" min="0" step="1000">
+</div>
+
+<div id="propertyRentGroup">
+  <label>Rent amount</label>
+  <input type="number" id="postPropertyRentAmount" placeholder="e.g. 650" min="0" step="10">
+
+  <label>Frequency</label>
+  <select id="postPropertyRentFrequency">
+    <option value="">Choose</option>
+    <option value="pcm">Per month (PCM)</option>
+    <option value="pw">Per week</option>
+  </select>
+</div>
+
+<h3>More Details</h3>
+<input type="number" id="propertyBedrooms" placeholder="Bedrooms">
+<input type="number" id="propertyBathrooms" placeholder="Bathrooms">
+<input type="text" id="propertyEPC" placeholder="EPC Rating (optional)">
