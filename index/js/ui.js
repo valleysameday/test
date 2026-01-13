@@ -4,32 +4,78 @@ let uiInit = false;
 let loginLoaded = false;
 let postGateLoaded = false;
 
+/* ==========================
+   LOAD POSTING MODAL (HTML)
+========================== */
+async function loadPostModal() {
+  // Already loaded?
+  if (document.getElementById("postModal")) return;
+
+  const container = document.getElementById("modalContainer");
+  if (!container) {
+    console.error("modalContainer not found in index.html");
+    return;
+  }
+
+  try {
+    const res = await fetch("/posting/postingModal.html");
+    const html = await res.text();
+    container.insertAdjacentHTML("beforeend", html);
+  } catch (err) {
+    console.error("Failed to load postingModal.html", err);
+  }
+}
+
+/* ==========================
+   INIT UI
+========================== */
 export function initUI() {
   if (uiInit) return;
   uiInit = true;
 
   const routes = {
-    post: document.getElementById("postModal"),
+    post: null, // will be loaded dynamically
     login: document.getElementById("loginModal"),
     signup: document.getElementById("signupModal"),
     forgot: document.getElementById("forgotPasswordModal"),
     resetConfirm: document.getElementById("resetConfirmModal")
   };
 
+  /* ==========================
+     OPEN SCREEN
+  ========================== */
   async function openScreen(name) {
     closeAll();
+
+    /* ---- POST MODAL (dynamic) ---- */
+    if (name === "post") {
+      await loadPostModal(); // load HTML first
+
+      routes.post = document.getElementById("postModal");
+      if (!routes.post) {
+        console.error("postModal failed to load");
+        return;
+      }
+
+      document.body.classList.add("modal-open");
+      routes.post.style.display = "flex";
+
+      // Lazy-load post gate ONCE
+      if (!postGateLoaded) {
+        postGateLoaded = true;
+        import("/index/js/post-gate/post-gate.js")
+          .then(m => m?.initPostGate?.())
+          .catch(err => console.error("Post gate load failed:", err));
+      }
+
+      return;
+    }
+
+    /* ---- OTHER MODALS (static) ---- */
     if (!routes[name]) return;
 
     document.body.classList.add("modal-open");
     routes[name].style.display = "flex";
-
-    // Lazy-load post gate ONCE
-    if (name === "post" && !postGateLoaded) {
-      postGateLoaded = true;
-      import("/index/js/post-gate/post-gate.js")
-        .then(m => m?.initPostGate?.())
-        .catch(err => console.error("Post gate load failed:", err));
-    }
 
     // Lazy-load login ONCE
     if (name === "login" && !loginLoaded) {
@@ -46,18 +92,24 @@ export function initUI() {
     }
   }
 
+  /* ==========================
+     CLOSE ALL MODALS
+  ========================== */
   function closeAll() {
     document.body.classList.remove("modal-open");
+
     Object.values(routes).forEach(m => {
       if (m) m.style.display = "none";
     });
   }
 
-  // Expose globally for other modules
+  // Expose globally
   window.openScreen = openScreen;
   window.closeScreens = closeAll;
 
-  /* ---------------- ACTION BUTTONS ---------------- */
+  /* ==========================
+     ACTION BUTTONS
+  ========================== */
 
   document.getElementById("openPostModal")?.addEventListener("click", e => {
     e.preventDefault();
@@ -77,14 +129,14 @@ export function initUI() {
       return;
     }
 
-    // SPA dashboard navigation
     if (typeof window.navigateToDashboard === "function") {
       window.navigateToDashboard();
     }
   });
 
-  /* ---------------- CLOSE MODALS ---------------- */
-
+  /* ==========================
+     CLOSE MODALS ON BACKDROP
+  ========================== */
   document.addEventListener("click", e => {
     if (
       e.target.classList.contains("modal") ||
