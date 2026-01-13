@@ -210,20 +210,28 @@ right.appendChild(details);
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-  // Actions
-  if (post.phone) {
-    const callBtn = document.createElement("a");
-    callBtn.href = `tel:${post.phone}`;
-    callBtn.className = "engage-btn";
-    callBtn.textContent = "Call";
-    right.appendChild(callBtn);
+// Actions
+if (post.phone) {
+  // Call button
+  const callBtn = document.createElement("a");
+  callBtn.href = `tel:${post.phone}`;
+  callBtn.className = "engage-btn";
+  callBtn.textContent = "Call";
+  right.appendChild(callBtn);
 
+  // WhatsApp button (only if allowed + valid mobile)
+  const cleaned = post.phone.replace(/\D/g, ""); // remove spaces/dashes
+
+  const isMobile = /^07\d{8,9}$/.test(cleaned); // UK mobile check
+
+  if (post.allowWhatsApp && isMobile) {
     const waBtn = document.createElement("a");
-    waBtn.href = `https://wa.me/${post.phone}`;
+    waBtn.href = `https://wa.me/44${cleaned.slice(1)}`; // convert 07 → +447
     waBtn.className = "secondary-btn";
     waBtn.textContent = "WhatsApp";
     right.appendChild(waBtn);
   }
+}
 
   // Footer buttons
   const footer = document.createElement("div");
