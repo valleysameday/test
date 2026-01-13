@@ -49,118 +49,16 @@
         <button class="post-next">Next</button>
       </div>
 
-      <!-- ================= STEP 2: CONDITION OR PROPERTY ================= -->
+      <!-- ================= STEP 2: CATEGORY FIELDS (TEMPLATES) ================= -->
       <div class="post-step" data-step="2">
-
-        <!-- CONDITION BLOCK -->
-        <div id="conditionBlock">
-          <h2>Condition</h2>
-          <p class="hint-text">Helps buyers understand the item quickly.</p>
-
-          <label class="checkbox-label">
-            <input type="radio" name="postCondition" value="brandnew">
-            🆕 Brand New
-          </label>
-
-          <label class="checkbox-label">
-            <input type="radio" name="postCondition" value="likenew">
-            ✨ Like New
-          </label>
-
-          <label class="checkbox-label">
-            <input type="radio" name="postCondition" value="good">
-            👍 Good Condition
-          </label>
-
-          <label class="checkbox-label">
-            <input type="radio" name="postCondition" value="fair">
-            🙂 Fair Condition
-          </label>
-
-          <label class="checkbox-label">
-            <input type="radio" name="postCondition" value="needswork">
-            🔧 Needs Attention
-          </label>
-
-          <label class="checkbox-label">
-            <input type="radio" name="postCondition" value="refurbished">
-            ♻️ Refurbished / Upcycled
-          </label>
-        </div>
-
-        <!-- PROPERTY BLOCK -->
-        <div id="propertyBlock" style="display:none;">
-          <h2>Property details</h2>
-
-          <p class="hint-text">Is this place for sale or for rent?</p>
-
-          <label class="checkbox-label">
-            <input type="radio" name="propertyListingType" value="sale">
-            🏡 For Sale
-          </label>
-
-          <label class="checkbox-label">
-            <input type="radio" name="propertyListingType" value="rent">
-            🏘️ For Rent
-          </label>
-
-          <div id="propertySaleGroup">
-            <label>Sale price</label>
-            <input type="number" id="postPropertySalePrice" placeholder="e.g. 120000" min="0" step="1000">
-          </div>
-
-          <div id="propertyRentGroup">
-            <label>Rent amount</label>
-            <input type="number" id="postPropertyRentAmount" placeholder="e.g. 650" min="0" step="10">
-
-            <label>Frequency</label>
-            <select id="postPropertyRentFrequency">
-              <option value="">Choose</option>
-              <option value="pcm">Per month (PCM)</option>
-              <option value="pw">Per week</option>
-            </select>
-          </div>
-        </div>
-
+        <div id="categoryFields"></div>
         <button class="post-prev">Back</button>
         <button class="post-next">Next</button>
       </div>
 
-      <!-- ================= STEP 3: BADGES ================= -->
+      <!-- ================= STEP 3: CATEGORY EXTRAS (TEMPLATES) ================= -->
       <div class="post-step" data-step="3">
-        <h2>Extra Options</h2>
-        <p class="hint-text">These show as icons on your card.</p>
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="postBadge" value="delivery">
-          🚚 Delivery Available
-        </label>
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="postBadge" value="collection">
-          📦 Collection Only
-        </label>
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="postBadge" value="assembly">
-          🛠️ Assembly / Setup Help
-        </label>
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="postBadge" value="heavy">
-          🏋️ Heavy Item
-        </label>
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="postBadge" value="boxed">
-          🎁 Boxed / Sealed
-        </label>
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="postBadge" value="new">
-          🆕 New Condition
-        </label>
-
+        <div id="categoryExtras"></div>
         <button class="post-prev">Back</button>
         <button class="post-next">Next</button>
       </div>
