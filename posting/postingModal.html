@@ -1,0 +1,195 @@
+<!-- ================= POST MODAL ================= -->
+<div id="postModal" class="modal">
+  <div class="modal-content">
+    <button class="close" aria-label="Close">&times;</button>
+
+    <div id="postFlow">
+
+      <!-- ================= STEP 0: POSTCODE CHECK ================= -->
+      <div class="post-step" data-step="0">
+        <h2>Your Postcode</h2>
+
+        <label for="postPostcode" class="tooltip-wrapper">
+          First part of your postcode
+          <span class="tooltip-icon">ⓘ</span>
+          <span class="tooltip-text">
+            We only use the first part of your postcode (e.g. CF43) to keep
+            Rhondda Noticeboard local and help match posts to nearby people.
+          </span>
+        </label>
+
+        <input type="text" id="postPostcode" placeholder="e.g. CF43" maxlength="6">
+
+        <div id="rhondda-warning" class="rhondda-warning hidden">
+          <p>⚠️ This website is intended for the Rhondda area. You can still post, but posts outside Rhondda may not reach local users.</p>
+        </div>
+
+        <div id="rhondda-thanks" class="rhondda-thanks hidden">
+          <p>✅ Thank you! You won’t be asked for your postcode again during this session.</p>
+        </div>
+
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- ================= STEP 1: CATEGORY ================= -->
+      <div class="post-step" data-step="1">
+        <h2>What are you posting?</h2>
+
+        <select id="postCategory">
+          <option value="">Choose category</option>
+          <option value="forsale">For Sale</option>
+          <option value="jobs">Jobs & Services</option>
+          <option value="property">Property</option>
+          <option value="events">Events</option>
+          <option value="community">Community</option>
+          <option value="free">Free</option>
+        </select>
+
+        <button class="post-prev">Back</button>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- ================= STEP 2: CONDITION OR PROPERTY ================= -->
+      <div class="post-step" data-step="2">
+
+        <!-- CONDITION BLOCK -->
+        <div id="conditionBlock">
+          <h2>Condition</h2>
+          <p class="hint-text">Helps buyers understand the item quickly.</p>
+
+          <label class="checkbox-label">
+            <input type="radio" name="postCondition" value="brandnew">
+            🆕 Brand New
+          </label>
+
+          <label class="checkbox-label">
+            <input type="radio" name="postCondition" value="likenew">
+            ✨ Like New
+          </label>
+
+          <label class="checkbox-label">
+            <input type="radio" name="postCondition" value="good">
+            👍 Good Condition
+          </label>
+
+          <label class="checkbox-label">
+            <input type="radio" name="postCondition" value="fair">
+            🙂 Fair Condition
+          </label>
+
+          <label class="checkbox-label">
+            <input type="radio" name="postCondition" value="needswork">
+            🔧 Needs Attention
+          </label>
+
+          <label class="checkbox-label">
+            <input type="radio" name="postCondition" value="refurbished">
+            ♻️ Refurbished / Upcycled
+          </label>
+        </div>
+
+        <!-- PROPERTY BLOCK -->
+        <div id="propertyBlock" style="display:none;">
+          <h2>Property details</h2>
+
+          <p class="hint-text">Is this place for sale or for rent?</p>
+
+          <label class="checkbox-label">
+            <input type="radio" name="propertyListingType" value="sale">
+            🏡 For Sale
+          </label>
+
+          <label class="checkbox-label">
+            <input type="radio" name="propertyListingType" value="rent">
+            🏘️ For Rent
+          </label>
+
+          <div id="propertySaleGroup">
+            <label>Sale price</label>
+            <input type="number" id="postPropertySalePrice" placeholder="e.g. 120000" min="0" step="1000">
+          </div>
+
+          <div id="propertyRentGroup">
+            <label>Rent amount</label>
+            <input type="number" id="postPropertyRentAmount" placeholder="e.g. 650" min="0" step="10">
+
+            <label>Frequency</label>
+            <select id="postPropertyRentFrequency">
+              <option value="">Choose</option>
+              <option value="pcm">Per month (PCM)</option>
+              <option value="pw">Per week</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="post-prev">Back</button>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- ================= STEP 3: BADGES ================= -->
+      <div class="post-step" data-step="3">
+        <h2>Extra Options</h2>
+        <p class="hint-text">These show as icons on your card.</p>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="delivery">
+          🚚 Delivery Available
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="collection">
+          📦 Collection Only
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="assembly">
+          🛠️ Assembly / Setup Help
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="heavy">
+          🏋️ Heavy Item
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="boxed">
+          🎁 Boxed / Sealed
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" name="postBadge" value="new">
+          🆕 New Condition
+        </label>
+
+        <button class="post-prev">Back</button>
+        <button class="post-next">Next</button>
+      </div>
+
+      <!-- ================= STEP 4: AD DETAILS ================= -->
+      <div class="post-step" data-step="4">
+        <h2>Ad Details</h2>
+
+        <input type="text" id="postTitle" placeholder="Title" required>
+
+        <textarea id="postDescription" rows="4" placeholder="Description" required></textarea>
+
+        <label>Price (optional)</label>
+        <input type="number" id="postPrice" placeholder="0" min="0" step="0.01">
+
+        <label>Your Area</label>
+        <input type="text" id="postArea" placeholder="e.g. Ferndale, Pentre, Tonypandy">
+
+        <label>Add Photos</label>
+        <button id="chooseImageBtn" class="ghost-btn">Choose Photos</button>
+        <input type="file" id="postImage" accept="image/*" multiple style="display:none;">
+        <div id="imagePreview" class="image-preview-grid"></div>
+
+        <button class="post-prev">Back</button>
+        <button id="postSubmitBtn">Submit Ad</button>
+      </div>
+
+    </div>
+
+    <p id="postFeedback" class="feedback-text"></p>
+  </div>
+</div>
