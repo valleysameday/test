@@ -27,7 +27,10 @@ export function initPostSubmit() {
     const category = document.getElementById("postCategory")?.value;
     const area = document.getElementById("postArea")?.value.trim() || null;
 const phone = document.getElementById("postPhone")?.value.trim() || null;
+const allowWhatsApp = document.getElementById("postWhatsApp")?.checked || false;
 
+data.phone = phone;
+data.allowWhatsApp = allowWhatsApp;
     if (!title || !description || !category) {
       feedback.textContent = "❌ Complete required fields.";
       return;
