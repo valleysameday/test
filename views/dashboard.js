@@ -56,6 +56,25 @@ export async function init() {
 
   await loadMyAds();
   await Messaging.initMessaging();
+  const openConv = sessionStorage.getItem("openConversationId");
+if (openConv) {
+  sessionStorage.removeItem("openConversationId");
+
+  // Load conversation details
+  const { db } = await getFirebase();
+  const convSnap = await getDoc(doc(db, "conversations", openConv));
+  const data = convSnap.data();
+
+  const uid = window.currentUser.uid;
+  const otherUserId = data.participants.find(id => id !== uid);
+
+  // Load other user's name
+  const userSnap = await getDoc(doc(db, "users", otherUserId));
+  const otherName = userSnap.data()?.firstName || "User";
+
+  // Open conversation
+  Messaging.openConversation(openConv, otherName, otherUserId);
+}
   showSection("myAds");
 }
 
