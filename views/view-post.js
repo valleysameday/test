@@ -5,10 +5,15 @@ import {
   doc,
   getDoc,
   updateDoc,
-  increment
+  increment,
+  query,
+  collection,
+  where,
+  getDocs,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-const PLACEHOLDER_IMG = "/index/images/image-webholder.webp";
+const PLACEHOLDER_IMG = "/index/images/webholder.svg";
 let db;
 
 /* =====================================================
@@ -18,6 +23,9 @@ export async function init() {
   console.log("🔁 view-post init()");
   const fb = await getFirebase();
   db = fb.db;
+
+  // Wait for Firebase Auth to finish
+  await waitForAuth();
 
   const postId =
     sessionStorage.getItem("viewPostId") ||
@@ -30,6 +38,20 @@ export async function init() {
 
   window.selectedPostId = postId;
   await loadPost(postId);
+}
+
+/* =====================================================
+   WAIT FOR AUTH
+===================================================== */
+function waitForAuth() {
+  return new Promise(resolve => {
+    const check = setInterval(() => {
+      if (window.currentUser) {
+        clearInterval(check);
+        resolve();
+      }
+    }, 50);
+  });
 }
 
 /* =====================================================
@@ -56,25 +78,9 @@ async function loadPost(postId) {
 }
 
 /* =====================================================
-   RENDER POST
+   START CONVERSATION
 ===================================================== */
-async function renderPost(container, post) {
-  container.innerHTML = "";
-
-  /* ---------- FETCH SELLER NAME ---------- */
-  let sellerName = "Local Seller";
-
-  if (post.userId) {
-    try {
-      const userSnap = await getDoc(doc(db, "users", post.userId));
-      if (userSnap.exists()) {
-        sellerName = userSnap.data().firstName || "Local Seller";
-      }
-    } catch (err) {
-      console.error("Failed to load seller name:", err);
-    }
-  }
-  async function startConversation(post) {
+async function startConversation(post) {
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
   const sellerId = post.userId;
@@ -121,7 +127,29 @@ async function renderPost(container, post) {
 
   // Load dashboard messaging view
   window.loadView("dashboard", "messages");
+}
+
+/* =====================================================
+   RENDER POST
+===================================================== */
+async function renderPost(container, post) {
+  container.innerHTML = "";
+
+  /* ---------- FETCH SELLER NAME ---------- */
+  let sellerName = "Local Seller";
+
+  if (post.userId) {
+    try {
+      const userSnap = await getDoc(doc(db, "users", post.userId));
+      if (userSnap.exists()) {
+        sellerName = userSnap.data().firstName || "Local Seller";
+      }
+    } catch (err) {
+      console.error("Failed to load seller name:", err);
+    }
   }
+
+  const currentUser = window.currentUser || null;
 
   /* ---------- IMAGES ---------- */
   const images = post.imageUrls?.length
@@ -183,6 +211,15 @@ async function renderPost(container, post) {
     ${post.area ? `<p><strong>Area</strong>${post.area}</p>` : ""}
   `;
   right.appendChild(meta);
+
+  /* ---------- MESSAGE SELLER BUTTON ---------- */
+  if (post.userId && currentUser && post.userId !== currentUser.uid) {
+    const msgBtn = document.createElement("button");
+    msgBtn.className = "primary-btn";
+    msgBtn.textContent = "Message Seller";
+    msgBtn.onclick = () => startConversation(post);
+    right.appendChild(msgBtn);
+  }
 
   /* ---------- BADGES ---------- */
   if (post.badges?.length) {
@@ -280,16 +317,7 @@ async function renderPost(container, post) {
     const cleaned = post.phone.replace(/\D/g, "");
     const isMobile = /^07\d{8,9}$/.test(cleaned);
 
-    /* ---------- MESSAGE SELLER BUTTON ---------- */
-if (post.userId && post.userId !== window.currentUser.uid) {
-  const msgBtn = document.createElement("button");
-  msgBtn.className = "primary-btn";
-  msgBtn.textContent = "Message Seller";
-  msgBtn.onclick = () => startConversation(post);
-  right.appendChild(msgBtn);
-}
-
-     if (post.allowWhatsApp && isMobile) {
+    if (post.allowWhatsApp && isMobile) {
       const waBtn = document.createElement("a");
       waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
       waBtn.className = "secondary-btn";
