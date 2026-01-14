@@ -180,7 +180,7 @@ function buildPostCard(post, category) {
   const imgSrc =
     post.imageUrl ||
     (Array.isArray(post.imageUrls) && post.imageUrls[0]) ||
-    "/index/images/image-webholder.webp";
+    "/index/images/webholder.svg";
 
   const area = post.area || "Rhondda";
   const priceText =
