@@ -5,6 +5,7 @@ import {
   where,
   orderBy,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   addDoc,
@@ -15,6 +16,7 @@ import {
 let unsubscribeMessages = null;
 let currentConversationId = null;
 let currentOtherUserId = null;
+let currentOtherUserName = "User";
 
 /* ==========================
    INIT MESSAGING
@@ -72,22 +74,32 @@ export async function loadConversations() {
 
   let html = "";
 
-  snap.forEach(docSnap => {
+  for (const docSnap of snap.docs) {
     const data = docSnap.data();
+
+    // Detect the other user
+    const otherUserId = data.participants.find(id => id !== uid);
+
+    // Load their name
+    let otherName = "User";
+    try {
+      const userDoc = await getDoc(doc(db, "users", otherUserId));
+      otherName = userDoc.data()?.firstName || "User";
+    } catch {}
+
     const unread = data.unread?.[uid];
-    const otherUserName = data.otherUserName || "User";
 
     html += `
       <div class="conversation-item ${unread ? "unread" : ""}"
            data-id="${docSnap.id}"
-           data-name="${escapeHtml(otherUserName)}"
-           data-other="${data.otherUserId}">
-        <strong>${escapeHtml(otherUserName)}</strong>
+           data-other="${otherUserId}"
+           data-name="${escapeHtml(otherName)}">
+        <strong>${escapeHtml(otherName)}</strong>
         ${unread ? '<span class="unread-dot"></span>' : ""}
         <div>${escapeHtml(data.lastMessage || "")}</div>
       </div>
     `;
-  });
+  }
 
   listEl.innerHTML = html;
 
@@ -108,6 +120,7 @@ export async function loadConversations() {
 export async function openConversation(id, name, otherUserId) {
   currentConversationId = id;
   currentOtherUserId = otherUserId;
+  currentOtherUserName = name;
 
   showSection("conversationView");
 
@@ -116,10 +129,23 @@ export async function openConversation(id, name, otherUserId) {
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
 
-  // Mark unread as read
-  await updateDoc(doc(db, "conversations", id), {
-    [`unread.${uid}`]: false
-  });
+  // Ensure unread map exists
+  const convRef = doc(db, "conversations", id);
+  const convSnap = await getDoc(convRef);
+  const data = convSnap.data();
+
+  if (!data.unread) {
+    await updateDoc(convRef, {
+      unread: {
+        [uid]: false,
+        [otherUserId]: true
+      }
+    });
+  } else {
+    await updateDoc(convRef, {
+      [`unread.${uid}`]: false
+    });
+  }
 
   await loadConversations();
   await checkUnreadMessages();
@@ -188,12 +214,14 @@ async function sendMessage() {
     "messages"
   );
 
+  // Create message
   await addDoc(msgRef, {
     senderId: uid,
     text,
     createdAt: serverTimestamp()
   });
 
+  // Update conversation metadata
   await updateDoc(doc(db, "conversations", currentConversationId), {
     lastMessage: text,
     updatedAt: serverTimestamp(),
