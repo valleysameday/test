@@ -5,7 +5,7 @@
       
       .t { font-family: 'Outfit', 'Arial Rounded MT Bold', sans-serif; text-anchor: middle; }
       .r-text { font-weight: 900; font-size: 90px; letter-spacing: 2px; animation: colorShift 8s infinite; }
-      .tagline { font-size: 28px; fill: #666; font-weight: 600; letter-spacing: 1px; }
+      .tagline { font-size: 28px; fill: #fff; font-weight: 650; letter-spacing: 1.1px; }
       
       @keyframes colorShift {
         /* This animation now only affects RCT- */
