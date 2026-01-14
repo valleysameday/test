@@ -14,7 +14,7 @@ import {
   updateEmail,
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
+import * as Messaging from "/views/messaging.js";
 let currentEditAdId = null;
 
 export async function init() {
@@ -55,6 +55,7 @@ export async function init() {
   document.getElementById("editAdForm")?.addEventListener("submit", onSaveEditAd);
 
   await loadMyAds();
+  await Messaging.initMessaging();
   showSection("myAds");
 }
 
