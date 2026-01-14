@@ -199,39 +199,34 @@ function buildPostCard(post, category) {
 
   // Card markup
   card.innerHTML = `
-    <div class="post-image">
-      <img src="${imgSrc}" alt="${escapeHtml(
-    post.title || "Listing image"
-  )}" loading="lazy"
-           onerror="this.src='/index/images/image-webholder.webp'">
-      ${post.businessId ? `<div class="business-overlay">Business</div>` : ""}
-      ${priceText ? `<div class="price-badge">${priceText}</div>` : ""}
-    </div>
+  <div class="post-image">
+    <img src="${imgSrc}" alt="${escapeHtml(
+      post.title || "Listing image"
+    )}" loading="lazy"
+         onerror="this.src='/index/images/image-webholder.webp'">
+    ${priceText ? `<div class="price-badge">${priceText}</div>` : ""}
+  </div>
 
-    <div class="post-body">
-      <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
-      ${badgesHTML}
-      <p class="post-teaser">${escapeHtml(post.description || "")}</p>
+  <div class="post-body">
+    <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
+    ${badgesHTML}
+    <p class="post-teaser">${escapeHtml(post.description || "")}</p>
 
-      <div class="post-meta">
-        ${post.price !== undefined && post.price !== null
-          ? `<span class="post-price">${priceText}</span>`
-          : ""}
-        <span class="post-area">📍 ${escapeHtml(area)}</span>
-        <span class="post-category">
-          ${escapeHtml(post.categoryLabel || post.category || "Other")}
-        </span>
-      </div>
-
+    <div class="post-meta">
       ${
-        post.type === "business" && post.cta
-          ? `<button class="cta-btn">${escapeHtml(post.cta)}</button>`
+        post.price !== undefined && post.price !== null
+          ? `<span class="post-price">${priceText}</span>`
           : ""
       }
+      <span class="post-area">📍 ${escapeHtml(area)}</span>
+      <span class="post-category">
+        ${escapeHtml(post.categoryLabel || post.category || "Other")}
+      </span>
     </div>
+  </div>
 
-    <button class="report-btn" title="Report this post">⚑</button>
-  `;
+  <button class="report-btn" title="Report this post">⚑</button>
+`;
 
   // Click handler (card navigates to view-post)
   card.addEventListener("click", (e) => {
