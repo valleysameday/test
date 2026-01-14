@@ -48,17 +48,34 @@ async function loadPost(postId) {
   }
 
   const post = snap.data();
+
+  // Increment views
   updateDoc(doc(db, "posts", postId), { views: increment(1) }).catch(() => {});
 
-  renderPost(container, post);
+  await renderPost(container, post);
 }
 
 /* =====================================================
    RENDER POST
 ===================================================== */
-function renderPost(container, post) {
+async function renderPost(container, post) {
   container.innerHTML = "";
 
+  /* ---------- FETCH SELLER NAME ---------- */
+  let sellerName = "Local Seller";
+
+  if (post.userId) {
+    try {
+      const userSnap = await getDoc(doc(db, "users", post.userId));
+      if (userSnap.exists()) {
+        sellerName = userSnap.data().firstName || "Local Seller";
+      }
+    } catch (err) {
+      console.error("Failed to load seller name:", err);
+    }
+  }
+
+  /* ---------- IMAGES ---------- */
   const images = post.imageUrls?.length
     ? post.imageUrls
     : post.imageUrl
@@ -68,7 +85,6 @@ function renderPost(container, post) {
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
-  /* ---------- LEFT (Gallery) ---------- */
   const left = document.createElement("div");
   left.className = "view-post-left gallery";
 
@@ -82,28 +98,28 @@ function renderPost(container, post) {
     left.appendChild(slide);
   });
 
-  /* ---------- RIGHT (Content) ---------- */
+  /* ---------- RIGHT SIDE ---------- */
   const right = document.createElement("div");
   right.className = "view-post-right";
 
-  // Seller header (fake seller for now, can fetch later)
+  /* ---------- SELLER HEADER ---------- */
   const sellerHeader = document.createElement("div");
   sellerHeader.className = "post-seller-header";
   sellerHeader.innerHTML = `
     <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
     <div class="seller-header-info">
-      <p class="posted-by"><strong>Local Seller</strong></p>
+      <p class="posted-by"><strong>${sellerName}</strong></p>
       <p class="posted-on">Rhondda Noticeboard</p>
     </div>
   `;
   right.appendChild(sellerHeader);
 
-  // Title
+  /* ---------- TITLE ---------- */
   const h1 = document.createElement("h1");
   h1.textContent = post.title || "Untitled post";
   right.appendChild(h1);
 
-  // Price
+  /* ---------- PRICE ---------- */
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
@@ -111,129 +127,121 @@ function renderPost(container, post) {
     right.appendChild(price);
   }
 
-  // Meta / badges
+  /* ---------- META ---------- */
   const meta = document.createElement("div");
   meta.className = "view-post-meta";
   meta.innerHTML = `
     ${post.category ? `<p><strong>Category</strong>${post.category}</p>` : ""}
-    ${post.location ? `<p><strong>Location</strong>${post.location}</p>` : ""}
+    ${post.area ? `<p><strong>Area</strong>${post.area}</p>` : ""}
   `;
   right.appendChild(meta);
+
   /* ---------- BADGES ---------- */
-if (post.badges?.length) {
-  const badgeWrap = document.createElement("div");
-  badgeWrap.className = "view-post-badges";
+  if (post.badges?.length) {
+    const badgeWrap = document.createElement("div");
+    badgeWrap.className = "view-post-badges";
 
-  const icons = {
-    garden: "🌿 Garden",
-    parking: "🚗 Parking",
-    pets: "🐾 Pets Allowed",
-    urgent: "⚡ Urgent",
-    remote: "🏠 Remote Work",
-    tickets: "🎟️ Tickets Required",
-    freeevent: "🎉 Free Event",
-    delivery: "🚚 Delivery",
-    collection: "📦 Collection Only",
-    assembly: "🛠️ Assembly",
-    heavy: "🏋️ Heavy Item",
-    boxed: "🎁 Boxed",
-    new: "🆕 New"
-  };
+    const icons = {
+      garden: "🌿 Garden",
+      parking: "🚗 Parking",
+      pets: "🐾 Pets Allowed",
+      urgent: "⚡ Urgent",
+      remote: "🏠 Remote Work",
+      tickets: "🎟️ Tickets Required",
+      freeevent: "🎉 Free Event",
+      delivery: "🚚 Delivery",
+      collection: "📦 Collection Only",
+      assembly: "🛠️ Assembly",
+      heavy: "🏋️ Heavy Item",
+      boxed: "🎁 Boxed",
+      new: "🆕 New"
+    };
 
-  post.badges.forEach(b => {
-    const badge = document.createElement("span");
-    badge.className = "post-badge";
-    badge.textContent = icons[b] || b;
-    badgeWrap.appendChild(badge);
-  });
+    post.badges.forEach(b => {
+      const badge = document.createElement("span");
+      badge.className = "post-badge";
+      badge.textContent = icons[b] || b;
+      badgeWrap.appendChild(badge);
+    });
 
-  right.appendChild(badgeWrap);
-}
+    right.appendChild(badgeWrap);
+  }
 
-  /* ---------- CATEGORY SPECIFIC FIELDS ---------- */
-const details = document.createElement("div");
-details.className = "view-post-details";
+  /* ---------- CATEGORY DETAILS ---------- */
+  const details = document.createElement("div");
+  details.className = "view-post-details";
 
-switch (post.category) {
+  switch (post.category) {
+    case "property":
+      details.innerHTML = `
+        ${post.propertyListingType ? `<p><strong>Listing:</strong> ${post.propertyListingType}</p>` : ""}
+        ${post.propertySalePrice ? `<p><strong>Sale Price:</strong> £${post.propertySalePrice}</p>` : ""}
+        ${post.propertyRentAmount ? `<p><strong>Rent:</strong> £${post.propertyRentAmount} ${post.propertyRentFrequency || ""}</p>` : ""}
+        ${post.propertyBedrooms ? `<p><strong>Bedrooms:</strong> ${post.propertyBedrooms}</p>` : ""}
+        ${post.propertyBathrooms ? `<p><strong>Bathrooms:</strong> ${post.propertyBathrooms}</p>` : ""}
+        ${post.propertyEPC ? `<p><strong>EPC Rating:</strong> ${post.propertyEPC}</p>` : ""}
+      `;
+      break;
 
-  /* ----- PROPERTY ----- */
-  case "property":
-    details.innerHTML = `
-      ${post.propertyListingType ? `<p><strong>Listing:</strong> ${post.propertyListingType}</p>` : ""}
-      ${post.propertySalePrice ? `<p><strong>Sale Price:</strong> £${post.propertySalePrice}</p>` : ""}
-      ${post.propertyRentAmount ? `<p><strong>Rent:</strong> £${post.propertyRentAmount} ${post.propertyRentFrequency || ""}</p>` : ""}
-      ${post.propertyBedrooms ? `<p><strong>Bedrooms:</strong> ${post.propertyBedrooms}</p>` : ""}
-      ${post.propertyBathrooms ? `<p><strong>Bathrooms:</strong> ${post.propertyBathrooms}</p>` : ""}
-      ${post.propertyEPC ? `<p><strong>EPC Rating:</strong> ${post.propertyEPC}</p>` : ""}
-    `;
-    break;
+    case "jobs":
+      details.innerHTML = `
+        ${post.jobType ? `<p><strong>Job Type:</strong> ${post.jobType}</p>` : ""}
+        ${post.jobSalary ? `<p><strong>Salary:</strong> £${post.jobSalary} ${post.jobSalaryFrequency || ""}</p>` : ""}
+        ${post.jobCompany ? `<p><strong>Company:</strong> ${post.jobCompany}</p>` : ""}
+      `;
+      break;
 
-  /* ----- JOBS ----- */
-  case "jobs":
-    details.innerHTML = `
-      ${post.jobType ? `<p><strong>Job Type:</strong> ${post.jobType}</p>` : ""}
-      ${post.jobSalary ? `<p><strong>Salary:</strong> £${post.jobSalary} ${post.jobSalaryFrequency || ""}</p>` : ""}
-      ${post.jobCompany ? `<p><strong>Company:</strong> ${post.jobCompany}</p>` : ""}
-    `;
-    break;
+    case "events":
+      details.innerHTML = `
+        ${post.eventDate ? `<p><strong>Date:</strong> ${post.eventDate}</p>` : ""}
+        ${post.eventTime ? `<p><strong>Time:</strong> ${post.eventTime}</p>` : ""}
+        ${post.eventLocation ? `<p><strong>Location:</strong> ${post.eventLocation}</p>` : ""}
+      `;
+      break;
 
-  /* ----- EVENTS ----- */
-  case "events":
-    details.innerHTML = `
-      ${post.eventDate ? `<p><strong>Date:</strong> ${post.eventDate}</p>` : ""}
-      ${post.eventTime ? `<p><strong>Time:</strong> ${post.eventTime}</p>` : ""}
-      ${post.eventLocation ? `<p><strong>Location:</strong> ${post.eventLocation}</p>` : ""}
-    `;
-    break;
+    case "community":
+      details.innerHTML = `
+        ${post.communityTopic ? `<p><strong>Topic:</strong> ${post.communityTopic}</p>` : ""}
+      `;
+      break;
 
-  /* ----- COMMUNITY ----- */
-  case "community":
-    details.innerHTML = `
-      ${post.communityTopic ? `<p><strong>Topic:</strong> ${post.communityTopic}</p>` : ""}
-    `;
-    break;
+    case "forsale":
+    case "free":
+      details.innerHTML = `
+        ${post.condition ? `<p><strong>Condition:</strong> ${post.condition}</p>` : ""}
+      `;
+      break;
+  }
 
-  /* ----- FOR SALE / FREE ----- */
-  case "forsale":
-  case "free":
-    details.innerHTML = `
-      ${post.condition ? `<p><strong>Condition:</strong> ${post.condition}</p>` : ""}
-    `;
-    break;
-}
+  right.appendChild(details);
 
-right.appendChild(details);
-
-  // Description
+  /* ---------- DESCRIPTION ---------- */
   const desc = document.createElement("p");
   desc.className = "view-post-desc";
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-// Actions
-if (post.phone) {
-  // Call button
-  const callBtn = document.createElement("a");
-  callBtn.href = `tel:${post.phone}`;
-  callBtn.className = "engage-btn";
-  callBtn.textContent = "Call";
-  right.appendChild(callBtn);
+  /* ---------- ACTION BUTTONS ---------- */
+  if (post.phone) {
+    const callBtn = document.createElement("a");
+    callBtn.href = `tel:${post.phone}`;
+    callBtn.className = "engage-btn";
+    callBtn.textContent = "Call";
+    right.appendChild(callBtn);
 
-  // WhatsApp button (only if allowed + valid mobile)
-  const cleaned = post.phone.replace(/\D/g, ""); // remove spaces/dashes
+    const cleaned = post.phone.replace(/\D/g, "");
+    const isMobile = /^07\d{8,9}$/.test(cleaned);
 
-  const isMobile = /^07\d{8,9}$/.test(cleaned); // UK mobile check
-
-  if (post.allowWhatsApp && isMobile) {
-    const waBtn = document.createElement("a");
-    waBtn.href = `https://wa.me/44${cleaned.slice(1)}`; // convert 07 → +447
-    waBtn.className = "secondary-btn";
-    waBtn.textContent = "WhatsApp";
-    right.appendChild(waBtn);
+    if (post.allowWhatsApp && isMobile) {
+      const waBtn = document.createElement("a");
+      waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
+      waBtn.className = "secondary-btn";
+      waBtn.textContent = "WhatsApp";
+      right.appendChild(waBtn);
+    }
   }
-}
 
-  // Footer buttons
+  /* ---------- FOOTER ---------- */
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
 
