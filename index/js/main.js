@@ -51,20 +51,11 @@ getFirebase().then(() => {
   }
 });
 
-/* ==========================
-   DASHBOARD NAVIGATION
-========================== */
-window.navigateToDashboard = (forcedType = null) => {
+window.navigateToDashboard = () => {
   if (!window.currentUser) {
     window.loadView("home");
     return;
   }
 
-  const type = forcedType || window.currentAccountType;
-
-  if (type === "business") {
-    window.loadView("business-dashboard");
-  } else {
-    window.loadView("customer-dashboard");
-  }
+  window.loadView("dashboard");
 };
