@@ -24,17 +24,24 @@ export async function init() {
   const fb = await getFirebase();
   db = fb.db;
 
-  // Wait for Firebase Auth to finish
+  // Wait for Firebase Auth
   await waitForAuth();
 
-  const postId =
-    sessionStorage.getItem("viewPostId") ||
-    window.selectedPostId;
+  // Wait for postId to be set by feed.js
+  let postId = null;
 
-  if (!postId) {
-    window.loadView("home");
-    return;
-  }
+  await new Promise(resolve => {
+    const check = setInterval(() => {
+      postId =
+        sessionStorage.getItem("viewPostId") ||
+        window.selectedPostId;
+
+      if (postId) {
+        clearInterval(check);
+        resolve();
+      }
+    }, 30);
+  });
 
   window.selectedPostId = postId;
   await loadPost(postId);
