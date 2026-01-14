@@ -67,21 +67,18 @@ export function initPostSubmit() {
        BASE DATA OBJECT
     ============================ */
     const data = {
-      title,
-      description,
-      category,
-      area,
-      phone,
-      allowWhatsApp,
-      badges,
-      imageUrl: imageUrls[0] || null,
-      imageUrls,
-      createdAt: serverTimestamp(),
-      userId: auth.currentUser.uid,
-      businessId: window.firebaseUserDoc?.isBusiness
-        ? auth.currentUser.uid
-        : null
-    };
+  title,
+  description,
+  category,
+  area,
+  phone,
+  allowWhatsApp,
+  badges,
+  imageUrl: imageUrls[0] || null,
+  imageUrls,
+  createdAt: serverTimestamp(),
+  userId: auth.currentUser.uid
+};
 
     /* ============================
        CATEGORY-SPECIFIC FIELDS
