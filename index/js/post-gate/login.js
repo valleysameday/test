@@ -57,11 +57,10 @@ async function loginUser() {
 /* ---------------- SIGNUP ---------------- */
 async function signupUser() {
   const firstName = $("signupFirstName")?.value.trim();
-  const lastName = $("signupLastName")?.value.trim();
   const email = $("signupEmail")?.value.trim();
   const password = $("signupPassword")?.value;
 
-  if (!firstName || !lastName || !email || !password) {
+  if (!firstName || !email || !password) {
     $("signupFeedback").textContent = "Please complete all fields";
     return;
   }
@@ -71,7 +70,6 @@ async function signupUser() {
 
     await setDoc(doc(db, "users", cred.user.uid), {
       firstName,
-      lastName,
       email,
       createdAt: Date.now()
     });
