@@ -74,6 +74,54 @@ async function renderPost(container, post) {
       console.error("Failed to load seller name:", err);
     }
   }
+  async function startConversation(post) {
+  const { db } = await getFirebase();
+  const uid = window.currentUser.uid;
+  const sellerId = post.userId;
+
+  if (!uid) {
+    alert("Please sign in to message the seller.");
+    return;
+  }
+
+  // Check if conversation already exists
+  const q = query(
+    collection(db, "conversations"),
+    where("participants", "array-contains", uid)
+  );
+
+  const snap = await getDocs(q);
+
+  let existingConv = null;
+
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    if (data.participants.includes(sellerId)) {
+      existingConv = docSnap.id;
+    }
+  });
+
+  let conversationId = existingConv;
+
+  // Create new conversation if none exists
+  if (!conversationId) {
+    const convRef = await addDoc(collection(db, "conversations"), {
+      participants: [uid, sellerId],
+      lastMessage: "",
+      updatedAt: Date.now(),
+      postId: post.id || window.selectedPostId,
+      deletedFor: {}
+    });
+
+    conversationId = convRef.id;
+  }
+
+  // Store for dashboard.js
+  sessionStorage.setItem("openConversationId", conversationId);
+
+  // Load dashboard messaging view
+  window.loadView("dashboard", "messages");
+  }
 
   /* ---------- IMAGES ---------- */
   const images = post.imageUrls?.length
@@ -232,7 +280,16 @@ async function renderPost(container, post) {
     const cleaned = post.phone.replace(/\D/g, "");
     const isMobile = /^07\d{8,9}$/.test(cleaned);
 
-    if (post.allowWhatsApp && isMobile) {
+    /* ---------- MESSAGE SELLER BUTTON ---------- */
+if (post.userId && post.userId !== window.currentUser.uid) {
+  const msgBtn = document.createElement("button");
+  msgBtn.className = "primary-btn";
+  msgBtn.textContent = "Message Seller";
+  msgBtn.onclick = () => startConversation(post);
+  right.appendChild(msgBtn);
+}
+
+     if (post.allowWhatsApp && isMobile) {
       const waBtn = document.createElement("a");
       waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
       waBtn.className = "secondary-btn";
