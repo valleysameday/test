@@ -1,0 +1,129 @@
+<link rel="stylesheet" href="/views/dashboard.css">
+
+<div class="dashboard">
+
+  <header class="dashboard-header">
+    <h2>Welcome, <span id="dashUserName">User</span></h2>
+    <p class="dashboard-sub">Your Rhondda Noticeboard hub</p>
+  </header>
+
+  <section class="dashboard-grid">
+    <div class="dash-card" data-section="myAds">
+      <div class="dash-icon">📢</div>
+      <h3>My Ads</h3>
+      <p>Manage your listings</p>
+    </div>
+    <div class="dash-card" data-section="messages">
+      <div class="dash-icon">💬</div>
+      <h3>Messages</h3>
+      <p>Conversations (coming soon)</p>
+    </div>
+    <div class="dash-card" data-section="saved">
+      <div class="dash-icon">⭐</div>
+      <h3>Saved Items</h3>
+      <p>Your favourites</p>
+    </div>
+    <div class="dash-card" data-section="profile">
+      <div class="dash-icon">👤</div>
+      <h3>Profile</h3>
+      <p>Your details</p>
+    </div>
+    <div class="dash-card" data-section="settings">
+      <div class="dash-icon">⚙️</div>
+      <h3>Settings</h3>
+      <p>Account options</p>
+    </div>
+  </section>
+
+  <section id="dashSections">
+
+    <!-- MY ADS -->
+    <div id="myAds" class="dash-section hidden">
+      <div class="section-header">
+        <h3>My Ads</h3>
+        <span id="myAdsStats" class="section-meta"></span>
+      </div>
+      <div id="myAdsList">Loading your ads…</div>
+    </div>
+
+    <!-- MESSAGES (placeholder) -->
+    <div id="messages" class="dash-section hidden">
+      <h3>Messages</h3>
+      <p>Messaging will live here soon.</p>
+    </div>
+
+    <!-- SAVED (placeholder) -->
+    <div id="saved" class="dash-section hidden">
+      <h3>Saved Items</h3>
+      <p>Your saved posts will appear here.</p>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile" class="dash-section hidden">
+      <h3>Profile</h3>
+      <p><strong>Name:</strong> <span id="profileName"></span></p>
+      <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+      <p><strong>Member since:</strong> <span id="profileSince"></span></p>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="dash-section hidden">
+      <h3>Settings</h3>
+
+      <form id="settingsForm" class="settings-form">
+        <label>
+          Name
+          <input type="text" id="settingsName" autocomplete="name">
+        </label>
+
+        <label>
+          Email
+          <input type="email" id="settingsEmail" autocomplete="email">
+        </label>
+
+        <button type="submit" class="primary-btn">Save changes</button>
+        <p id="settingsFeedback" class="settings-feedback"></p>
+      </form>
+
+      <button id="settingsResetPassword" class="secondary-btn">
+        Send password reset email
+      </button>
+
+      <button id="dashLogout" class="logout-btn">Log out</button>
+    </div>
+
+  </section>
+
+  <!-- EDIT AD MODAL -->
+  <div id="editAdModal" class="edit-modal hidden">
+    <div class="edit-modal-inner">
+      <h3>Edit Ad</h3>
+      <form id="editAdForm">
+        <label>
+          Title
+          <input type="text" id="editTitle">
+        </label>
+        <label>
+          Description
+          <textarea id="editDescription" rows="4"></textarea>
+        </label>
+        <label>
+          Price (£)
+          <input type="number" id="editPrice" min="0" step="1">
+        </label>
+        <label>
+          Area
+          <input type="text" id="editArea">
+        </label>
+        <div class="edit-actions">
+          <button type="submit" class="primary-btn">Save</button>
+          <button type="button" id="editCancel" class="secondary-btn">Cancel</button>
+        </div>
+        <p id="editFeedback" class="settings-feedback"></p>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="/views/dashboard.js"></script>
