@@ -1,28 +1,73 @@
 <svg width="600" height="250" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rhondda Noticeboard logo">
-  <style>
-    .t { font-family: Arial Rounded MT Bold, sans-serif; font-weight: 900; }
-    .r { animation: c 6s infinite; }
-    .b { animation: f 3s infinite ease-in-out; }
-    @keyframes c {
-      0%, 100% { fill: #f52; } 20% { fill: #fd3; } 40% { fill: #6cb; } 60% { fill: #49f; } 80% { fill: #97a; }
-    }
-    @keyframes f { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-    @keyframes s { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-  </style>
-  <circle cx="450" cy="76" r="18" fill="#7ef" opacity="0.6" class="b" style="animation-duration:2s" />
-  <g class="t r" font-size="85" letter-spacing="-2">
-    <text x="50" y="140">R</text>
-    <text x="110" y="140" style="animation-delay:-1s">h</text>
-    <text x="160" y="140" style="animation-delay:-2s">o</text>
-    <text x="215" y="140" style="animation-delay:-3s">n</text>
-    <text x="270" y="140" style="animation-delay:-4s">d</text>
-    <text x="325" y="140" style="animation-delay:-5s">d</text>
-    <text x="380" y="140" style="animation-delay:-6s">a</text>
-  </g> <text x="235" y="195" class="t" font-size="35" fill="#97a" letter-spacing="1">NOTICEBOARD</text>
-  <path d="M470 110l5 15 15 5-15 5-5 15-5-15-15-5 15-5z" fill="#fd0" style="animation:s 2s infinite" /> <g style="animation:s 3s infinite">
-    <path d="M100 40l10 20h-20z" fill="#fd3" />
-    <path d="M300 30l10 20h-20z" fill="#f7b" style="animation-duration:2s" />
-  </g> <path d="M200 210q50 20 100 0t100 0" stroke="#f75" stroke-width="4" fill="none">
-    <animate attributeName="d" values="M200 210q50 20 100 0t100 0; M200 210q50-20 100 0t100 0; M200 210q50 20 100 0t100 0" dur="4s" repeatCount="indefinite"/>
+  <defs>
+    <style>
+      @import url('fonts.googleapis.com');
+      
+      .t { font-family: 'Outfit', 'Arial Rounded MT Bold', sans-serif; text-anchor: middle; }
+      .r-text { font-weight: 900; font-size: 90px; letter-spacing: 2px; animation: colorShift 8s infinite; }
+      .tagline { font-size: 28px; fill: #666; font-weight: 600; letter-spacing: 1px; }
+      
+      @keyframes colorShift {
+        /* This animation now only affects RCT- */
+        0%, 100% { fill: #ff5522; }
+        25% { fill: #ffdd33; }
+        50% { fill: #66ccbb; }
+        75% { fill: #4499ff; }
+      }
+      
+      .float { animation: float 5s infinite ease-in-out; }
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      
+      .pulse { animation: pulse 5s infinite ease-in-out; }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.8); }
+      }
+
+      /* Specific style for the X to make it stand out */
+      .x-standout {
+          fill: #ff00aa; /* Bright contrast color */
+          transform-origin: center center;
+          animation: highlightX 5s infinite ease-in-out;
+      }
+      @keyframes highlightX {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          50% { transform: scale(1.1) rotate(2deg); }
+      }
+
+    </style>
+  </defs>
+
+  <!-- Decorative Background Elements -->
+  <circle cx="120" cy="80" r="12" fill="#7ef" opacity="0.4" class="float" />
+  <circle cx="480" cy="60" r="18" fill="#49f" opacity="0.2" class="float" style="animation-delay: -2.5s" />
+  
+  <!-- Main Brand Text (Split for styling X separately) -->
+  <g class="t" font-weight="900" font-size="90">
+    <!-- RCT- inherits the colorShift animation -->
+    <text x="265" y="130" class="r-text">RCT-</text>
+    <!-- X has its own unique color and animation -->
+    <text x="390" y="130" class="x-standout">X</text>
+  </g>
+  
+  <!-- Tagline - Moved up to y="165" -->
+  <text x="300" y="165" class="t tagline">Rhondda's Marketplace</text>
+  
+  <!-- Accent Sparkles -->
+  <g class="pulse">
+    <path d="M460 110l3 9 9 3-9 3-3 9-3-9-9-3 9-3z" fill="#fd0" />
+    <path d="M140 140l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#f7b" />
+  </g>
+
+  <!-- Animated Bottom Wave -->
+  <path d="M180 210q60 15 120 0t120 0" stroke="#ff5522" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.6">
+    <animate attributeName="d" 
+             values="M180 210q60 15 120 0t120 0; 
+                     M180 210q60 -15 120 0t120 0; 
+                     M180 210q60 15 120 0t120 0" 
+             dur="10s" repeatCount="indefinite"/>
   </path>
 </svg>
