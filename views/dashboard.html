@@ -14,9 +14,10 @@
       <p>Manage your listings</p>
     </div>
     <div class="dash-card" data-section="messages">
-      <div class="dash-icon">💬</div>
-      <h3>Messages</h3>
-      <p>Conversations (coming soon)</p>
+  <div class="dash-icon">💬</div>
+  <h3>Messages</h3>
+  <p>Conversations</p>
+  <span id="messagesNotifDot" class="notif-dot hidden"></span>
     </div>
     <div class="dash-card" data-section="saved">
       <div class="dash-icon">⭐</div>
@@ -46,11 +47,24 @@
       <div id="myAdsList">Loading your ads…</div>
     </div>
 
-    <!-- MESSAGES (placeholder) -->
-    <div id="messages" class="dash-section hidden">
-      <h3>Messages</h3>
-      <p>Messaging will live here soon.</p>
-    </div>
+    <!-- MESSAGES LIST -->
+<div id="messages" class="dash-section hidden">
+  <h3>Messages</h3>
+  <div id="messagesList">Loading…</div>
+</div>
+
+<!-- CONVERSATION VIEW -->
+<div id="conversationView" class="dash-section hidden">
+  <button id="convBack" class="secondary-btn">← Back</button>
+  <h3 id="convName">Chat</h3>
+
+  <div id="convMessages" class="conv-messages"></div>
+
+  <div class="conv-input">
+    <input id="convInput" type="text" placeholder="Type a message…">
+    <button id="convSend" class="primary-btn">Send</button>
+  </div>
+</div>
 
     <!-- SAVED (placeholder) -->
     <div id="saved" class="dash-section hidden">
