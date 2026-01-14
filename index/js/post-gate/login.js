@@ -14,8 +14,6 @@ let auth, db;
 let initialised = false;
 
 const $ = id => document.getElementById(id);
-const show = el => el && (el.style.display = "block");
-const hide = el => el && (el.style.display = "none");
 
 /* ---------------- SESSION + IDLE LOGOUT ---------------- */
 const IDLE_TIMEOUT = 30 * 60 * 1000;
@@ -26,7 +24,8 @@ function resetIdleTimer() {
   idleTimer = setTimeout(async () => {
     if (auth?.currentUser) {
       await signOut(auth);
-      clearSession();
+      window.currentUser = null;
+      window.currentUserDoc = null;
       window.openScreen?.("login");
     }
   }, IDLE_TIMEOUT);
@@ -35,17 +34,6 @@ function resetIdleTimer() {
 ['mousemove','keydown','scroll','click','touchstart'].forEach(ev =>
   window.addEventListener(ev, resetIdleTimer, true)
 );
-
-/* ---------------- SESSION STATE ---------------- */
-function setSession(user, type) {
-  window.currentUser = user;
-  window.currentAccountType = type;
-}
-
-function clearSession() {
-  window.currentUser = null;
-  window.currentAccountType = null;
-}
 
 /* ---------------- LOGIN ---------------- */
 async function loginUser() {
@@ -62,32 +50,34 @@ async function loginUser() {
     await signInWithEmailAndPassword(auth, email, password);
     $("loginFeedback").textContent = "Logging you in…";
   } catch (err) {
-    console.error(err);
     $("loginFeedback").textContent = err.message;
   }
 }
 
 /* ---------------- SIGNUP ---------------- */
 async function signupUser() {
+  const firstName = $("signupFirstName")?.value.trim();
+  const lastName = $("signupLastName")?.value.trim();
   const email = $("signupEmail")?.value.trim();
   const password = $("signupPassword")?.value;
-  const isBusiness = $("isBusinessAccount")?.checked;
 
-  if (!email || !password) {
-    $("signupFeedback").textContent = "Missing details";
+  if (!firstName || !lastName || !email || !password) {
+    $("signupFeedback").textContent = "Please complete all fields";
     return;
   }
 
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, isBusiness ? "businesses" : "users", cred.user.uid), {
+
+    await setDoc(doc(db, "users", cred.user.uid), {
+      firstName,
+      lastName,
       email,
       createdAt: Date.now()
     });
 
     $("signupFeedback").textContent = "Account created ✅";
   } catch (err) {
-    console.error(err);
     $("signupFeedback").textContent = err.message;
   }
 }
@@ -108,7 +98,8 @@ async function sendResetEmail() {
 /* ---------------- LOGOUT ---------------- */
 async function logoutUser() {
   await signOut(auth);
-  clearSession();
+  window.currentUser = null;
+  window.currentUserDoc = null;
   window.openScreen?.("login");
 }
 
@@ -129,19 +120,20 @@ export async function initLogin() {
     resetIdleTimer();
 
     if (!user) {
-      clearSession();
+      window.currentUser = null;
+      window.currentUserDoc = null;
       return;
     }
 
-    // Detect account type
-    const bizSnap = await getDoc(doc(db, "businesses", user.uid));
-    const type = bizSnap.exists() ? "business" : "customer";
+    window.currentUser = user;
 
-    setSession(user, type);
+    // Load user profile
+    const snap = await getDoc(doc(db, "users", user.uid));
+    window.currentUserDoc = snap.exists() ? snap.data() : null;
 
-    // SPA navigation ONLY
+    // Close modal and go to dashboard/home
     window.closeScreens?.();
-    window.navigateToDashboard?.(type);
+    window.navigateToDashboard?.();
   });
 }
 
