@@ -25,7 +25,7 @@ export async function init() {
   db = fb.db;
 
   // Wait for Firebase Auth
-  await waitForAuth();
+  await waitForAuth(1500); // wait max 1.5s
 
   // Wait for postId to be set by feed.js
   let postId = null;
@@ -50,17 +50,24 @@ export async function init() {
 /* =====================================================
    WAIT FOR AUTH
 ===================================================== */
-function waitForAuth() {
+function waitForAuth(timeout = 1500) {
   return new Promise(resolve => {
+    if (window.currentUser !== undefined) return resolve();
+
+    const start = Date.now();
     const check = setInterval(() => {
-      if (window.currentUser) {
+      if (window.currentUser !== undefined) {
         clearInterval(check);
+        resolve();
+      }
+      if (Date.now() - start > timeout) {
+        clearInterval(check);
+        console.warn("⚠️ Auth timeout – continuing as guest");
         resolve();
       }
     }, 50);
   });
 }
-
 /* =====================================================
    LOAD POST
 ===================================================== */
@@ -76,7 +83,10 @@ async function loadPost(postId) {
     return;
   }
 
-  const post = snap.data();
+  const post = {
+  id: snap.id,
+  ...snap.data()
+};
 
   // Increment views
   updateDoc(doc(db, "posts", postId), { views: increment(1) }).catch(() => {});
