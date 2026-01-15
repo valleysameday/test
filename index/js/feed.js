@@ -260,11 +260,6 @@ function buildPostCard(post, category) {
   return card;
 }
 
-  if (!window.currentUser) {
-    window.openLoginModal?.();
-    return;
-  }
-
   
 /* --------------------------------------------------
    WEATHER WIDGET
