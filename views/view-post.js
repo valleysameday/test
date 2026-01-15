@@ -24,10 +24,8 @@ export async function init() {
   const fb = await getFirebase();
   db = fb.db;
 
-  // Wait for Firebase Auth
-  await waitForAuth(1500); // wait max 1.5s
+  await waitForAuth(1500);
 
-  // Wait for postId to be set by feed.js
   let postId = null;
 
   await new Promise(resolve => {
@@ -48,7 +46,7 @@ export async function init() {
 }
 
 /* =====================================================
-   WAIT FOR AUTH
+   WAIT FOR AUTH (NON-BLOCKING)
 ===================================================== */
 function waitForAuth(timeout = 1500) {
   return new Promise(resolve => {
@@ -68,12 +66,16 @@ function waitForAuth(timeout = 1500) {
     }, 50);
   });
 }
+
 /* =====================================================
    LOAD POST
 ===================================================== */
 async function loadPost(postId) {
   const container = document.getElementById("viewPostContent");
-  if (!container) return;
+  if (!container) {
+    console.error("❌ #viewPostContent not found");
+    return;
+  }
 
   container.innerHTML = "<p class='loading'>Loading post…</p>";
 
@@ -84,12 +86,13 @@ async function loadPost(postId) {
   }
 
   const post = {
-  id: snap.id,
-  ...snap.data()
-};
+    id: snap.id,
+    ...snap.data()
+  };
 
-  // Increment views
-  updateDoc(doc(db, "posts", postId), { views: increment(1) }).catch(() => {});
+  updateDoc(doc(db, "posts", postId), {
+    views: increment(1)
+  }).catch(() => {});
 
   await renderPost(container, post);
 }
@@ -98,16 +101,21 @@ async function loadPost(postId) {
    START CONVERSATION
 ===================================================== */
 async function startConversation(post) {
+  if (!window.currentUser) {
+    if (typeof window.openLoginModal === "function") {
+      window.openLoginModal();
+    } else {
+      alert("Please sign in to message the seller.");
+    }
+    return;
+  }
+
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
   const sellerId = post.userId;
 
-  if (!uid) {
-    alert("Please sign in to message the seller.");
-    return;
-  }
+  if (!sellerId || sellerId === uid) return;
 
-  // Check if conversation already exists
   const q = query(
     collection(db, "conversations"),
     where("participants", "array-contains", uid)
@@ -115,34 +123,28 @@ async function startConversation(post) {
 
   const snap = await getDocs(q);
 
-  let existingConv = null;
+  let conversationId = null;
 
   snap.forEach(docSnap => {
     const data = docSnap.data();
-    if (data.participants.includes(sellerId)) {
-      existingConv = docSnap.id;
+    if (data.participants?.includes(sellerId)) {
+      conversationId = docSnap.id;
     }
   });
 
-  let conversationId = existingConv;
-
-  // Create new conversation if none exists
   if (!conversationId) {
     const convRef = await addDoc(collection(db, "conversations"), {
       participants: [uid, sellerId],
       lastMessage: "",
       updatedAt: Date.now(),
-      postId: post.id || window.selectedPostId,
+      postId: post.id,
       deletedFor: {}
     });
 
     conversationId = convRef.id;
   }
 
-  // Store for dashboard.js
   sessionStorage.setItem("openConversationId", conversationId);
-
-  // Load dashboard messaging view
   window.loadView("dashboard", "messages");
 }
 
@@ -152,23 +154,19 @@ async function startConversation(post) {
 async function renderPost(container, post) {
   container.innerHTML = "";
 
-  /* ---------- FETCH SELLER NAME ---------- */
   let sellerName = "Local Seller";
 
   if (post.userId) {
     try {
       const userSnap = await getDoc(doc(db, "users", post.userId));
       if (userSnap.exists()) {
-        sellerName = userSnap.data().firstName || "Local Seller";
+        sellerName = userSnap.data().firstName || sellerName;
       }
-    } catch (err) {
-      console.error("Failed to load seller name:", err);
-    }
+    } catch {}
   }
 
   const currentUser = window.currentUser || null;
 
-  /* ---------- IMAGES ---------- */
   const images = post.imageUrls?.length
     ? post.imageUrls
     : post.imageUrl
@@ -181,38 +179,27 @@ async function renderPost(container, post) {
   const left = document.createElement("div");
   left.className = "view-post-left gallery";
 
-  images.forEach((src) => {
-    const slide = document.createElement("div");
-    slide.className = "gallery-slide";
+  images.forEach(src => {
     const img = document.createElement("img");
     img.src = src;
     img.onerror = () => (img.src = PLACEHOLDER_IMG);
-    slide.appendChild(img);
-    left.appendChild(slide);
+    left.appendChild(img);
   });
 
-  /* ---------- RIGHT SIDE ---------- */
   const right = document.createElement("div");
   right.className = "view-post-right";
 
-  /* ---------- SELLER HEADER ---------- */
-  const sellerHeader = document.createElement("div");
-  sellerHeader.className = "post-seller-header";
-  sellerHeader.innerHTML = `
-    <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
-    <div class="seller-header-info">
-      <p class="posted-by"><strong>${sellerName}</strong></p>
-      <p class="posted-on">Rhondda Noticeboard</p>
+  right.innerHTML = `
+    <div class="post-seller-header">
+      <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
+      <div class="seller-header-info">
+        <p class="posted-by"><strong>${sellerName}</strong></p>
+        <p class="posted-on">Rhondda Noticeboard</p>
+      </div>
     </div>
+    <h1>${post.title || "Untitled post"}</h1>
   `;
-  right.appendChild(sellerHeader);
 
-  /* ---------- TITLE ---------- */
-  const h1 = document.createElement("h1");
-  h1.textContent = post.title || "Untitled post";
-  right.appendChild(h1);
-
-  /* ---------- PRICE ---------- */
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
@@ -220,17 +207,8 @@ async function renderPost(container, post) {
     right.appendChild(price);
   }
 
-  /* ---------- META ---------- */
-  const meta = document.createElement("div");
-  meta.className = "view-post-meta";
-  meta.innerHTML = `
-    ${post.category ? `<p><strong>Category</strong>${post.category}</p>` : ""}
-    ${post.area ? `<p><strong>Area</strong>${post.area}</p>` : ""}
-  `;
-  right.appendChild(meta);
-
-  /* ---------- MESSAGE SELLER BUTTON ---------- */
-  if (post.userId && currentUser && post.userId !== currentUser.uid) {
+  /* ---------- MESSAGE SELLER (ALWAYS VISIBLE) ---------- */
+  if (post.userId && post.userId !== currentUser?.uid) {
     const msgBtn = document.createElement("button");
     msgBtn.className = "primary-btn";
     msgBtn.textContent = "Message Seller";
@@ -238,112 +216,11 @@ async function renderPost(container, post) {
     right.appendChild(msgBtn);
   }
 
-  /* ---------- BADGES ---------- */
-  if (post.badges?.length) {
-    const badgeWrap = document.createElement("div");
-    badgeWrap.className = "view-post-badges";
-
-    const icons = {
-      garden: "🌿 Garden",
-      parking: "🚗 Parking",
-      pets: "🐾 Pets Allowed",
-      urgent: "⚡ Urgent",
-      remote: "🏠 Remote Work",
-      tickets: "🎟️ Tickets Required",
-      freeevent: "🎉 Free Event",
-      delivery: "🚚 Delivery",
-      collection: "📦 Collection Only",
-      assembly: "🛠️ Assembly",
-      heavy: "🏋️ Heavy Item",
-      boxed: "🎁 Boxed",
-      new: "🆕 New"
-    };
-
-    post.badges.forEach(b => {
-      const badge = document.createElement("span");
-      badge.className = "post-badge";
-      badge.textContent = icons[b] || b;
-      badgeWrap.appendChild(badge);
-    });
-
-    right.appendChild(badgeWrap);
-  }
-
-  /* ---------- CATEGORY DETAILS ---------- */
-  const details = document.createElement("div");
-  details.className = "view-post-details";
-
-  switch (post.category) {
-    case "property":
-      details.innerHTML = `
-        ${post.propertyListingType ? `<p><strong>Listing:</strong> ${post.propertyListingType}</p>` : ""}
-        ${post.propertySalePrice ? `<p><strong>Sale Price:</strong> £${post.propertySalePrice}</p>` : ""}
-        ${post.propertyRentAmount ? `<p><strong>Rent:</strong> £${post.propertyRentAmount} ${post.propertyRentFrequency || ""}</p>` : ""}
-        ${post.propertyBedrooms ? `<p><strong>Bedrooms:</strong> ${post.propertyBedrooms}</p>` : ""}
-        ${post.propertyBathrooms ? `<p><strong>Bathrooms:</strong> ${post.propertyBathrooms}</p>` : ""}
-        ${post.propertyEPC ? `<p><strong>EPC Rating:</strong> ${post.propertyEPC}</p>` : ""}
-      `;
-      break;
-
-    case "jobs":
-      details.innerHTML = `
-        ${post.jobType ? `<p><strong>Job Type:</strong> ${post.jobType}</p>` : ""}
-        ${post.jobSalary ? `<p><strong>Salary:</strong> £${post.jobSalary} ${post.jobSalaryFrequency || ""}</p>` : ""}
-        ${post.jobCompany ? `<p><strong>Company:</strong> ${post.jobCompany}</p>` : ""}
-      `;
-      break;
-
-    case "events":
-      details.innerHTML = `
-        ${post.eventDate ? `<p><strong>Date:</strong> ${post.eventDate}</p>` : ""}
-        ${post.eventTime ? `<p><strong>Time:</strong> ${post.eventTime}</p>` : ""}
-        ${post.eventLocation ? `<p><strong>Location:</strong> ${post.eventLocation}</p>` : ""}
-      `;
-      break;
-
-    case "community":
-      details.innerHTML = `
-        ${post.communityTopic ? `<p><strong>Topic:</strong> ${post.communityTopic}</p>` : ""}
-      `;
-      break;
-
-    case "forsale":
-    case "free":
-      details.innerHTML = `
-        ${post.condition ? `<p><strong>Condition:</strong> ${post.condition}</p>` : ""}
-      `;
-      break;
-  }
-
-  right.appendChild(details);
-
-  /* ---------- DESCRIPTION ---------- */
   const desc = document.createElement("p");
   desc.className = "view-post-desc";
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-  /* ---------- ACTION BUTTONS ---------- */
-  if (post.phone) {
-    const callBtn = document.createElement("a");
-    callBtn.href = `tel:${post.phone}`;
-    callBtn.className = "engage-btn";
-    callBtn.textContent = "Call";
-    right.appendChild(callBtn);
-
-    const cleaned = post.phone.replace(/\D/g, "");
-    const isMobile = /^07\d{8,9}$/.test(cleaned);
-
-    if (post.allowWhatsApp && isMobile) {
-      const waBtn = document.createElement("a");
-      waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
-      waBtn.className = "secondary-btn";
-      waBtn.textContent = "WhatsApp";
-      right.appendChild(waBtn);
-    }
-  }
-
-  /* ---------- FOOTER ---------- */
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
 
@@ -352,11 +229,7 @@ async function renderPost(container, post) {
   backBtn.textContent = "← Back";
   backBtn.onclick = () => window.loadView("home");
 
-  const reportBtn = document.createElement("button");
-  reportBtn.className = "ghost-btn";
-  reportBtn.textContent = "Report";
-
-  footer.append(backBtn, reportBtn);
+  footer.appendChild(backBtn);
 
   layout.append(left, right);
   container.append(layout, footer);
