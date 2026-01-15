@@ -177,80 +177,88 @@ function buildPostCard(post, category) {
   const card = document.createElement("div");
   card.className = `post-card ${post.type || ""}`;
 
-  const imgSrc =
-    post.imageUrl ||
-    (Array.isArray(post.imageUrls) && post.imageUrls[0]) ||
-    "/index/images/webholder.svg";
+  const img = post.imageUrl ||
+              (Array.isArray(post.imageUrls) && post.imageUrls[0]) ||
+              "/index/images/webholder.svg";
 
   const area = post.area || "Rhondda";
-  const priceText =
-    post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+  const price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
 
-  // Build badges HTML (icons only)
-  const badgesHTML = Array.isArray(post.badges) && post.badges.length
-    ? `<div class="post-badges">
-         ${post.badges
-           .map((b) => BADGE_ICONS[b])
-           .filter(Boolean)
-           .map((icon) => `<span class="badge-icon">${icon}</span>`)
-           .join("")}
-       </div>`
-    : "";
+  card.innerHTML = `
+    <div class="post-image">
+      <img src="${img}" alt="${escapeHtml(post.title || "Listing image")}" loading="lazy"
+           onerror="this.src='/index/images/image-webholder.webp'">
+      ${price ? `<div class="price-badge">${price}</div>` : ""}
+    </div>
 
-a.innerHTML = `
-  <div class="post-image">
-    <img src="${r}" alt="${escapeHtml(e.title||"Listing image")}" loading="lazy"
-         onerror="this.src='/index/images/image-webholder.webp'">
-    ${s ? `<div class="price-badge">${s}</div>` : ""}
-  </div>
+    <div class="post-body">
+      <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
 
-  <div class="post-body">
-    <h3 class="post-title">${escapeHtml(e.title || "Untitled post")}</h3>
+      <p class="post-teaser">${escapeHtml(post.description || "")}</p>
 
-    <p class="post-teaser">${escapeHtml(e.description || "")}</p>
+      <div class="post-meta">
+        <span class="post-price">${price}</span>
 
-<div class="post-meta">
-  <span class="post-price">${s}</span>
+        <button class="heart-btn" data-id="${post.id}" aria-label="Save Post">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
+                     2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
+                     C13.09 3.81 14.76 3 16.5 3 
+                     19.58 3 22 5.42 22 8.5
+                     c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"/>
+          </svg>
+        </button>
 
-  <button class="heart-btn" data-id="${e.id}" aria-label="Save Post">
-    <svg viewBox="0 0 24 24" width="20" height="20">
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
-               2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
-               C13.09 3.81 14.76 3 16.5 3 
-               19.58 3 22 5.42 22 8.5
-               c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"/>
-    </svg>
-  </button>
+        <span class="post-area">📍 ${escapeHtml(area)}</span>
+      </div>
+    </div>
+  `;
 
-  <span class="post-area">📍 ${escapeHtml(o)}</span>
-</div>
-  </div>
-`;
+  // ⭐ HEART BUTTON LOGIC (INSIDE buildPostCard)
+  const heartBtn = card.querySelector(".heart-btn");
 
-  // Click handler (card navigates to view-post)
-card.addEventListener("click", () => {
-  sessionStorage.setItem("viewPostId", post.id);
-  sessionStorage.setItem("homeScroll", window.scrollY);
-  sessionStorage.setItem("homeCategory", category);
-  sessionStorage.setItem("homeSearch", window.currentSearch || "");
+  heartBtn.addEventListener("click", async (ev) => {
+    ev.stopPropagation();
 
-  if (typeof window.loadView === "function") {
-    window.loadView("view-post");
-  } else {
-    console.warn("⚠️ window.loadView is not defined");
-  }
-});
+    if (!window.currentUser) {
+      window.openLoginModal?.();
+      return;
+    }
 
-return card;
+    const postId = heartBtn.dataset.id;
+    const { db } = await getFirebase();
+    const uid = window.currentUser.uid;
+
+    const ref = doc(db, "users", uid, "saved", postId);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      await deleteDoc(ref);
+      heartBtn.classList.remove("saved");
+    } else {
+      await setDoc(ref, {
+        postId,
+        savedAt: Date.now()
+      });
+      heartBtn.classList.add("saved");
+    }
+  });
+
+  // ⭐ CARD CLICK (open post)
+  card.addEventListener("click", () => {
+    sessionStorage.setItem("viewPostId", post.id);
+    sessionStorage.setItem("homeScroll", window.scrollY);
+    sessionStorage.setItem("homeCategory", category);
+    sessionStorage.setItem("homeSearch", window.currentSearch || "");
+
+    window.loadView?.("view-post");
+  });
+
+  return card;
 }
-
-const heartBtn = card.querySelector(".heart-btn");
-
-heartBtn.addEventListener("click", async (ev) => {
-  ev.stopPropagation(); // prevent opening the post
 
   if (!window.currentUser) {
     window.openLoginModal?.();
