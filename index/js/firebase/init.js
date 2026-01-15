@@ -10,6 +10,28 @@ let firebasePromise = null;
 export function getFirebase() {
   if (firebasePromise) return firebasePromise;
 
+ import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+window.logoutUser = async function () {
+  try {
+    const { auth } = await getFirebase();
+    await signOut(auth);
+
+    // Clear session data
+    sessionStorage.clear();
+    localStorage.clear();
+
+    // Reset globals
+    window.currentUser = null;
+    window.currentUserDoc = null;
+
+    // Go back to home
+    window.loadView?.("home");
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
+  
   firebasePromise = (async () => {
     const res = await fetch('/.netlify/functions/firebaseConfig');
     if (!res.ok) throw new Error("Failed to load Firebase config");
