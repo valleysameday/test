@@ -197,54 +197,39 @@ function buildPostCard(post, category) {
        </div>`
     : "";
 
-  // Card markup
-  card.innerHTML = `
+a.innerHTML = `
   <div class="post-image">
-    <img src="${imgSrc}" alt="${escapeHtml(
-      post.title || "Listing image"
-    )}" loading="lazy"
+    <img src="${r}" alt="${escapeHtml(e.title||"Listing image")}" loading="lazy"
          onerror="this.src='/index/images/image-webholder.webp'">
-    ${priceText ? `<div class="price-badge">${priceText}</div>` : ""}
+    ${s ? `<div class="price-badge">${s}</div>` : ""}
   </div>
 
   <div class="post-body">
-    <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
-    ${badgesHTML}
-    <p class="post-teaser">${escapeHtml(post.description || "")}</p>
+    <h3 class="post-title">${escapeHtml(e.title || "Untitled post")}</h3>
+
+    <p class="post-teaser">${escapeHtml(e.description || "")}</p>
 
     <div class="post-meta">
-      ${
-        post.price !== undefined && post.price !== null
-          ? `<span class="post-price">${priceText}</span>`
-          : ""
-      }
-      <span class="post-area">📍 ${escapeHtml(area)}</span>
-      <span class="post-category">
-        ${escapeHtml(post.categoryLabel || post.category || "Other")}
-      </span>
+      <span class="post-area">📍 ${escapeHtml(o)}</span>
     </div>
   </div>
-
-  <button class="report-btn" title="Report this post">⚑</button>
 `;
 
   // Click handler (card navigates to view-post)
-  card.addEventListener("click", (e) => {
-    if (e.target.closest(".report-btn")) return;
+card.addEventListener("click", () => {
+  sessionStorage.setItem("viewPostId", post.id);
+  sessionStorage.setItem("homeScroll", window.scrollY);
+  sessionStorage.setItem("homeCategory", category);
+  sessionStorage.setItem("homeSearch", window.currentSearch || "");
 
-    sessionStorage.setItem("viewPostId", post.id);
-    sessionStorage.setItem("homeScroll", window.scrollY);
-    sessionStorage.setItem("homeCategory", category);
-    sessionStorage.setItem("homeSearch", window.currentSearch || "");
+  if (typeof window.loadView === "function") {
+    window.loadView("view-post");
+  } else {
+    console.warn("⚠️ window.loadView is not defined");
+  }
+});
 
-    if (typeof window.loadView === "function") {
-      window.loadView("view-post");
-    } else {
-      console.warn("⚠️ window.loadView is not defined");
-    }
-  });
-
-  return card;
+return card;
 }
 
 /* --------------------------------------------------
