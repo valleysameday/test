@@ -1,4 +1,4 @@
-:root {
+  :root {
     /* Modern 2025 Color Profile */
     --brand-primary: #FF7EB3;
     --brand-secondary: #FF7E5F;
@@ -94,8 +94,6 @@ header img.logo {
 }
 
 
-
-
 /* 6. FLOATING ACTION BAR (BOTTOM NAV) */
 
 .action-bar {
@@ -106,8 +104,8 @@ header img.logo {
     z-index: 1000;
     display: flex;
     justify-content: center;
-    gap: 30px;
-    padding: 14px 0;
+    gap: 50px;
+    padding: 5px 0;
     /* Aquatic Awe: Vibrant, fresh, and modern for 2026 */
     background: #00D2D3; 
     border-top: 1px solid rgba(255, 255, 255, 0.2);
@@ -137,20 +135,7 @@ header img.logo {
 
 .icon-wrap { position: relative; }
 
-.free-ribbon {
-    position: absolute;
-    top: -8px;
-    right: -24px;
-    /* Neon Shock accent: Blazing Orange to grab instant attention */
-    background: #FF5F1F; 
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 3px 6px;
-    border-radius: 6px;
-    transform: rotate(12deg);
-    box-shadow: 0 2px 8px rgba(255, 95, 31, 0.4);
-}
+
 .action-link,
 .action-link:visited,
 .action-link:hover,
