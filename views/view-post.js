@@ -194,7 +194,7 @@ async function renderPost(container, post) {
       <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
       <div class="seller-header-info">
         <p class="posted-by"><strong>${sellerName}</strong></p>
-        <p class="posted-on">Rhondda Noticeboard</p>
+        <p class="posted-on">RCT -X</p>
       </div>
     </div>
     <h1>${post.title || "Untitled post"}</h1>
@@ -221,6 +221,31 @@ async function renderPost(container, post) {
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
+/* ---------- CONTACT ACTIONS ---------- */
+if (post.phone) {
+  const actions = document.createElement("div");
+  actions.className = "view-post-actions";
+
+  const callBtn = document.createElement("a");
+  callBtn.href = `tel:${post.phone}`;
+  callBtn.className = "engage-btn";
+  callBtn.textContent = "Call";
+  actions.appendChild(callBtn);
+
+  const cleaned = post.phone.replace(/\D/g, "");
+  const isMobile = /^07\d{8,9}$/.test(cleaned);
+
+  if (post.allowWhatsApp && isMobile) {
+    const waBtn = document.createElement("a");
+    waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
+    waBtn.className = "secondary-btn";
+    waBtn.textContent = "WhatsApp";
+    actions.appendChild(waBtn);
+  }
+
+  right.appendChild(actions);
+}
+  
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
 
