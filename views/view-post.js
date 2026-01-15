@@ -49,7 +49,7 @@ export async function init() {
   const fb = await getFirebase();
   db = fb.db;
 
-  await waitForAuth(1500);
+  await waitForAuth();
 
   let postId = null;
 
