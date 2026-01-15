@@ -2,6 +2,7 @@ import { getFirebase } from "/index/js/firebase/init.js";
 import {
   collection,
   query,
+  getDoc,
   where,
   getDocs,
   doc,
