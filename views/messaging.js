@@ -167,7 +167,7 @@ function closeConversation() {
 /* ==========================
    REAL-TIME MESSAGE LISTENER
 ========================== */
-function listenForMessages(conversationId) {
+async function listenForMessages(conversationId) {
   const { db } = await getFirebase();
 
   if (unsubscribeMessages) unsubscribeMessages();
