@@ -291,6 +291,7 @@ if (post.phone) {
   const cleaned = post.phone.replace(/\D/g, "");
   const isMobile = /^07\d{8,9}$/.test(cleaned);
 
+  // WhatsApp only appears if allowed AND number is mobile
   if (post.allowWhatsApp && isMobile) {
     waBtn = document.createElement("a");
     waBtn.className = "secondary-btn";
@@ -303,7 +304,10 @@ if (post.phone) {
   if (window.currentUser) {
     // Logged in → unlock immediately
     callBtn.href = `tel:${post.phone}`;
-    if (waBtn) waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
+
+    if (waBtn) {
+      waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
+    }
   } else {
     // Not logged in → clicking opens login modal
     callBtn.onclick = () => window.openLoginModal?.();
