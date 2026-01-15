@@ -278,65 +278,40 @@ if (post.userId && post.userId !== currentUser?.uid) {
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-  /* ---------- CONTACT ACTIONS ---------- */
-  if (post.phone) {
-    const actions = document.createElement("div");
-    actions.className = "view-post-actions";
+/* ---------- CONTACT ACTIONS ---------- */
+if (post.phone) {
+  const actions = document.createElement("div");
+  actions.className = "view-post-actions";
 
-    const callBtn = document.createElement("a");
-    callBtn.className = "engage-btn locked";
-    callBtn.textContent = "Call";
+  const callBtn = document.createElement("a");
+  callBtn.className = "engage-btn";
+  callBtn.textContent = "Call";
 
-    let waBtn = null;
-    const cleaned = post.phone.replace(/\D/g, "");
-    const isMobile = /^07\d{8,9}$/.test(cleaned);
+  let waBtn = null;
+  const cleaned = post.phone.replace(/\D/g, "");
+  const isMobile = /^07\d{8,9}$/.test(cleaned);
 
-    if (post.allowWhatsApp && isMobile) {
-      waBtn = document.createElement("a");
-      waBtn.className = "secondary-btn locked";
-      waBtn.textContent = "WhatsApp";
-      actions.appendChild(waBtn);
-    }
-
-    actions.appendChild(callBtn);
-
-    const unlock = () => {
-      callBtn.classList.remove("locked");
-      callBtn.href = `tel:${post.phone}`;
-
-      if (waBtn) {
-        waBtn.classList.remove("locked");
-        waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
-      }
-    };
-
-    const handleClick = type => e => {
-      e.preventDefault();
-
-      if (!window.currentUser) {
-        sessionStorage.setItem("unlockContactPost", post.id);
-        window.openLoginModal?.();
-        return;
-      }
-
-      trackClick(type, post.id);
-      unlock();
-    };
-
-    callBtn.addEventListener("click", handleClick("call_click"));
-    waBtn?.addEventListener("click", handleClick("whatsapp_click"));
-
-    if (
-      window.currentUser &&
-      sessionStorage.getItem("unlockContactPost") === post.id
-    ) {
-      unlock();
-      sessionStorage.removeItem("unlockContactPost");
-    }
-
-    right.appendChild(actions);
+  if (post.allowWhatsApp && isMobile) {
+    waBtn = document.createElement("a");
+    waBtn.className = "secondary-btn";
+    waBtn.textContent = "WhatsApp";
+    actions.appendChild(waBtn);
   }
 
+  actions.appendChild(callBtn);
+
+  if (window.currentUser) {
+    // Logged in → unlock immediately
+    callBtn.href = `tel:${post.phone}`;
+    if (waBtn) waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
+  } else {
+    // Not logged in → clicking opens login modal
+    callBtn.onclick = () => window.openLoginModal?.();
+    if (waBtn) waBtn.onclick = () => window.openLoginModal?.();
+  }
+
+  right.appendChild(actions);
+}
   /* ---------- FOOTER ---------- */
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
