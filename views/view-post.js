@@ -17,7 +17,24 @@ const PLACEHOLDER_IMG = "/index/images/webholder.svg";
 let db;
 
 /* =====================================================
-   UTIL: TEMP BUTTON LOCK (ANTI DOUBLE CLICK)
+   ⭐ TOAST NOTIFICATION
+===================================================== */
+function showToast(msg, type = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+/* =====================================================
+   UTIL: TEMP BUTTON LOCK
 ===================================================== */
 function lockTemporarily(el, ms = 1200) {
   if (!el) return;
@@ -26,19 +43,10 @@ function lockTemporarily(el, ms = 1200) {
 }
 
 /* =====================================================
-   CLICK TRACKING (HOOKS ONLY)
-   → Replace console.log with Firestore later
+   CLICK TRACKING
 ===================================================== */
 function trackClick(type, postId) {
   console.log(`📊 TRACK: ${type}`, postId);
-
-  // READY FOR FIRESTORE
-  // addDoc(collection(db, "clickEvents"), {
-  //   type,
-  //   postId,
-  //   userId: window.currentUser?.uid || null,
-  //   ts: Date.now()
-  // });
 }
 
 /* =====================================================
@@ -71,7 +79,7 @@ export async function init() {
 }
 
 /* =====================================================
-   WAIT FOR AUTH (NON-BLOCKING)
+   WAIT FOR AUTH
 ===================================================== */
 function waitForAuth(timeout = 1500) {
   return new Promise(resolve => {
@@ -117,19 +125,23 @@ async function loadPost(postId) {
 }
 
 /* =====================================================
-   START CONVERSATION
+   ⭐ INLINE MESSAGE SENDER (NO DASHBOARD)
 ===================================================== */
-async function startConversation(post) {
+async function sendInlineMessage(post, text) {
   if (!window.currentUser) {
     window.openLoginModal?.();
-    return;
+    return { ok: false, error: "not_logged_in" };
   }
 
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
   const sellerId = post.userId;
-  if (!sellerId || sellerId === uid) return;
 
+  if (!sellerId || sellerId === uid) {
+    return { ok: false, error: "invalid_seller" };
+  }
+
+  // Find existing conversation
   const q = query(
     collection(db, "conversations"),
     where("participants", "array-contains", uid)
@@ -145,21 +157,32 @@ async function startConversation(post) {
     }
   });
 
+  // Create conversation if needed
   if (!conversationId) {
     const convRef = await addDoc(collection(db, "conversations"), {
       participants: [uid, sellerId],
       lastMessage: "",
       updatedAt: Date.now(),
       postId: post.id,
-      deletedFor: {}
+      unread: {}
     });
     conversationId = convRef.id;
   }
 
-  trackClick("message_seller", post.id);
+  // Send first message
+  await addDoc(collection(db, "conversations", conversationId, "messages"), {
+    senderId: uid,
+    text,
+    createdAt: Date.now()
+  });
 
-  sessionStorage.setItem("openConversationId", conversationId);
-  window.loadView("dashboard", "messages");
+  await updateDoc(doc(db, "conversations", conversationId), {
+    lastMessage: text,
+    updatedAt: Date.now(),
+    [`unread.${sellerId}`]: true
+  });
+
+  return { ok: true };
 }
 
 /* =====================================================
@@ -216,18 +239,34 @@ async function renderPost(container, post) {
     right.appendChild(price);
   }
 
-  /* ---------- MESSAGE SELLER ---------- */
+  /* =====================================================
+     ⭐ INLINE MESSAGE BOX (GUMTREE STYLE)
+  ====================================================== */
   if (post.userId && post.userId !== currentUser?.uid) {
-    const msgBtn = document.createElement("button");
-    msgBtn.className = "primary-btn";
-    msgBtn.textContent = "Message Seller";
+    const quickBox = document.createElement("div");
+    quickBox.className = "quick-message-box";
 
-    msgBtn.onclick = () => {
-      lockTemporarily(msgBtn);
-      startConversation(post);
+    quickBox.innerHTML = `
+      <textarea id="quickMessageInput" class="quick-message-input" rows="2">
+Hi, is this still available?
+      </textarea>
+      <button id="quickMessageSend" class="primary-btn">Send Message</button>
+    `;
+
+    right.appendChild(quickBox);
+
+    document.getElementById("quickMessageSend").onclick = async () => {
+      const text = document.getElementById("quickMessageInput").value.trim();
+      if (!text) return;
+
+      const result = await sendInlineMessage(post, text);
+
+      if (result.ok) {
+        showToast("Message sent to seller");
+      } else {
+        showToast("Failed to send message", "error");
+      }
     };
-
-    right.appendChild(msgBtn);
   }
 
   /* ---------- DESCRIPTION ---------- */
@@ -236,7 +275,7 @@ async function renderPost(container, post) {
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-  /* ---------- CONTACT ACTIONS (LOCKED) ---------- */
+  /* ---------- CONTACT ACTIONS ---------- */
   if (post.phone) {
     const actions = document.createElement("div");
     actions.className = "view-post-actions";
@@ -284,7 +323,6 @@ async function renderPost(container, post) {
     callBtn.addEventListener("click", handleClick("call_click"));
     waBtn?.addEventListener("click", handleClick("whatsapp_click"));
 
-    // AUTO UNLOCK AFTER LOGIN
     if (
       window.currentUser &&
       sessionStorage.getItem("unlockContactPost") === post.id
