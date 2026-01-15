@@ -247,6 +247,34 @@ card.addEventListener("click", () => {
 return card;
 }
 
+const heartBtn = card.querySelector(".heart-btn");
+
+heartBtn.addEventListener("click", async (ev) => {
+  ev.stopPropagation(); // prevent opening the post
+
+  if (!window.currentUser) {
+    window.openLoginModal?.();
+    return;
+  }
+
+  const postId = heartBtn.dataset.id;
+  const { db } = await getFirebase();
+  const uid = window.currentUser.uid;
+
+  const ref = doc(db, "users", uid, "saved", postId);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    await deleteDoc(ref);
+    heartBtn.classList.remove("saved");
+  } else {
+    await setDoc(ref, {
+      postId,
+      savedAt: Date.now()
+    });
+    heartBtn.classList.add("saved");
+  }
+});
 /* --------------------------------------------------
    WEATHER WIDGET
 -------------------------------------------------- */
