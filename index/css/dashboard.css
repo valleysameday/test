@@ -1,4 +1,5 @@
-.hidden {
+  
+  .hidden {
   display: none !important;
 }
 .dashboard {
@@ -426,4 +427,27 @@
   font-size: 1rem;
   cursor: pointer;
   margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 2fr);
+    gap: 12px;
+  }
+
+  .dash-card {
+    padding: 1px;
+  }
+
+  .dash-icon {
+    font-size: 1.6rem;
+  }
+
+  .dash-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .dash-card p {
+    font-size: 0.8rem;
+  }
 }
