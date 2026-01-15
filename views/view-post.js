@@ -17,6 +17,31 @@ const PLACEHOLDER_IMG = "/index/images/webholder.svg";
 let db;
 
 /* =====================================================
+   UTIL: TEMP BUTTON LOCK (ANTI DOUBLE CLICK)
+===================================================== */
+function lockTemporarily(el, ms = 1200) {
+  if (!el) return;
+  el.disabled = true;
+  setTimeout(() => (el.disabled = false), ms);
+}
+
+/* =====================================================
+   CLICK TRACKING (HOOKS ONLY)
+   → Replace console.log with Firestore later
+===================================================== */
+function trackClick(type, postId) {
+  console.log(`📊 TRACK: ${type}`, postId);
+
+  // READY FOR FIRESTORE
+  // addDoc(collection(db, "clickEvents"), {
+  //   type,
+  //   postId,
+  //   userId: window.currentUser?.uid || null,
+  //   ts: Date.now()
+  // });
+}
+
+/* =====================================================
    SPA ENTRY POINT
 ===================================================== */
 export async function init() {
@@ -72,10 +97,7 @@ function waitForAuth(timeout = 1500) {
 ===================================================== */
 async function loadPost(postId) {
   const container = document.getElementById("viewPostContent");
-  if (!container) {
-    console.error("❌ #viewPostContent not found");
-    return;
-  }
+  if (!container) return;
 
   container.innerHTML = "<p class='loading'>Loading post…</p>";
 
@@ -85,10 +107,7 @@ async function loadPost(postId) {
     return;
   }
 
-  const post = {
-    id: snap.id,
-    ...snap.data()
-  };
+  const post = { id: snap.id, ...snap.data() };
 
   updateDoc(doc(db, "posts", postId), {
     views: increment(1)
@@ -102,18 +121,13 @@ async function loadPost(postId) {
 ===================================================== */
 async function startConversation(post) {
   if (!window.currentUser) {
-    if (typeof window.openLoginModal === "function") {
-      window.openLoginModal();
-    } else {
-      alert("Please sign in to message the seller.");
-    }
+    window.openLoginModal?.();
     return;
   }
 
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
   const sellerId = post.userId;
-
   if (!sellerId || sellerId === uid) return;
 
   const q = query(
@@ -126,8 +140,7 @@ async function startConversation(post) {
   let conversationId = null;
 
   snap.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.participants?.includes(sellerId)) {
+    if (docSnap.data().participants?.includes(sellerId)) {
       conversationId = docSnap.id;
     }
   });
@@ -140,9 +153,10 @@ async function startConversation(post) {
       postId: post.id,
       deletedFor: {}
     });
-
     conversationId = convRef.id;
   }
+
+  trackClick("message_seller", post.id);
 
   sessionStorage.setItem("openConversationId", conversationId);
   window.loadView("dashboard", "messages");
@@ -154,18 +168,13 @@ async function startConversation(post) {
 async function renderPost(container, post) {
   container.innerHTML = "";
 
+  const currentUser = window.currentUser || null;
   let sellerName = "Local Seller";
 
   if (post.userId) {
-    try {
-      const userSnap = await getDoc(doc(db, "users", post.userId));
-      if (userSnap.exists()) {
-        sellerName = userSnap.data().firstName || sellerName;
-      }
-    } catch {}
+    const u = await getDoc(doc(db, "users", post.userId));
+    if (u.exists()) sellerName = u.data().firstName || sellerName;
   }
-
-  const currentUser = window.currentUser || null;
 
   const images = post.imageUrls?.length
     ? post.imageUrls
@@ -194,7 +203,7 @@ async function renderPost(container, post) {
       <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
       <div class="seller-header-info">
         <p class="posted-by"><strong>${sellerName}</strong></p>
-        <p class="posted-on">RCT -X</p>
+        <p class="posted-on">RCT-X</p>
       </div>
     </div>
     <h1>${post.title || "Untitled post"}</h1>
@@ -207,45 +216,87 @@ async function renderPost(container, post) {
     right.appendChild(price);
   }
 
-  /* ---------- MESSAGE SELLER (ALWAYS VISIBLE) ---------- */
+  /* ---------- MESSAGE SELLER ---------- */
   if (post.userId && post.userId !== currentUser?.uid) {
     const msgBtn = document.createElement("button");
     msgBtn.className = "primary-btn";
     msgBtn.textContent = "Message Seller";
-    msgBtn.onclick = () => startConversation(post);
+
+    msgBtn.onclick = () => {
+      lockTemporarily(msgBtn);
+      startConversation(post);
+    };
+
     right.appendChild(msgBtn);
   }
 
+  /* ---------- DESCRIPTION ---------- */
   const desc = document.createElement("p");
   desc.className = "view-post-desc";
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-/* ---------- CONTACT ACTIONS ---------- */
-if (post.phone) {
-  const actions = document.createElement("div");
-  actions.className = "view-post-actions";
+  /* ---------- CONTACT ACTIONS (LOCKED) ---------- */
+  if (post.phone) {
+    const actions = document.createElement("div");
+    actions.className = "view-post-actions";
 
-  const callBtn = document.createElement("a");
-  callBtn.href = `tel:${post.phone}`;
-  callBtn.className = "engage-btn";
-  callBtn.textContent = "Call";
-  actions.appendChild(callBtn);
+    const callBtn = document.createElement("a");
+    callBtn.className = "engage-btn locked";
+    callBtn.textContent = "Call";
 
-  const cleaned = post.phone.replace(/\D/g, "");
-  const isMobile = /^07\d{8,9}$/.test(cleaned);
+    let waBtn = null;
+    const cleaned = post.phone.replace(/\D/g, "");
+    const isMobile = /^07\d{8,9}$/.test(cleaned);
 
-  if (post.allowWhatsApp && isMobile) {
-    const waBtn = document.createElement("a");
-    waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
-    waBtn.className = "secondary-btn";
-    waBtn.textContent = "WhatsApp";
-    actions.appendChild(waBtn);
+    if (post.allowWhatsApp && isMobile) {
+      waBtn = document.createElement("a");
+      waBtn.className = "secondary-btn locked";
+      waBtn.textContent = "WhatsApp";
+      actions.appendChild(waBtn);
+    }
+
+    actions.appendChild(callBtn);
+
+    const unlock = () => {
+      callBtn.classList.remove("locked");
+      callBtn.href = `tel:${post.phone}`;
+
+      if (waBtn) {
+        waBtn.classList.remove("locked");
+        waBtn.href = `https://wa.me/44${cleaned.slice(1)}`;
+      }
+    };
+
+    const handleClick = type => e => {
+      e.preventDefault();
+
+      if (!window.currentUser) {
+        sessionStorage.setItem("unlockContactPost", post.id);
+        window.openLoginModal?.();
+        return;
+      }
+
+      trackClick(type, post.id);
+      unlock();
+    };
+
+    callBtn.addEventListener("click", handleClick("call_click"));
+    waBtn?.addEventListener("click", handleClick("whatsapp_click"));
+
+    // AUTO UNLOCK AFTER LOGIN
+    if (
+      window.currentUser &&
+      sessionStorage.getItem("unlockContactPost") === post.id
+    ) {
+      unlock();
+      sessionStorage.removeItem("unlockContactPost");
+    }
+
+    right.appendChild(actions);
   }
 
-  right.appendChild(actions);
-}
-  
+  /* ---------- FOOTER ---------- */
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
 
@@ -260,4 +311,4 @@ if (post.phone) {
   container.append(layout, footer);
 
   console.log("✅ Post rendered correctly");
-}
+    }
