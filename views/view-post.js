@@ -239,35 +239,38 @@ async function renderPost(container, post) {
     right.appendChild(price);
   }
 
-  /* =====================================================
-     ⭐ INLINE MESSAGE BOX (GUMTREE STYLE)
-  ====================================================== */
-  if (post.userId && post.userId !== currentUser?.uid) {
-    const quickBox = document.createElement("div");
-    quickBox.className = "quick-message-box";
+/* =====================================================
+   ⭐ INLINE MESSAGE BOX ( STYLE)
+===================================================== */
+if (post.userId && post.userId !== currentUser?.uid) {
+  const quickBox = document.createElement("div");
+  quickBox.className = "quick-message-box";
 
-    quickBox.innerHTML = `
-      <textarea id="quickMessageInput" class="quick-message-input" rows="2">
-Hi, is this still available?
-      </textarea>
-      <button id="quickMessageSend" class="primary-btn">Send Message</button>
-    `;
+  // IMPORTANT: no indentation inside template string
+  quickBox.innerHTML = `
+<textarea id="quickMessageInput" class="quick-message-input" rows="2">Hi, is this still available?</textarea>
+<button id="quickMessageSend" class="primary-btn">Send Message</button>
+  `;
 
-    right.appendChild(quickBox);
+  right.appendChild(quickBox);
 
-    document.getElementById("quickMessageSend").onclick = async () => {
-      const text = document.getElementById("quickMessageInput").value.trim();
-      if (!text) return;
+  // SAFER: query inside quickBox, not document
+  const sendBtn = quickBox.querySelector("#quickMessageSend");
+  const input = quickBox.querySelector("#quickMessageInput");
 
-      const result = await sendInlineMessage(post, text);
+  sendBtn.onclick = async () => {
+    const text = input.value.trim();
+    if (!text) return;
 
-      if (result.ok) {
-        showToast("Message sent to seller");
-      } else {
-        showToast("Failed to send message", "error");
-      }
-    };
-  }
+    const result = await sendInlineMessage(post, text);
+
+    if (result.ok) {
+      showToast("Message sent to seller");
+    } else {
+      showToast("Failed to send message", "error");
+    }
+  };
+}
 
   /* ---------- DESCRIPTION ---------- */
   const desc = document.createElement("p");
