@@ -292,10 +292,3 @@
 .follow-btn:hover {
   background-color: #1e40af;
 }
-
-
-.follow-btn {
-  position: absolute;
-  right: 0;
-  top: 0;
-}
