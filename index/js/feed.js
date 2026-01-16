@@ -195,7 +195,7 @@ function buildPostCard(post, category) {
     else if (isRent) {
       if (rentAmount > 0) {
         if (rentFreq === "pcm") price = `£${rentAmount} pcm`;
-        else if (rentFreq === "weekly") price = `£${rentAmount} pw`;
+        else if (rentFreq === "pw") price = `£${rentAmount} pw`;
         else price = `£${rentAmount}`;
       } else {
         price = "£0";
