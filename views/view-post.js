@@ -224,6 +224,39 @@ async function renderPost(container, post) {
     <h1>${post.title || "Untitled post"}</h1>
   `;
 
+
+  const sellerInfo = right.querySelector(".seller-header-info");
+
+const followBtn = document.createElement("button");
+followBtn.className = "follow-btn";
+followBtn.textContent = "Follow";
+
+followBtn.onclick = async () => {
+  if (!window.currentUser) {
+    window.openLoginModal?.();
+    return;
+  }
+
+  const uid = window.currentUser.uid;
+  const ref = doc(db, "users", uid, "following", post.userId);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    await deleteDoc(ref);
+    followBtn.textContent = "Follow";
+    showToast("Unfollowed seller");
+  } else {
+    await setDoc(ref, {
+      userId: post.userId,
+      followedAt: Date.now()
+    });
+    followBtn.textContent = "Following";
+    showToast("You’re now following this seller");
+  }
+};
+
+sellerInfo.appendChild(followBtn);
+  
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
