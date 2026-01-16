@@ -1,4 +1,4 @@
-  :root {
+    :root {
     /* Modern 2025 Color Profile */
     --brand-primary: #FF7EB3;
     --brand-secondary: #FF7E5F;
@@ -104,10 +104,10 @@ header img.logo {
 .site-footer {
   background: #0b1e9c;
   color: #e5e7eb;
-  padding: 80px 16px;
+  padding: 28px 16px;
   text-align: center;
   font-family: 'Poppins', sans-serif;
-  line-height: 1.4;
+  line-height: 1.25;
 }
 
 .footer-inner {
@@ -116,7 +116,7 @@ header img.logo {
 }
 
 .footer-brand {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .footer-tagline {
@@ -132,7 +132,7 @@ header img.logo {
 }
 
 .footer-links {
-  margin: 12px 0;
+  margin: 6px 0;
   font-size: 0.95rem;
 }
 
@@ -160,7 +160,7 @@ header img.logo {
 .footer-copy {
   font-size: 0.8rem;
   color: #9ca3af;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 
 
