@@ -193,7 +193,7 @@ async function renderPost(container, post) {
 
   const currentUser = window.currentUser || null;
   let sellerName = "Local Seller";
-}
+
 
   const images = post.imageUrls?.length
     ? post.imageUrls
