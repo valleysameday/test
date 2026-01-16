@@ -16,8 +16,21 @@ import {
   sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import * as Messaging from "/views/messaging.js";
+
 let currentEditAdId = null;
 
+/* ================= FOLLOWERS ================= */
+async function loadFollowerCount(uid) {
+  if (!uid) return;
+  const el = document.getElementById("profileFollowers");
+  if (!el) return;
+
+  const { db } = await getFirebase();
+  const snap = await getDocs(collection(db, "users", uid, "following"));
+  el.textContent = snap.size;
+}
+
+/* ================= INIT ================= */
 export async function init() {
   const nameEl = document.getElementById("dashUserName");
   const profileName = document.getElementById("profileName");
@@ -36,6 +49,11 @@ export async function init() {
   if (window.currentUser?.metadata?.creationTime) {
     const d = new Date(window.currentUser.metadata.creationTime);
     profileSince.textContent = d.toLocaleDateString("en-GB");
+  }
+
+  // ✅ follower count
+  if (window.currentUser?.uid) {
+    loadFollowerCount(window.currentUser.uid);
   }
 
   document.querySelectorAll(".dash-card").forEach(card => {
@@ -57,28 +75,28 @@ export async function init() {
 
   await loadMyAds();
   await Messaging.initMessaging();
+
   const openConv = sessionStorage.getItem("openConversationId");
-if (openConv) {
-  sessionStorage.removeItem("openConversationId");
+  if (openConv) {
+    sessionStorage.removeItem("openConversationId");
 
-  // Load conversation details
-  const { db } = await getFirebase();
-  const convSnap = await getDoc(doc(db, "conversations", openConv));
-  const data = convSnap.data();
+    const { db } = await getFirebase();
+    const convSnap = await getDoc(doc(db, "conversations", openConv));
+    const data = convSnap.data();
 
-  const uid = window.currentUser.uid;
-  const otherUserId = data.participants.find(id => id !== uid);
+    const uid = window.currentUser.uid;
+    const otherUserId = data.participants.find(id => id !== uid);
 
-  // Load other user's name
-  const userSnap = await getDoc(doc(db, "users", otherUserId));
-  const otherName = userSnap.data()?.firstName || "User";
+    const userSnap = await getDoc(doc(db, "users", otherUserId));
+    const otherName = userSnap.data()?.firstName || "User";
 
-  // Open conversation
-  Messaging.openConversation(openConv, otherName, otherUserId);
-}
+    Messaging.openConversation(openConv, otherName, otherUserId);
+  }
+
   showSection("myAds");
 }
 
+/* ================= SECTIONS ================= */
 function showSection(id) {
   document.querySelectorAll(".dash-section").forEach(sec => {
     sec.classList.add("hidden");
@@ -88,6 +106,7 @@ function showSection(id) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* ================= MY ADS ================= */
 async function loadMyAds() {
   const listEl = document.getElementById("myAdsList");
   const statsEl = document.getElementById("myAdsStats");
@@ -152,13 +171,12 @@ async function loadMyAds() {
     item.addEventListener("click", e => {
       const actionBtn = e.target.closest("button[data-action]");
       if (!actionBtn) return;
-      const action = actionBtn.dataset.action;
-      const id = item.dataset.id;
-      handleAdAction(action, id);
+      handleAdAction(actionBtn.dataset.action, item.dataset.id);
     });
   });
 }
 
+/* ================= ACTIONS ================= */
 function handleAdAction(action, id) {
   if (action === "view") {
     sessionStorage.setItem("viewPostId", id);
@@ -199,6 +217,7 @@ async function deleteAd(id) {
   await loadMyAds();
 }
 
+/* ================= EDIT ================= */
 async function openEditModal(id) {
   currentEditAdId = id;
   const { db } = await getFirebase();
@@ -256,6 +275,7 @@ async function onSaveEditAd(e) {
   }, 400);
 }
 
+/* ================= SETTINGS ================= */
 async function onSaveSettings(e) {
   e.preventDefault();
   const nameInput = document.getElementById("settingsName");
@@ -324,4 +344,4 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-    }
+                            }
