@@ -131,7 +131,14 @@ export async function initLogin() {
 
     // Close modal and go to dashboard/home
     window.closeScreens?.();
-    window.navigateToDashboard?.();
+  if (window.loginRedirect === "dashboard") {
+  window.navigateToDashboard();
+} else if (window.loginRedirect === "post") {
+  openScreen("post");
+} else {
+  // default: stay on the same view
+  window.closeScreens();
+  }
   });
 }
 
