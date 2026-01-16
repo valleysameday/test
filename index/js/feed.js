@@ -79,6 +79,24 @@ export async function initFeed() {
 
     categoriesEl.dataset.bound = "true";
   }
+/* --------------------------------------------------
+   SEARCH BAR LISTENER
+-------------------------------------------------- */
+const searchInput = document.getElementById("searchInput");
+
+if (searchInput && !searchInput.dataset.bound) {
+  searchInput.value = window.currentSearch || "";
+
+  searchInput.addEventListener("input", () => {
+    window.currentSearch = searchInput.value.trim().toLowerCase();
+    sessionStorage.setItem("homeSearch", window.currentSearch);
+
+    const cat = sessionStorage.getItem("homeCategory") || "all";
+    renderPosts(cat);
+  });
+
+  searchInput.dataset.bound = "true";
+}
 }
 
 /* --------------------------------------------------
