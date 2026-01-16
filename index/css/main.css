@@ -94,62 +94,7 @@ header img.logo {
 }
 
 
-/* 6. FLOATING ACTION BAR (BOTTOM NAV) */
-/* Hide action bar on screens wider than 768px */
-@media (min-width: 768px) {
-  .action-bar {
-    display: none;
-  }
-}
 
-.action-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-    padding: 5px 0;
-    /* Aquatic Awe: Vibrant, fresh, and modern for 2026 */
-    background: #00D2D3; 
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    /* Subtle glassmorphism effect trending for 2026 */
-    backdrop-filter: blur(10px);
-    box-shadow: 0 -4px 20px rgba(0, 210, 211, 0.15);
-}
-
-.action-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* High contrast white for readability */
-    color: #FFFFFF; 
-    font-size: 13px;
-    font-weight: 600;
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.action-link {
-    -webkit-tap-highlight-color: transparent;
-}
-.action-link:hover {
-    /* Electric Lavender highlight for attention */
-    color: #E0B1FF; 
-    transform: translateY(-4px);
-}
-
-.icon-wrap { position: relative; }
-
-
-.action-link,
-.action-link:visited,
-.action-link:hover,
-.action-link:active,
-.action-link:focus {
-    text-decoration: none;
-    outline: none;
-}
 /*=====================================================
    FOOTER
 ===================================================== */
