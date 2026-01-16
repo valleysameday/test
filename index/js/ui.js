@@ -123,9 +123,16 @@ window.openLoginModal = () => openScreen("login");
   ========================== */
 
   document.getElementById("openPostModal")?.addEventListener("click", e => {
-    e.preventDefault();
-    openScreen("post");
-  });
+  e.preventDefault();
+
+  if (!window.currentUser) {
+    window.loginRedirect = "post";
+    openScreen("login");
+    return;
+  }
+
+  openScreen("post");
+});
 
   document.getElementById("openLoginModal")?.addEventListener("click", e => {
     e.preventDefault();
@@ -135,10 +142,11 @@ window.openLoginModal = () => openScreen("login");
   document.getElementById("openAccountModal")?.addEventListener("click", e => {
     e.preventDefault();
 
-    if (!window.currentUser) {
-      openScreen("login");
-      return;
-    }
+if (!window.currentUser) {
+  window.loginRedirect = "dashboard";
+  openScreen("login");
+  return;
+}
 
     if (typeof window.navigateToDashboard === "function") {
       window.navigateToDashboard();
