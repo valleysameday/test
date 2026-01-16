@@ -1,6 +1,5 @@
 /* ============================================================
-   CARD WRAPPER
-   Clean, modern, welcoming
+   CARD WRAPPER — Auto height (no white gaps)
 ============================================================ */
 .post-card {
     position: relative;
@@ -12,7 +11,7 @@
     border: 1px solid #e5e7eb;
     box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     transition: transform .18s ease, box-shadow .18s ease;
-    height: 320px;
+    height: auto; /* ← KEY FIX */
 }
 
 .post-card:hover {
@@ -25,7 +24,7 @@
 ============================================================ */
 .post-image {
     width: 100%;
-    height: 180px;
+    height: 180px; /* consistent image height */
     background: #f3f4f6;
     position: relative;
 }
@@ -36,7 +35,7 @@
     object-fit: cover;
 }
 
-/* Paid badge overlay (Featured / Spotlight / Urgent) */
+/* Paid badge overlay */
 .badge-overlay {
     position: absolute;
     top: 10px;
@@ -52,17 +51,9 @@
     white-space: nowrap;
 }
 
-.badge-overlay.featured {
-    background: #f59e0b;
-}
-
-.badge-overlay.spotlight {
-    background: #3b82f6;
-}
-
-.badge-overlay.urgent {
-    background: #ef4444;
-}
+.badge-overlay.featured { background: #f59e0b; }
+.badge-overlay.spotlight { background: #3b82f6; }
+.badge-overlay.urgent { background: #ef4444; }
 
 /* ============================================================
    BODY
@@ -153,20 +144,12 @@
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
     }
-
-    .post-card {
-        height: 320px;
-    }
 }
 
 /* ============================================================
    MOBILE
 ============================================================ */
 @media (max-width: 640px) {
-    .post-card {
-        height: auto;
-    }
-
     .post-image {
         height: 160px;
     }
