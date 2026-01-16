@@ -160,37 +160,57 @@ function buildPostCard(post, category) {
 
   const area = post.area || "Rhondda";
 
-/* ------------------------------
-   PRICE LOGIC (Property aware)
------------------------------- */
-let price = "";
+  /* ------------------------------
+     AUTO PROPERTY PRICE LOGIC
+     Bulletproof + auto-detect
+  ------------------------------ */
+  let price = "";
 
-if (post.category === "property") {
+  if (post.category === "property") {
+    const listingType = post.propertyListingType || null;
 
-  // SALE LISTING
-  if (post.propertyListingType === "sale") {
-    const salePrice = post.propertySalePrice || post.price;
-    price = `£${Number(salePrice).toLocaleString()}`;
-  }
+    const salePrice = Number(post.propertySalePrice || 0);
+    const rentAmount = Number(post.propertyRentAmount || 0);
+    const rentFreq = post.propertyRentFrequency || null;
 
-  // RENT LISTING
-  else if (post.propertyListingType === "rent") {
-    const rent = post.propertyRentAmount || post.price;
-    const freq = post.propertyRentFrequency;
+    // AUTO-DETECT SALE vs RENT
+    let isSale = listingType === "sale";
+    let isRent = listingType === "rent";
 
-    if (freq === "pcm") {
-      price = `£${rent} pcm`;
-    } else if (freq === "weekly") {
-      price = `£${rent} pw`;
-    } else {
-      price = `£${rent}`;
+    if (!listingType) {
+      if (rentAmount > 0) isRent = true;
+      else if (salePrice > 0) isSale = true;
     }
-  }
 
-} else {
-  // NORMAL ITEMS
-  price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
-}
+    // SALE
+    if (isSale) {
+      if (salePrice > 0) {
+        price = `£${salePrice.toLocaleString()}`;
+      } else {
+        price = "£0";
+      }
+    }
+
+    // RENT
+    else if (isRent) {
+      if (rentAmount > 0) {
+        if (rentFreq === "pcm") price = `£${rentAmount} pcm`;
+        else if (rentFreq === "weekly") price = `£${rentAmount} pw`;
+        else price = `£${rentAmount}`;
+      } else {
+        price = "£0";
+      }
+    }
+
+    // FALLBACK
+    else {
+      price = post.price ? `£${post.price}` : "";
+    }
+
+  } else {
+    // NORMAL ITEMS
+    price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+  }
 
   /* ------------------------------
      PAID BADGE OVERLAY
