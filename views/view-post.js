@@ -202,14 +202,18 @@ async function renderPost(container, post) {
         };
       } else {
         // Guest click
-        followBtn.onclick = () => {
-          showToast("You must be logged in to follow sellers", "error");
-          setTimeout(() => {
-            if (typeof window.openLoginModal === "function") {
-              window.openLoginModal();
-            }
-          }, 4000);
-        };
+followBtn.onclick = () => {
+  showToast("You must be logged in to follow sellers", "error");
+
+  // Save where we are so we can return after login
+  window.loginRedirect = "stay";
+
+  setTimeout(() => {
+    if (typeof window.openLoginModal === "function") {
+      window.openLoginModal();
+    }
+  }, 4000);
+};
       }
     };
 
