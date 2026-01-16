@@ -20,6 +20,14 @@ export function initTemplateLoader() {
       // Load extras (Step 3)
       const extrasRes = await fetch(`/posting/templates/${category}-extras.html`);
       extrasContainer.innerHTML = await extrasRes.text();
+
+      // --- INIT CATEGORY-SPECIFIC LOGIC ---
+      if (category === "property") {
+        initPropertyFields(); // <-- our dynamic show/hide logic
+      }
+      // Add more category-specific initializers here if needed
+      // e.g. if (category === "jobs") initJobFields();
+
     } catch (err) {
       console.error("Template load failed:", err);
     }
