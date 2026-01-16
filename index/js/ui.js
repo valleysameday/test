@@ -8,7 +8,6 @@ let postGateLoaded = false;
    LOAD POSTING MODAL + CSS
 ========================== */
 async function loadPostModal() {
-  // Already loaded?
   if (document.getElementById("postModal")) return;
 
   const container = document.getElementById("modalContainer");
@@ -18,12 +17,10 @@ async function loadPostModal() {
   }
 
   try {
-    // Load HTML
     const res = await fetch("/posting/postingModal.html");
     const html = await res.text();
     container.insertAdjacentHTML("beforeend", html);
 
-    // Load CSS once
     if (!document.getElementById("postModalCSS")) {
       const css = document.createElement("link");
       css.id = "postModalCSS";
@@ -45,7 +42,7 @@ export function initUI() {
   uiInit = true;
 
   const routes = {
-    post: null, // loaded dynamically
+    post: null,
     login: document.getElementById("loginModal"),
     signup: document.getElementById("signupModal"),
     forgot: document.getElementById("forgotPasswordModal"),
@@ -58,7 +55,7 @@ export function initUI() {
   async function openScreen(name) {
     closeAll();
 
-    /* ---- POST MODAL ---- */
+    // POST MODAL
     if (name === "post") {
       await loadPostModal();
 
@@ -71,7 +68,6 @@ export function initUI() {
       document.body.classList.add("modal-open");
       routes.post.style.display = "flex";
 
-      // Lazy-load post gate ONCE
       if (!postGateLoaded) {
         postGateLoaded = true;
         import("/index/js/post-gate/post-gate.js")
@@ -82,23 +78,17 @@ export function initUI() {
       return;
     }
 
-    /* ---- OTHER STATIC MODALS ---- */
+    // OTHER STATIC MODALS
     if (!routes[name]) return;
 
     document.body.classList.add("modal-open");
     routes[name].style.display = "flex";
 
-    // Lazy-load login ONCE
+    // Lazy-load login
     if (name === "login" && !loginLoaded) {
       loginLoaded = true;
       import("/index/js/post-gate/login.js")
-        .then(m => {
-          if (typeof m.initLogin === "function") {
-            m.initLogin();
-          } else {
-            console.error("login.js loaded but initLogin not found");
-          }
-        })
+        .then(m => m?.initLogin?.())
         .catch(err => console.error("Login module load failed:", err));
     }
   }
@@ -108,7 +98,6 @@ export function initUI() {
   ========================== */
   function closeAll() {
     document.body.classList.remove("modal-open");
-
     Object.values(routes).forEach(m => {
       if (m) m.style.display = "none";
     });
@@ -117,41 +106,75 @@ export function initUI() {
   // Expose globally
   window.openScreen = openScreen;
   window.closeScreens = closeAll;
-window.openLoginModal = () => openScreen("login");
+  window.openLoginModal = () => openScreen("login");
+
   /* ==========================
-     ACTION BUTTONS
+     HAMBURGER MENU
+  ========================== */
+  const sideMenu = document.getElementById("sideMenu");
+  const hamburger = document.getElementById("hamburger");
+
+  hamburger?.addEventListener("click", () => {
+    sideMenu.classList.toggle("open");
+  });
+
+  // Close menu when clicking a link
+  sideMenu.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      sideMenu.classList.remove("open");
+    });
+  });
+
+  /* ==========================
+     MENU ACTIONS
   ========================== */
 
-  document.getElementById("openPostModal")?.addEventListener("click", e => {
-  e.preventDefault();
+  // HOME
+  document.getElementById("menu-home").onclick = () => {
+    window.loadView("home");
+  };
 
-  if (!window.currentUser) {
-    window.loginRedirect = "post";
-    openScreen("login");
-    return;
+  // POST AD
+  document.getElementById("menu-post").onclick = () => {
+    if (!window.currentUser) {
+      window.loginRedirect = "post";
+      window.openLoginModal();
+      return;
+    }
+    openScreen("post");
+  };
+
+  // DASHBOARD
+  document.getElementById("menu-dashboard").onclick = () => {
+    window.navigateToDashboard?.();
+  };
+
+  // LOGIN
+  document.getElementById("menu-login").onclick = () => {
+    window.loginRedirect = "stay";
+    window.openLoginModal();
+  };
+
+  // LOGOUT
+  document.getElementById("menu-logout").onclick = async () => {
+    const { auth } = await getFirebase();
+    await auth.signOut();
+    window.currentUser = null;
+    updateMenuAuthState();
+  };
+
+  /* ==========================
+     LOGIN STATE HANDLING
+  ========================== */
+  function updateMenuAuthState() {
+    const loggedIn = !!window.currentUser;
+
+    document.getElementById("menu-login").classList.toggle("hidden", loggedIn);
+    document.getElementById("menu-logout").classList.toggle("hidden", !loggedIn);
+    document.getElementById("menu-dashboard").classList.toggle("hidden", !loggedIn);
   }
 
-  openScreen("post");
-});
-
-  document.getElementById("openLoginModal")?.addEventListener("click", e => {
-    e.preventDefault();
-    openScreen("login");
-  });
-
-  document.getElementById("openAccountModal")?.addEventListener("click", e => {
-    e.preventDefault();
-
-if (!window.currentUser) {
-  window.loginRedirect = "dashboard";
-  openScreen("login");
-  return;
-}
-
-    if (typeof window.navigateToDashboard === "function") {
-      window.navigateToDashboard();
-    }
-  });
+  updateMenuAuthState();
 
   /* ==========================
      CLOSE MODALS ON BACKDROP
