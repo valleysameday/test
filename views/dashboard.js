@@ -26,7 +26,7 @@ async function loadFollowerCount(uid) {
   if (!el) return;
 
   const { db } = await getFirebase();
-  const snap = await getDocs(collection(db, "users", uid, "following"));
+  const snap = await getDocs(collection(db, "users", uid, "followers"));
   el.textContent = snap.size;
 }
 
