@@ -295,3 +295,11 @@
   color: #6b7280;
   pointer-events: none;
 }
+.posted-since {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 400;
+  line-height: 1.2;
+  opacity: 0.9;
+}
