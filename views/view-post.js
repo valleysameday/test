@@ -25,8 +25,8 @@ function showToast(msg, type = "success") {
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
   toast.textContent = msg;
-
   document.body.appendChild(toast);
+
   setTimeout(() => toast.classList.add("show"), 10);
   setTimeout(() => {
     toast.classList.remove("show");
@@ -106,62 +106,6 @@ async function loadPost(postId) {
 }
 
 /* =====================================================
-   SEND INLINE MESSAGE
-===================================================== */
-async function sendInlineMessage(post, text) {
-  if (!window.currentUser) {
-    window.openLoginModal?.();
-    return { ok: false };
-  }
-
-  const uid = window.currentUser.uid;
-  const sellerId = post.userId;
-  if (!sellerId || sellerId === uid) return { ok: false };
-
-  const q = query(
-    collection(db, "conversations"),
-    where("participants", "array-contains", uid)
-  );
-
-  const snap = await getDocs(q);
-  let conversationId = null;
-
-  snap.forEach(d => {
-    if (d.data().participants?.includes(sellerId)) {
-      conversationId = d.id;
-    }
-  });
-
-  if (!conversationId) {
-    const conv = await addDoc(collection(db, "conversations"), {
-      participants: [uid, sellerId],
-      lastMessage: "",
-      updatedAt: Date.now(),
-      postId: post.id,
-      unread: {}
-    });
-    conversationId = conv.id;
-  }
-
-  await addDoc(
-    collection(db, "conversations", conversationId, "messages"),
-    {
-      senderId: uid,
-      text,
-      createdAt: Date.now()
-    }
-  );
-
-  await updateDoc(doc(db, "conversations", conversationId), {
-    lastMessage: text,
-    updatedAt: Date.now(),
-    [`unread.${sellerId}`]: true
-  });
-
-  return { ok: true };
-}
-
-/* =====================================================
    RENDER POST
 ===================================================== */
 async function renderPost(container, post) {
@@ -226,69 +170,62 @@ async function renderPost(container, post) {
     <h1>${post.title || "Untitled post"}</h1>
   `;
 
-
+  /* =====================================================
+     FOLLOW BUTTON (FIXED & SAFE)
+  ===================================================== */
   const sellerInfo = right.querySelector(".seller-header-info");
+  const followBtn = document.createElement("button");
+  followBtn.className = "follow-btn";
+  followBtn.textContent = "Follow";
 
-const followBtn = document.createElement("button");
-followBtn.className = "follow-btn";
-followBtn.textContent = "Follow";
+  if (currentUser && post.userId && post.userId !== currentUser.uid) {
+    const viewerId = currentUser.uid;
+    const sellerId = post.userId;
 
-followBtn.onclick = async () => {
-  if (!window.currentUser) {
-    window.openLoginModal?.();
-    return;
+    const followerRef = doc(db, "users", sellerId, "followers", viewerId);
+    const followingRef = doc(db, "users", viewerId, "following", sellerId);
+
+    try {
+      const snap = await getDoc(followingRef);
+      if (snap.exists()) followBtn.textContent = "Following";
+    } catch {}
+
+    followBtn.onclick = async () => {
+      try {
+        const snap = await getDoc(followingRef);
+
+        if (snap.exists()) {
+          await deleteDoc(followingRef);
+          await deleteDoc(followerRef);
+          followBtn.textContent = "Follow";
+          showToast("Unfollowed seller");
+        } else {
+          await setDoc(followingRef, {
+            userId: sellerId,
+            followedAt: Date.now()
+          });
+          await setDoc(followerRef, {
+            userId: viewerId,
+            followedAt: Date.now()
+          });
+          followBtn.textContent = "Following";
+          showToast("You’re now following this seller");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Action not allowed", "error");
+      }
+    };
+
+    sellerInfo.appendChild(followBtn);
   }
 
-  const uid = window.currentUser.uid;
-  const ref = doc(db, "users", post.userId, "followers", uid);
-  const snap = await getDoc(ref);
-
-  if (snap.exists()) {
-    await deleteDoc(ref);
-    followBtn.textContent = "Follow";
-    showToast("Unfollowed seller");
-  } else {
-    await setDoc(ref, {
-      userId: post.userId,
-      followedAt: Date.now()
-    });
-    followBtn.textContent = "Following";
-    showToast("You’re now following this seller");
-  }
-};
-
-  if (window.currentUser) {
-  const uid = window.currentUser.uid;
-  const ref = doc(db, "users", uid, "following", post.userId);
-  const snap = await getDoc(ref);
-  if (snap.exists()) followBtn.textContent = "Following";
-  }
-
-sellerInfo.appendChild(followBtn);
-  
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
     price.textContent =
       post.price === 0 ? "FREE" : `£${post.price}`;
     right.appendChild(price);
-  }
-
-  if (post.userId && post.userId !== currentUser?.uid) {
-    const box = document.createElement("div");
-    box.className = "quick-message-box";
-    box.innerHTML = `
-      <textarea id="quickMessageInput" rows="2">Hi, is this still available?</textarea>
-      <button id="quickMessageSend" class="primary-btn">Send Message</button>
-    `;
-    right.appendChild(box);
-
-    box.querySelector("#quickMessageSend").onclick = async () => {
-      const text = box.querySelector("#quickMessageInput").value.trim();
-      if (!text) return;
-      const res = await sendInlineMessage(post, text);
-      showToast(res.ok ? "Message sent" : "Failed", res.ok ? "success" : "error");
-    };
   }
 
   const desc = document.createElement("p");
@@ -308,4 +245,4 @@ sellerInfo.appendChild(followBtn);
 
   layout.append(left, right);
   container.append(layout, footer);
-                                                        }
+}
