@@ -19,26 +19,11 @@ let db;
 let allPosts = [];
 
 /* --------------------------------------------------
-   BADGE ICON MAP (for cards)
-   - post.badges is array like ["delivery", "collection"]
--------------------------------------------------- */
-const BADGE_ICONS = {
-  delivery: "🚚",     // delivery available
-  collection: "📦",   // collection only
-  assembly: "🛠️",    // assembly / setup help
-  heavy: "🏋️",       // heavy item
-  trusted: "⭐",      // trusted seller
-  boxed: "🎁",        // boxed / sealed
-  new: "🆕"           // new condition
-};
-
-/* --------------------------------------------------
    PUBLIC INIT
 -------------------------------------------------- */
 export function init() {
   console.log("🏠 Home feed init");
 
-  // Restore search state
   window.currentSearch = sessionStorage.getItem("homeSearch") || "";
 
   initFeed().then(() => {
@@ -63,23 +48,19 @@ export async function initFeed() {
     return;
   }
 
-  // Lazy init Firebase
   if (!db) {
     const fb = await getFirebase();
     db = fb.db;
   }
 
-  // First-time load
   if (!allPosts.length) {
     postsContainer.innerHTML = `<p>Loading posts…</p>`;
     await fetchPosts();
   }
 
-  // Initial render
   const savedCategory = sessionStorage.getItem("homeCategory") || "all";
   renderPosts(savedCategory);
 
-  // Category click binding
   if (categoriesEl && !categoriesEl.dataset.bound) {
     categoriesEl.addEventListener("click", (e) => {
       const btn = e.target.closest(".category-btn");
@@ -134,10 +115,8 @@ function renderPosts(category) {
   const searchTerm = (window.currentSearch || "").toLowerCase().trim();
 
   const filtered = allPosts.filter((p) => {
-    // Category filter
     if (category !== "all" && p.category !== category) return false;
 
-    // Search filter
     if (!searchTerm) return true;
 
     const priceText =
@@ -145,14 +124,14 @@ function renderPosts(category) {
 
     return (
       p.title?.toLowerCase().includes(searchTerm) ||
-      p.description?.toLowerCase().includes(searchTerm) ||
       p.area?.toLowerCase().includes(searchTerm) ||
       priceText.includes(searchTerm)
     );
   });
 
   if (!filtered.length) {
-    postsContainer.innerHTML = "<p>No posts found. Try another search or category.</p>";
+    postsContainer.innerHTML =
+      "<p>No posts found. Try another search or category.</p>";
     return;
   }
 
@@ -168,30 +147,60 @@ function renderPosts(category) {
 }
 
 /* --------------------------------------------------
-   BUILD SINGLE CARD
+   BUILD SINGLE CARD (Gumtree layout)
 -------------------------------------------------- */
 function buildPostCard(post, category) {
   const card = document.createElement("div");
   card.className = `post-card ${post.type || ""}`;
 
-  const img = post.imageUrl ||
-              (Array.isArray(post.imageUrls) && post.imageUrls[0]) ||
-              "/index/images/webholder.svg";
+  const img =
+    post.imageUrl ||
+    (Array.isArray(post.imageUrls) && post.imageUrls[0]) ||
+    "/index/images/webholder.svg";
 
   const area = post.area || "Rhondda";
-  const price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
 
+  /* ------------------------------
+     PRICE LOGIC (Property aware)
+  ------------------------------ */
+  let price = "";
+
+  if (post.category === "property") {
+    if (post.propertyType === "sale") {
+      price = `£${Number(post.price).toLocaleString()}`;
+    } else if (post.propertyType === "rent") {
+      if (post.rentPeriod === "pcm") price = `£${post.price} pcm`;
+      else if (post.rentPeriod === "weekly") price = `£${post.price} pw`;
+      else price = `£${post.price}`;
+    }
+  } else {
+    price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+  }
+
+  /* ------------------------------
+     PAID BADGE OVERLAY
+  ------------------------------ */
+  let badgeHtml = "";
+  if (post.featured) {
+    badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
+  } else if (post.spotlight) {
+    badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
+  } else if (post.urgent) {
+    badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
+  }
+
+  /* ------------------------------
+     CARD HTML
+  ------------------------------ */
   card.innerHTML = `
     <div class="post-image">
       <img src="${img}" alt="${escapeHtml(post.title || "Listing image")}" loading="lazy"
            onerror="this.src='/index/images/image-webholder.webp'">
-      ${price ? `<div class="price-badge">${price}</div>` : ""}
+
+      ${badgeHtml}
     </div>
 
     <div class="post-body">
-      <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
-
-      <p class="post-teaser">${escapeHtml(post.description || "")}</p>
 
       <div class="post-meta">
         <span class="post-price">${price}</span>
@@ -208,13 +217,18 @@ function buildPostCard(post, category) {
                   stroke-width="2"/>
           </svg>
         </button>
-
-        <span class="post-area">📍 ${escapeHtml(area)}</span>
       </div>
+
+      <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
+
+      <span class="post-area">📍 ${escapeHtml(area)}</span>
+
     </div>
   `;
 
-  // ⭐ HEART BUTTON LOGIC (INSIDE buildPostCard)
+  /* ------------------------------
+     HEART BUTTON LOGIC
+  ------------------------------ */
   const heartBtn = card.querySelector(".heart-btn");
 
   heartBtn.addEventListener("click", async (ev) => {
@@ -244,7 +258,9 @@ function buildPostCard(post, category) {
     }
   });
 
-  // ⭐ CARD CLICK (open post)
+  /* ------------------------------
+     CARD CLICK → OPEN POST
+  ------------------------------ */
   card.addEventListener("click", () => {
     sessionStorage.setItem("viewPostId", post.id);
     sessionStorage.setItem("homeScroll", window.scrollY);
@@ -256,6 +272,7 @@ function buildPostCard(post, category) {
 
   return card;
 }
+
 /* --------------------------------------------------
    UTILS
 -------------------------------------------------- */
