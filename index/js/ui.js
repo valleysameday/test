@@ -117,7 +117,7 @@ export function initUI() {
   // Expose globally
   window.openScreen = openScreen;
   window.closeScreens = closeAll;
-
+window.openLoginModal = () => openScreen("login");
   /* ==========================
      ACTION BUTTONS
   ========================== */
