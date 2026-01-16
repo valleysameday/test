@@ -160,22 +160,37 @@ function buildPostCard(post, category) {
 
   const area = post.area || "Rhondda";
 
-  /* ------------------------------
-     PRICE LOGIC (Property aware)
-  ------------------------------ */
-  let price = "";
+/* ------------------------------
+   PRICE LOGIC (Property aware)
+------------------------------ */
+let price = "";
 
-  if (post.category === "property") {
-    if (post.propertyType === "sale") {
-      price = `£${Number(post.price).toLocaleString()}`;
-    } else if (post.propertyType === "rent") {
-      if (post.rentPeriod === "pcm") price = `£${post.price} pcm`;
-      else if (post.rentPeriod === "weekly") price = `£${post.price} pw`;
-      else price = `£${post.price}`;
-    }
-  } else {
-    price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+if (post.category === "property") {
+
+  // SALE LISTING
+  if (post.propertyListingType === "sale") {
+    const salePrice = post.propertySalePrice || post.price;
+    price = `£${Number(salePrice).toLocaleString()}`;
   }
+
+  // RENT LISTING
+  else if (post.propertyListingType === "rent") {
+    const rent = post.propertyRentAmount || post.price;
+    const freq = post.propertyRentFrequency;
+
+    if (freq === "pcm") {
+      price = `£${rent} pcm`;
+    } else if (freq === "weekly") {
+      price = `£${rent} pw`;
+    } else {
+      price = `£${rent}`;
+    }
+  }
+
+} else {
+  // NORMAL ITEMS
+  price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
+}
 
   /* ------------------------------
      PAID BADGE OVERLAY
