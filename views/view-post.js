@@ -1,17 +1,8 @@
 console.log("✅ view-post.js loaded");
 
 import { getFirebase } from "/index/js/firebase/init.js";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  increment
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-import {
-  toggleFollow,
-  isFollowing
-} from "/index/js/social/follow.js";
+import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { toggleFollow, isFollowing } from "/index/js/social/follow.js";
 
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
 let db;
@@ -44,9 +35,7 @@ export async function init() {
   let postId = null;
   await new Promise(resolve => {
     const check = setInterval(() => {
-      postId =
-        sessionStorage.getItem("viewPostId") ||
-        window.selectedPostId;
+      postId = sessionStorage.getItem("viewPostId") || window.selectedPostId;
       if (postId) {
         clearInterval(check);
         resolve();
@@ -112,6 +101,7 @@ async function renderPost(container, post) {
 
   const currentUser = window.currentUser || null;
 
+  // Seller defaults
   let sellerName = "Local Seller";
   let sellerAvatar = PLACEHOLDER_IMG;
   let sellerSince = null;
@@ -131,18 +121,19 @@ async function renderPost(container, post) {
     }
   }
 
+  // Images
   const images = post.imageUrls?.length
     ? post.imageUrls
     : post.imageUrl
     ? [post.imageUrl]
     : [PLACEHOLDER_IMG];
 
+  // Layout
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
   const left = document.createElement("div");
   left.className = "view-post-left gallery";
-
   images.forEach(src => {
     const img = document.createElement("img");
     img.src = src;
@@ -170,62 +161,82 @@ async function renderPost(container, post) {
   `;
 
   /* =====================================================
-     FOLLOW BUTTON (SHARED LOGIC)
+     FOLLOW BUTTON (ALWAYS VISIBLE)
   ===================================================== */
-  if (currentUser && post.userId && post.userId !== currentUser.uid) {
-    const sellerInfo = right.querySelector(".seller-header-info");
-    const followBtn = document.createElement("button");
-    followBtn.className = "follow-btn";
+  const sellerInfo = right.querySelector(".seller-header-info");
+  const followBtn = document.createElement("button");
+  followBtn.className = "follow-btn";
+  followBtn.textContent = "Follow";
 
-    const viewerId = currentUser.uid;
-    const sellerId = post.userId;
+  // Hide if current user is the seller
+  if (currentUser?.uid === post.userId) {
+    followBtn.style.display = "none";
+  } else {
+    sellerInfo.appendChild(followBtn);
 
-    try {
-      const following = await isFollowing(viewerId, sellerId);
-      followBtn.textContent = following ? "Following" : "Follow";
-    } catch {
-      followBtn.textContent = "Follow";
-    }
+    const setupFollowButton = async () => {
+      if (currentUser?.uid) {
+        const viewerId = currentUser.uid;
+        const sellerId = post.userId;
 
-    followBtn.onclick = async () => {
-      try {
-        const res = await toggleFollow(viewerId, sellerId);
-        followBtn.textContent = res.following ? "Following" : "Follow";
-        showToast(
-          res.following
-            ? "You’re now following this seller"
-            : "Unfollowed seller"
-        );
-      } catch (err) {
-        console.error(err);
-        showToast("Action not allowed", "error");
+        try {
+          const following = await isFollowing(viewerId, sellerId);
+          followBtn.textContent = following ? "Following" : "Follow";
+        } catch {
+          followBtn.textContent = "Follow";
+        }
+
+        followBtn.onclick = async () => {
+          try {
+            const res = await toggleFollow(viewerId, sellerId);
+            followBtn.textContent = res.following ? "Following" : "Follow";
+            showToast(
+              res.following
+                ? "You’re now following this seller"
+                : "Unfollowed seller"
+            );
+          } catch (err) {
+            console.error(err);
+            showToast("Action not allowed", "error");
+          }
+        };
+      } else {
+        // Guest click
+        followBtn.onclick = () => {
+          showToast("You must be logged in to follow sellers", "error");
+          setTimeout(() => {
+            if (typeof window.openLoginModal === "function") {
+              window.openLoginModal();
+            }
+          }, 4000);
+        };
       }
     };
 
-    sellerInfo.appendChild(followBtn);
+    setupFollowButton();
   }
 
+  // Price
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
-    price.textContent =
-      post.price === 0 ? "FREE" : `£${post.price}`;
+    price.textContent = post.price === 0 ? "FREE" : `£${post.price}`;
     right.appendChild(price);
   }
 
+  // Description
   const desc = document.createElement("p");
   desc.className = "view-post-desc";
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
+  // Footer
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
-
   const backBtn = document.createElement("button");
   backBtn.className = "secondary-btn";
   backBtn.textContent = "← Back";
   backBtn.onclick = () => window.loadView("home");
-
   footer.appendChild(backBtn);
 
   layout.append(left, right);
