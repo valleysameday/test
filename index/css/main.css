@@ -296,3 +296,35 @@ header img.logo {
 .toast.error {
   background: #c62828;
 }
+
+
+.hamburger-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: -50vw; /* hidden off-screen */
+  width: 50vw;  /* half screen */
+  max-width: 380px; /* optional */
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+  transition: right 0.3s ease;
+  z-index: 2000;
+}
+
+.side-menu.open {
+  right: 0;
+}
+
+.menu-inner a {
+  display: block;
+  padding: 18px;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+  cursor: pointer;
+}
