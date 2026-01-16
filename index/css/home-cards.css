@@ -12,7 +12,7 @@
     border: 1px solid #e5e7eb;
     box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     transition: transform .18s ease, box-shadow .18s ease;
-    height: 360px;
+    height: 320px;
 }
 
 .post-card:hover {
@@ -21,11 +21,11 @@
 }
 
 /* ============================================================
-   IMAGE
+   IMAGE + BADGE OVERLAY
 ============================================================ */
 .post-image {
     width: 100%;
-    height: 190px;
+    height: 180px;
     background: #f3f4f6;
     position: relative;
 }
@@ -36,44 +36,32 @@
     object-fit: cover;
 }
 
-/* Soft gradient overlay */
-.post-image::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0) 55%,
-      rgba(0,0,0,0.25)
-    );
-}
-
-/* Price badge */
-.price-badge {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: #16a34a;
-    color: #fff;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: .9rem;
-    font-weight: 700;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-/* Business overlay */
-.business-overlay {
+/* Paid badge overlay (Featured / Spotlight / Urgent) */
+.badge-overlay {
     position: absolute;
     top: 10px;
-    left: 10px;
-    background: #ff2f7d;
+    right: 10px;
+    background: #1e293b;
     color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
     padding: 4px 10px;
     border-radius: 8px;
-    font-size: .8rem;
-    font-weight: 700;
     box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    z-index: 5;
+    white-space: nowrap;
+}
+
+.badge-overlay.featured {
+    background: #f59e0b;
+}
+
+.badge-overlay.spotlight {
+    background: #3b82f6;
+}
+
+.badge-overlay.urgent {
+    background: #ef4444;
 }
 
 /* ============================================================
@@ -88,126 +76,64 @@
 
 /* Title */
 .post-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #0f172a;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* BADGES (icons only) */
-.post-badges {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-.badge-icon {
-    font-size: 1.2rem;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-}
-
-/* Teaser text */
-.post-teaser {
-    font-size: .9rem;
-    color: #475569;
-    line-height: 1.35;
-    margin-bottom: 10px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+/* Area */
+.post-area {
+    font-size: .85rem;
+    font-weight: 600;
+    color: #334155;
 }
 
 /* ============================================================
-   META ROW
+   PRICE + HEART ROW
 ============================================================ */
 .post-meta {
-    margin-top: auto;
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    font-size: .8rem;
-    color: #6b7280;
-}
-
-.post-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    justify-content: space-between;
+    margin-bottom: 6px;
 }
 
 .post-price {
-    font-size: .95rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #16a34a;
 }
 
-.post-area {
-    font-weight: 600;
-    color: #334155;
-}
-
-.post-category {
-    background: #f1f5f9;
-    color: #334155;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: .72rem;
-    font-weight: 600;
-}
-
 /* ============================================================
-   REPORT BUTTON
+   HEART BUTTON
 ============================================================ */
-.report-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.9);
+.heart-btn {
+    cursor: pointer;
+    background: none;
     border: none;
-    border-radius: 50%;
-    width: 34px;
-    height: 34px;
+    padding: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background .15s ease, transform .15s ease;
-    z-index: 10;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.report-btn:hover {
-    background: #fee2e2;
-    transform: scale(1.1);
+.heart-btn:active {
+    transform: scale(1.2);
 }
 
-/* ============================================================
-   BUSINESS CARDS
-============================================================ */
-.post-card.business {
-    border: 2px solid #ff4f8b;
-    background: linear-gradient(180deg, #fff7fb, #ffffff);
-    border-radius: 18px;
+.heart-btn svg path {
+    stroke: #64748b;
+    fill: none;
+    transition: stroke .2s ease, fill .2s ease;
 }
 
-.post-card.business .post-title {
-    color: #ff2f7d;
-}
-
-.post-card.business .post-price {
-    color: #ff2f7d;
-}
-
-.post-card.business .post-category {
-    background: rgba(255,47,125,0.12);
-    color: #ff2f7d;
+.heart-btn.saved svg path {
+    stroke: #ff3b30;
+    fill: #ff3b30;
 }
 
 /* ============================================================
@@ -229,32 +155,19 @@
     }
 
     .post-card {
-        height: 360px;
+        height: 320px;
     }
 }
 
-/* Mobile */
+/* ============================================================
+   MOBILE
+============================================================ */
 @media (max-width: 640px) {
     .post-card {
         height: auto;
     }
 
     .post-image {
-        height: 180px;
+        height: 160px;
     }
 }
-
-
-
-
-  .heart-btn {
-    cursor: pointer;
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .heart-btn:active {
-    transform: scale(1.3);
-  }
-  .heart-btn.saved {
-    fill: #ff3b30;
-    stroke: #ff3b30;
-  }
