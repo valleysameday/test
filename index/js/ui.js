@@ -176,6 +176,14 @@ export function initUI() {
 
   updateMenuAuthState();
 
+  // If your Firebase setup exposes onAuthStateChanged globally:
+  if (window.onAuthStateChanged) {
+    window.onAuthStateChanged(user => {
+      window.currentUser = user || null;
+      updateMenuAuthState();
+    });
+  }
+
   /* ==========================
      CLOSE MODALS ON BACKDROP
   ========================== */
