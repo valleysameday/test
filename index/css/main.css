@@ -95,6 +95,12 @@ header img.logo {
 
 
 /* 6. FLOATING ACTION BAR (BOTTOM NAV) */
+/* Hide action bar on screens wider than 768px */
+@media (min-width: 768px) {
+  .action-bar {
+    display: none;
+  }
+}
 
 .action-bar {
     position: fixed;
