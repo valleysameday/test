@@ -10,7 +10,9 @@ import {
   collection,
   where,
   getDocs,
-  addDoc
+  addDoc,
+  setDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
