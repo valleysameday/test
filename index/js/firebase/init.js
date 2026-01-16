@@ -30,6 +30,7 @@ export function getFirebase() {
     const db = getFirestore(app);
     const storage = getStorage(app);
 
+window.onAuthStateChanged = (callback) => onAuthStateChanged(auth, callback);
     // 🔐 GLOBAL AUTH LISTENER
     onAuthStateChanged(auth, async user => {
       window.currentUser = user || null;
