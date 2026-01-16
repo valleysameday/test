@@ -255,6 +255,13 @@ followBtn.onclick = async () => {
   }
 };
 
+  if (window.currentUser) {
+  const uid = window.currentUser.uid;
+  const ref = doc(db, "users", uid, "following", post.userId);
+  const snap = await getDoc(ref);
+  if (snap.exists()) followBtn.textContent = "Following";
+  }
+
 sellerInfo.appendChild(followBtn);
   
   if (post.price !== undefined) {
