@@ -145,20 +145,21 @@ async function renderPost(container, post) {
   right.className = "view-post-right";
 
   right.innerHTML = `
-    <div class="post-seller-header">
-      <img class="seller-header-avatar" src="${sellerAvatar}">
-      <div class="seller-header-info">
-        <p class="posted-by"><strong>${sellerName}</strong></p>
-        <p class="posted-on">RCT-X</p>
-        ${
-          sellerSince
-            ? `<p class="posted-since">Posting since: ${sellerSince}</p>`
-            : ""
-        }
-      </div>
+  <div id="sellerHeaderClickable" class="post-seller-header">
+    <img class="seller-header-avatar" src="${sellerAvatar}">
+    <div class="seller-header-info">
+      <p class="posted-by"><strong>${sellerName}</strong></p>
+      <p class="posted-on">RCT-X</p>
+      ${
+        sellerSince
+          ? `<p class="posted-since">Posting since: ${sellerSince}</p>`
+          : ""
+      }
     </div>
-    <h1>${post.title || "Untitled post"}</h1>
-  `;
+  </div>
+
+  <h1>${post.title || "Untitled post"}</h1>
+`;
 
   /* =====================================================
      FOLLOW BUTTON (ALWAYS VISIBLE)
@@ -220,6 +221,16 @@ followBtn.onclick = () => {
     setupFollowButton();
   }
 
+   const sellerHeader = document.getElementById("sellerHeaderClickable");
+
+sellerHeader.addEventListener("click", (e) => {
+  // Prevent click if user taps the follow button
+  if (e.target.closest(".follow-btn")) return;
+
+  window.selectedSellerId = post.userId;
+  window.loadView("seller-profile");
+});
+   
   // Price
   if (post.price !== undefined) {
     const price = document.createElement("h2");
