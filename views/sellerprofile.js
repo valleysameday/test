@@ -1,7 +1,96 @@
-/* ---------------------------------------------------
-   ✅ LOAD SELLER'S OTHER ADS (LAZY + FALLBACK)
---------------------------------------------------- */
-async function loadSellerAds(sellerId) {
+import { getFirebase } from "/index/js/firebase/init.js";
+import { 
+  doc, getDoc, collection, query, where, orderBy, getDocs 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+/* ============================================================
+   AUTO‑LOAD CSS (only once)
+============================================================ */
+(function loadSellerProfileCSS() {
+  if (document.getElementById("sellerProfileCSS")) return;
+
+  const link = document.createElement("link");
+  link.id = "sellerProfileCSS";
+  link.rel = "stylesheet";
+  link.href = "/index/css/seller-profile.css";
+  document.head.appendChild(link);
+})();
+
+/* ============================================================
+   MAIN ENTRY POINT
+============================================================ */
+export async function initSellerProfile() {
+  const { db } = await getFirebase();
+
+  const sellerId = window.selectedSellerId;
+  if (!sellerId) {
+    console.error("❌ No sellerId provided to seller-profile view");
+    return;
+  }
+
+  /* -----------------------------
+     LOAD SELLER DOCUMENT
+  ----------------------------- */
+  const sellerRef = doc(db, "users", sellerId);
+  const snap = await getDoc(sellerRef);
+
+  if (!snap.exists()) {
+    document.getElementById("sellerProfilePage").innerHTML =
+      "<p>Seller not found.</p>";
+    return;
+  }
+
+  const seller = snap.data();
+
+  /* -----------------------------
+     RENDER PROFILE
+  ----------------------------- */
+  renderSellerProfile(seller, sellerId);
+
+  /* -----------------------------
+     LOAD SELLER'S OTHER ADS
+  ----------------------------- */
+  loadSellerAds(sellerId, db);
+}
+
+/* ============================================================
+   RENDER PROFILE
+============================================================ */
+function renderSellerProfile(seller, sellerId) {
+  const isOwner = window.currentUser?.uid === sellerId;
+
+  document.getElementById("sellerName").textContent =
+    seller.name || "Unknown Seller";
+
+  document.getElementById("sellerReliability").textContent =
+    seller.reliability || "";
+
+  document.getElementById("sellerAvatar").style.backgroundImage =
+    `url('${seller.avatarUrl || "/images/avatar-placeholder.png"}')`;
+
+  document.getElementById("sellerBio").innerHTML =
+    `<p>${seller.bio || "No bio provided."}</p>`;
+
+  /* Owner-only edit hook (disabled until you want it) */
+  if (isOwner) {
+    const bioEl = document.getElementById("sellerBio");
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit Bio";
+    editBtn.className = "edit-btn";
+    bioEl.appendChild(editBtn);
+  }
+
+  /* Contact Seller */
+  document.getElementById("contactSellerBtn").onclick = () => {
+    window.selectedChatUserId = sellerId;
+    window.loadView("chat");
+  };
+}
+
+/* ============================================================
+   LOAD SELLER'S OTHER ADS
+============================================================ */
+async function loadSellerAds(sellerId, db) {
   const container = document.getElementById("sellerAdsContainer");
   const PLACEHOLDER = "/images/post-placeholder.jpg";
 
@@ -26,10 +115,9 @@ async function loadSellerAds(sellerId) {
     card.className = "post-card";
     card.addEventListener("click", () => {
       window.selectedPostId = post.id;
-      loadView("view-post");
+      window.loadView("view-post");
     });
 
-    // ---------- Image ----------
     const imgSrc =
       post.imageUrl ||
       (Array.isArray(post.imageUrls) && post.imageUrls[0]) ||
@@ -45,7 +133,6 @@ async function loadSellerAds(sellerId) {
     postImageDiv.className = "post-image";
     postImageDiv.appendChild(img);
 
-    // ---------- Body ----------
     const postBody = document.createElement("div");
     postBody.className = "post-body";
 
@@ -59,7 +146,6 @@ async function loadSellerAds(sellerId) {
     postBody.appendChild(h3);
     postBody.appendChild(desc);
 
-    // ---------- Append to card ----------
     card.appendChild(postImageDiv);
     card.appendChild(postBody);
 
