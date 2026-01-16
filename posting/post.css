@@ -1,33 +1,62 @@
 /* ============================
-   POSTING MODAL — BASE LAYOUT
+   POSTING MODAL — FULL SCREEN
 ============================ */
 
-.post-modal .modal-content {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 22px;
+.post-modal {
+  position: fixed;
+  inset: 0; 
   width: 100%;
-  max-width: 620px;
-  margin: auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  animation: fadeIn 0.25s ease;
+  height: 100%;
+  background: #f4f4f6; /* soft light gray background */
+  z-index: 1000;
+  overflow-y: auto;
+  font-family: "Inter", sans-serif;
+  color: #333; /* default text color */
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.post-modal .modal-content {
+  width: 100%;
+  max-width: 100%; 
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  padding: 20px;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease forwards;
+  background: #ffffff; /* white content area for clarity */
 }
 
-.post-modal h2 {
-  font-size: 1.6rem;
-  margin-bottom: 14px;
-  font-weight: 600;
+/* Slide-in animation from bottom */
+@keyframes slideIn {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ============================
+   HEADER / CLOSE BUTTON
+============================ */
+.post-modal .close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  font-size: 28px;
+  font-weight: bold;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1100;
+  color: #555; /* softer than black */
+}
+
+.post-modal .close:hover {
+  color: #000;
 }
 
 /* ============================
    STEPS
 ============================ */
-
 .post-modal .post-step {
   display: none;
 }
@@ -36,25 +65,28 @@
   display: block;
 }
 
-.post-modal .hint-text {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 10px;
-}
-
 /* ============================
    INPUTS
 ============================ */
-
 .post-modal input,
 .post-modal select,
 .post-modal textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid #ccc;
   margin-bottom: 14px;
   font-size: 1rem;
+  background: #fdfdfd; /* very light background for inputs */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.post-modal input:focus,
+.post-modal select:focus,
+.post-modal textarea:focus {
+  border-color: #6c63ff; /* subtle accent color */
+  box-shadow: 0 0 6px rgba(108, 99, 255, 0.2);
+  outline: none;
 }
 
 .post-modal textarea {
@@ -64,34 +96,46 @@
 /* ============================
    BUTTONS
 ============================ */
-
 .post-modal button {
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-radius: 8px;
   border: none;
   cursor: pointer;
   font-size: 1rem;
+  transition: background 0.2s ease;
 }
 
 .post-modal .post-next {
-  background: #007bff;
+  background: #6c63ff; /* soft purple for primary action */
   color: #fff;
+}
+
+.post-modal .post-next:hover {
+  background: #574fd6;
 }
 
 .post-modal .post-prev {
-  background: #e5e5e5;
+  background: #e0e0e0;
+  color: #333;
   margin-right: 10px;
 }
 
+.post-modal .post-prev:hover {
+  background: #d5d5d5;
+}
+
 .post-modal #postSubmitBtn {
-  background: #28a745;
+  background: #28a745; /* green for submit */
   color: #fff;
+}
+
+.post-modal #postSubmitBtn:hover {
+  background: #218838;
 }
 
 /* ============================
    IMAGE PREVIEW GRID
 ============================ */
-
 .post-modal .image-preview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
@@ -104,15 +148,15 @@
   height: 90px;
   object-fit: cover;
   border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 /* ============================
    WARNINGS / FEEDBACK
 ============================ */
-
-.post-modal .rhondda-warning,
-.post-modal .rhondda-thanks {
-  background: #fff3cd;
+.post-modal .rhondda-warning {
+  background: #fff3cd; /* yellow soft warning */
+  color: #856404;
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 12px;
@@ -120,13 +164,26 @@
 }
 
 .post-modal .rhondda-thanks {
-  background: #d4edda;
+  background: #d4edda; /* light green success */
   border-color: #c3e6cb;
+  color: #155724;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
 }
 
 .post-modal .feedback-text {
   margin-top: 10px;
   font-size: 0.95rem;
-  color: #d9534f;
+  color: #d9534f; /* red for errors */
   text-align: center;
+}
+
+/* ============================
+   HINT TEXT
+============================ */
+.post-modal .hint-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
 }
