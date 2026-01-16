@@ -194,10 +194,21 @@ async function renderPost(container, post) {
   const currentUser = window.currentUser || null;
   let sellerName = "Local Seller";
 
-  if (post.userId) {
-    const u = await getDoc(doc(db, "users", post.userId));
-    if (u.exists()) sellerName = u.data().firstName || sellerName;
+  let sellerAvatar = PLACEHOLDER_IMG;
+let sellerSince = null;
+
+if (post.userId) {
+  const u = await getDoc(doc(db, "users", post.userId));
+  if (u.exists()) {
+    const data = u.data();
+    sellerName = data.firstName || sellerName;
+    sellerAvatar = data.profileImage || PLACEHOLDER_IMG;
+    sellerSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long"
+    }) : null;
   }
+}
 
   const images = post.imageUrls?.length
     ? post.imageUrls
@@ -221,16 +232,27 @@ async function renderPost(container, post) {
   const right = document.createElement("div");
   right.className = "view-post-right";
 
-  right.innerHTML = `
-    <div class="post-seller-header">
-      <img class="seller-header-avatar" src="${PLACEHOLDER_IMG}">
-      <div class="seller-header-info">
-        <p class="posted-by"><strong>${sellerName}</strong></p>
-        <p class="posted-on">RCT-X</p>
-      </div>
+  let sellerAvatar = PLACEHOLDER_IMG;
+
+if (post.userId) {
+  const u = await getDoc(doc(db, "users", post.userId));
+  if (u.exists()) {
+    sellerName = u.data().firstName || sellerName;
+    sellerAvatar = u.data().profileImage || PLACEHOLDER_IMG;
+  }
+}
+
+right.innerHTML = `
+  <div class="post-seller-header">
+    <img class="seller-header-avatar" src="${sellerAvatar}">
+    <div class="seller-header-info">
+      <p class="posted-by"><strong>${sellerName}</strong></p>
+      <p class="posted-on">RCT‑X</p>
+      ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
     </div>
-    <h1>${post.title || "Untitled post"}</h1>
-  `;
+  </div>
+  <h1>${post.title || "Untitled post"}</h1>
+`;
 
   if (post.price !== undefined) {
     const price = document.createElement("h2");
