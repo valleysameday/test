@@ -109,78 +109,59 @@ export function initUI() {
   window.openLoginModal = () => openScreen("login");
 
   /* ==========================
-     HAMBURGER MENU
-  ========================== */
-  const sideMenu = document.getElementById("sideMenu");
-  const hamburger = document.getElementById("hamburger");
+     HEADER ICON LOGIC
+========================== */
 
-  hamburger?.addEventListener("click", () => {
-    sideMenu.classList.toggle("open");
-  });
+  const postAdBtn = document.getElementById("post-ad-btn");
+  const loginBtn = document.getElementById("auth-logged-out");
+  const logoutBtn = document.getElementById("auth-logged-in");
+  const menuBtn = document.getElementById("menu-btn");
 
-  // Close menu when clicking a link
-  sideMenu.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", () => {
-      sideMenu.classList.remove("open");
-    });
-  });
-
-  /* ==========================
-     MENU ACTIONS
-  ========================== */
-
-  // HOME
-  document.getElementById("menu-home").onclick = () => {
-    window.loadView("home");
-  };
-
-  // POST AD
-  document.getElementById("menu-post").onclick = () => {
+  /* ---- POST AD ---- */
+  postAdBtn?.addEventListener("click", () => {
     if (!window.currentUser) {
       window.loginRedirect = "post";
       window.openLoginModal();
       return;
     }
     openScreen("post");
-  };
+  });
 
-  // DASHBOARD
-  document.getElementById("menu-dashboard").onclick = () => {
-    window.navigateToDashboard?.();
-  };
-
-  // LOGIN
-  document.getElementById("menu-login").onclick = () => {
+  /* ---- LOGIN ---- */
+  loginBtn?.addEventListener("click", () => {
     window.loginRedirect = "stay";
     window.openLoginModal();
-  };
+  });
 
-  // LOGOUT
-  document.getElementById("menu-logout").onclick = async () => {
+  /* ---- LOGOUT ---- */
+  logoutBtn?.addEventListener("click", async () => {
     const { auth } = await getFirebase();
     await auth.signOut();
     window.currentUser = null;
-    updateMenuAuthState();
-  };
+    updateHeaderAuthState();
+  });
+
+  /* ---- MENU BUTTON ---- */
+  menuBtn?.addEventListener("click", () => {
+    window.loadView("menu"); // or open a dropdown later
+  });
 
   /* ==========================
      LOGIN STATE HANDLING
   ========================== */
-  function updateMenuAuthState() {
+  function updateHeaderAuthState() {
     const loggedIn = !!window.currentUser;
 
-    document.getElementById("menu-login").classList.toggle("hidden", loggedIn);
-    document.getElementById("menu-logout").classList.toggle("hidden", !loggedIn);
-    document.getElementById("menu-dashboard").classList.toggle("hidden", !loggedIn);
+    loginBtn.style.display = loggedIn ? "none" : "flex";
+    logoutBtn.style.display = loggedIn ? "flex" : "none";
   }
 
-  updateMenuAuthState();
+  updateHeaderAuthState();
 
-  // If your Firebase setup exposes onAuthStateChanged globally:
   if (window.onAuthStateChanged) {
     window.onAuthStateChanged(user => {
       window.currentUser = user || null;
-      updateMenuAuthState();
+      updateHeaderAuthState();
     });
   }
 
