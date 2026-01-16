@@ -193,21 +193,6 @@ async function renderPost(container, post) {
 
   const currentUser = window.currentUser || null;
   let sellerName = "Local Seller";
-
-  let sellerAvatar = PLACEHOLDER_IMG;
-let sellerSince = null;
-
-if (post.userId) {
-  const u = await getDoc(doc(db, "users", post.userId));
-  if (u.exists()) {
-    const data = u.data();
-    sellerName = data.firstName || sellerName;
-    sellerAvatar = data.profileImage || PLACEHOLDER_IMG;
-    sellerSince = data.createdAt ? new Date(data.createdAt).toLocaleDateString("en-GB", {
-      year: "numeric",
-      month: "long"
-    }) : null;
-  }
 }
 
   const images = post.imageUrls?.length
