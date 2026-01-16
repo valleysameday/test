@@ -240,7 +240,7 @@ followBtn.onclick = async () => {
   }
 
   const uid = window.currentUser.uid;
-  const ref = doc(db, "users", uid, "followers", post.userId);
+  const ref = doc(db, "users", post.userId, "followers", uid);
   const snap = await getDoc(ref);
 
   if (snap.exists()) {
