@@ -221,7 +221,7 @@ followBtn.onclick = () => {
     setupFollowButton();
   }
 
-   const sellerHeader = document.getElementById("sellerHeaderClickable");
+   const sellerHeader = right.querySelector("#sellerHeaderClickable");
 
 sellerHeader.addEventListener("click", (e) => {
   // Prevent click if user taps the follow button
