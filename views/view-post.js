@@ -5,15 +5,13 @@ import {
   doc,
   getDoc,
   updateDoc,
-  increment,
-  query,
-  collection,
-  where,
-  getDocs,
-  addDoc,
-  setDoc,
-  deleteDoc
+  increment
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+import {
+  toggleFollow,
+  isFollowing
+} from "/index/js/social/follow.js";
 
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
 let db;
@@ -98,6 +96,7 @@ async function loadPost(postId) {
 
   const post = { id: snap.id, ...snap.data() };
 
+  /* 🔢 Safe view increment */
   updateDoc(doc(db, "posts", postId), {
     views: increment(1)
   }).catch(() => {});
@@ -171,46 +170,32 @@ async function renderPost(container, post) {
   `;
 
   /* =====================================================
-     FOLLOW BUTTON (FIXED & SAFE)
+     FOLLOW BUTTON (SHARED LOGIC)
   ===================================================== */
-  const sellerInfo = right.querySelector(".seller-header-info");
-  const followBtn = document.createElement("button");
-  followBtn.className = "follow-btn";
-  followBtn.textContent = "Follow";
-
   if (currentUser && post.userId && post.userId !== currentUser.uid) {
+    const sellerInfo = right.querySelector(".seller-header-info");
+    const followBtn = document.createElement("button");
+    followBtn.className = "follow-btn";
+
     const viewerId = currentUser.uid;
     const sellerId = post.userId;
 
-    const followerRef = doc(db, "users", sellerId, "followers", viewerId);
-    const followingRef = doc(db, "users", viewerId, "following", sellerId);
-
     try {
-      const snap = await getDoc(followingRef);
-      if (snap.exists()) followBtn.textContent = "Following";
-    } catch {}
+      const following = await isFollowing(viewerId, sellerId);
+      followBtn.textContent = following ? "Following" : "Follow";
+    } catch {
+      followBtn.textContent = "Follow";
+    }
 
     followBtn.onclick = async () => {
       try {
-        const snap = await getDoc(followingRef);
-
-        if (snap.exists()) {
-          await deleteDoc(followingRef);
-          await deleteDoc(followerRef);
-          followBtn.textContent = "Follow";
-          showToast("Unfollowed seller");
-        } else {
-          await setDoc(followingRef, {
-            userId: sellerId,
-            followedAt: Date.now()
-          });
-          await setDoc(followerRef, {
-            userId: viewerId,
-            followedAt: Date.now()
-          });
-          followBtn.textContent = "Following";
-          showToast("You’re now following this seller");
-        }
+        const res = await toggleFollow(viewerId, sellerId);
+        followBtn.textContent = res.following ? "Following" : "Follow";
+        showToast(
+          res.following
+            ? "You’re now following this seller"
+            : "Unfollowed seller"
+        );
       } catch (err) {
         console.error(err);
         showToast("Action not allowed", "error");
