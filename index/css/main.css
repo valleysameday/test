@@ -67,7 +67,7 @@ header .logo {
 .rctx-icons {
   display: flex;
   gap: 14px;
-  align-items: center;
+  align-items: flex-end;
 }
 
 .search-wrapper {
