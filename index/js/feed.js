@@ -19,6 +19,53 @@ let db;
 let allPosts = [];
 
 /* --------------------------------------------------
+   SUBCATEGORY MAP
+-------------------------------------------------- */
+const SUBCATEGORIES = {
+  property: [
+    { id: "for-sale", label: "For Sale" },
+    { id: "to-rent", label: "To Rent" },
+    { id: "rooms", label: "Rooms to Rent" },
+    { id: "holiday", label: "Holiday Lets" },
+    { id: "commercial", label: "Commercial" },
+    { id: "land", label: "Land & Plots" },
+    { id: "parking", label: "Parking & Garages" }
+  ],
+
+  vehicles: [
+    { id: "cars", label: "Cars" },
+    { id: "vans", label: "Vans" },
+    { id: "motorbikes", label: "Motorbikes" },
+    { id: "caravans", label: "Caravans" },
+    { id: "trucks", label: "Trucks" },
+    { id: "parts", label: "Parts & Accessories" },
+    { id: "other", label: "Other Vehicles" }
+  ],
+
+  jobs: [
+    { id: "full-time", label: "Full‑Time" },
+    { id: "part-time", label: "Part‑Time" },
+    { id: "temporary", label: "Temporary" },
+    { id: "apprenticeships", label: "Apprenticeships" },
+    { id: "work-from-home", label: "Work From Home" },
+    { id: "driving", label: "Driving Jobs" },
+    { id: "hospitality", label: "Hospitality" },
+    { id: "retail", label: "Retail" }
+  ],
+
+  services: [
+    { id: "trades", label: "Tradesmen" },
+    { id: "cleaning", label: "Cleaning" },
+    { id: "gardening", label: "Gardening" },
+    { id: "beauty", label: "Beauty & Wellness" },
+    { id: "tutoring", label: "Tutoring" },
+    { id: "removals", label: "Transport & Removals" },
+    { id: "it", label: "IT Support" },
+    { id: "business", label: "Business Services" }
+  ]
+};
+
+/* --------------------------------------------------
    PUBLIC INIT
 -------------------------------------------------- */
 export function init() {
@@ -59,6 +106,7 @@ export async function initFeed() {
   }
 
   const savedCategory = sessionStorage.getItem("homeCategory") || "all";
+  renderSubcategories(savedCategory);
   renderPosts(savedCategory);
 
   if (categoriesEl && !categoriesEl.dataset.bound) {
@@ -74,11 +122,57 @@ export async function initFeed() {
       const cat = btn.dataset.category || "all";
 
       sessionStorage.setItem("homeCategory", cat);
+      sessionStorage.removeItem("homeSubcategory");
+
+      renderSubcategories(cat);
       renderPosts(cat);
     });
 
     categoriesEl.dataset.bound = "true";
   }
+}
+
+/* --------------------------------------------------
+   RENDER SUBCATEGORIES
+-------------------------------------------------- */
+function renderSubcategories(category) {
+  const subEl = document.getElementById("subcategories");
+  if (!subEl) return;
+
+  const list = SUBCATEGORIES[category];
+
+  if (!list) {
+    subEl.classList.add("hidden");
+    subEl.innerHTML = "";
+    return;
+  }
+
+  subEl.classList.remove("hidden");
+  subEl.innerHTML = "";
+
+  const saved = sessionStorage.getItem("homeSubcategory");
+
+  list.forEach((sub) => {
+    const btn = document.createElement("button");
+    btn.className = "subcategory-btn";
+    btn.dataset.sub = sub.id;
+    btn.textContent = sub.label;
+
+    if (saved === sub.id) btn.classList.add("active");
+
+    btn.addEventListener("click", () => {
+      subEl.querySelectorAll(".subcategory-btn")
+        .forEach((b) => b.classList.remove("active"));
+
+      btn.classList.add("active");
+      sessionStorage.setItem("homeSubcategory", sub.id);
+
+      const main = sessionStorage.getItem("homeCategory") || "all";
+      renderPosts(main);
+    });
+
+    subEl.appendChild(btn);
+  });
 }
 
 /* --------------------------------------------------
@@ -113,9 +207,12 @@ function renderPosts(category) {
   if (!postsContainer) return;
 
   const searchTerm = (window.currentSearch || "").toLowerCase().trim();
+  const sub = sessionStorage.getItem("homeSubcategory");
 
   const filtered = allPosts.filter((p) => {
     if (category !== "all" && p.category !== category) return false;
+
+    if (sub && p.subcategory !== sub) return false;
 
     if (!searchTerm) return true;
 
@@ -162,7 +259,6 @@ function buildPostCard(post, category) {
 
   /* ------------------------------
      AUTO PROPERTY PRICE LOGIC
-     Bulletproof + auto-detect
   ------------------------------ */
   let price = "";
 
@@ -171,9 +267,8 @@ function buildPostCard(post, category) {
 
     const salePrice = Number(post.propertySalePrice || 0);
     const rentAmount = Number(post.propertyRentAmount || 0);
-    const rentFreq = post.propertyRentFrequency || null;
+    const rentFreq = (post.propertyRentFrequency || "").toLowerCase().trim();
 
-    // AUTO-DETECT SALE vs RENT
     let isSale = listingType === "sale";
     let isRent = listingType === "rent";
 
@@ -182,47 +277,37 @@ function buildPostCard(post, category) {
       else if (salePrice > 0) isSale = true;
     }
 
-    // SALE
     if (isSale) {
-      if (salePrice > 0) {
-        price = `£${salePrice.toLocaleString()}`;
-      } else {
-        price = "£0";
-      }
+      price = salePrice > 0 ? `£${salePrice.toLocaleString()}` : "£—";
     }
 
-    // RENT
     else if (isRent) {
       if (rentAmount > 0) {
-        if (rentFreq === "pcm") price = `£${rentAmount} pcm`;
-        else if (rentFreq === "pw") price = `£${rentAmount} pw`;
+        if (["pcm", "per month", "month"].includes(rentFreq))
+          price = `£${rentAmount} pcm`;
+        else if (["pw", "weekly", "per week", "week", "wk"].includes(rentFreq))
+          price = `£${rentAmount} pw`;
         else price = `£${rentAmount}`;
       } else {
-        price = "£0";
+        price = "£—";
       }
     }
 
-    // FALLBACK
     else {
-      price = post.price ? `£${post.price}` : "";
+      price = post.price ? `£${post.price}` : "£—";
     }
 
   } else {
-    // NORMAL ITEMS
     price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
   }
 
   /* ------------------------------
-     PAID BADGE OVERLAY
+     BADGE OVERLAY
   ------------------------------ */
   let badgeHtml = "";
-  if (post.featured) {
-    badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
-  } else if (post.spotlight) {
-    badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
-  } else if (post.urgent) {
-    badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
-  }
+  if (post.featured) badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
+  else if (post.spotlight) badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
+  else if (post.urgent) badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
 
   /* ------------------------------
      CARD HTML
@@ -231,12 +316,10 @@ function buildPostCard(post, category) {
     <div class="post-image">
       <img src="${img}" alt="${escapeHtml(post.title || "Listing image")}" loading="lazy"
            onerror="this.src='/index/images/image-webholder.webp'">
-
       ${badgeHtml}
     </div>
 
     <div class="post-body">
-
       <div class="post-meta">
         <span class="post-price">${price}</span>
 
@@ -255,14 +338,12 @@ function buildPostCard(post, category) {
       </div>
 
       <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
-
       <span class="post-area">📍 ${escapeHtml(area)}</span>
-
     </div>
   `;
 
   /* ------------------------------
-     HEART BUTTON LOGIC
+     HEART BUTTON
   ------------------------------ */
   const heartBtn = card.querySelector(".heart-btn");
 
