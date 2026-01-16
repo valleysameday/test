@@ -1,28 +1,41 @@
+<!-- ================================
+     HOME VIEW
+================================ -->
+<div id="homeView" class="home-view">
+
+  <!-- Search -->
   <div class="search-wrapper">
-  <input 
-    type="text" 
-    id="searchInput" 
-    class="search-bar" 
-    placeholder="Search rct-X…"
-  >
+    <input 
+      type="text" 
+      id="searchInput" 
+      class="search-bar" 
+      placeholder="Search RCT‑X…"
+    >
   </div>
 
-<!-- Weather -->
-<section id="weatherSnippet" class="weather-snippet">
-  <span class="weather-emoji">⏳.......</span>
-  <span class="weather-text">Loading today’s weather…</span>
-</section>
+  <!-- Weather -->
+  <section id="weatherSnippet" class="weather-snippet">
+    <span class="weather-emoji">⏳.......</span>
+    <span class="weather-text">Loading today’s weather…</span>
+  </section>
 
-<!-- Categories -->
-<section id="categories">
+  <!-- Main Categories -->
+  <section id="categories" class="categories">
   <button data-category="all" class="category-btn active">All</button>
   <button data-category="forsale" class="category-btn">For Sale</button>
-  <button data-category="jobs" class="category-btn">Jobs & Services</button>
+  <button data-category="free" class="category-btn">Freebies</button>
+  <button data-category="vehicles" class="category-btn">Vehicles</button>
   <button data-category="property" class="category-btn">Property</button>
+  <button data-category="jobs" class="category-btn">Jobs</button>
+  <button data-category="services" class="category-btn">Services</button>
   <button data-category="community" class="category-btn">Community</button>
   <button data-category="events" class="category-btn">Events</button>
-  <button data-category="free" class="category-btn">Freebies</button>
-</section>
+  </section>
 
-<!-- Posts -->
-<section id="postsContainer" class="posts-grid"></section>
+  <!-- Subcategories (dynamic) -->
+  <section id="subcategories" class="subcategories hidden"></section>
+
+  <!-- Posts Grid -->
+  <section id="postsContainer" class="posts-grid"></section>
+
+</div>
