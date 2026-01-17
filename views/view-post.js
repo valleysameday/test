@@ -299,21 +299,29 @@ msgBtn.onclick = async () => {
   } 
   // Create new conversation
   else {
-    const newConv = await addDoc(convRef, {
-      participants: [buyerId, sellerId],
-      postId,
-      lastMessage: text,
-      unread: {
-        [buyerId]: false,
-        [sellerId]: true
-      },
-      deletedFor: {
-        [buyerId]: false,
-        [sellerId]: false
-      },
-      updatedAt: Date.now()
-    });
+const newConv = await addDoc(convRef, {
+  participants: [buyerId, sellerId],
 
+  postId,
+  postTitle: post.title || "Item",
+  postImage: images?.[0] || null,
+
+  lastMessage: text,
+  lastSenderId: buyerId,
+
+  unread: {
+    [buyerId]: false,
+    [sellerId]: true
+  },
+
+  deletedFor: {
+    [buyerId]: false,
+    [sellerId]: false
+  },
+
+  createdAt: Date.now(),
+  updatedAt: Date.now()
+});
     conversationId = newConv.id;
   }
 
