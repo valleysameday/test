@@ -262,16 +262,15 @@ messageInput.setSelectionRange(
     return true;
   }
 
-  if (currentUser.uid === post.userId) {
-  showToast("You can’t message your own post", "error");
-  return;
-  }
-
   /* =====================================================
      MESSAGE SELLER (FIXED v9)
   ===================================================== */
 msgBtn.onclick = async () => {
   if (!requireLogin()) return;
+  if (currentUser.uid === post.userId) {
+  showToast("You can’t message your own post", "error");
+  return;
+  }
 
   const text = messageInput.value.trim();
   if (!text) {
