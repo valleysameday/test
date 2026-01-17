@@ -244,18 +244,18 @@ contactBox.innerHTML = `
     </button>
 
     <!-- WHATSAPP (ONLY IF ALLOWED) -->
-    ${
-      post.whatsapp
-        ? `<a
-             href="https://wa.me/${post.whatsapp}"
-             target="_blank"
-             rel="noopener"
-             class="secondary-btn whatsapp-btn"
-           >
-             WhatsApp
-           </a>`
-        : ``
-    }
+${
+  post.allowWhatsApp && post.phone
+    ? `<a
+         href="https://wa.me/44${post.phone.replace(/^0/, "")}"
+         target="_blank"
+         rel="noopener"
+         class="secondary-btn whatsapp-btn"
+       >
+         WhatsApp
+       </a>`
+    : ``
+}
   </div>
 `;
 
