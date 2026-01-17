@@ -173,14 +173,119 @@ async function renderPost(container, post) {
     }
   }
 
-  // -------------------------------
-  // Images
-  // -------------------------------
-  const images = post.imageUrls?.length
-    ? post.imageUrls
-    : post.imageUrl
-    ? [post.imageUrl]
-    : [PLACEHOLDER_IMG];
+// -------------------------------
+// Images
+// -------------------------------
+const images = post.imageUrls?.length
+  ? post.imageUrls
+  : post.imageUrl
+  ? [post.imageUrl]
+  : [PLACEHOLDER_IMG];
+
+// -------------------------------
+// Layout
+// -------------------------------
+const layout = document.createElement("div");
+layout.className = "view-post-layout";
+
+const left = document.createElement("div");
+left.className = "view-post-left gallery scrollable-gallery";
+
+// Full-width, scrollable images
+images.forEach((src, index) => {
+  const imgWrapper = document.createElement("div");
+  imgWrapper.className = "gallery-img-wrapper";
+  const img = document.createElement("img");
+  img.src = src;
+  img.onerror = () => (img.src = PLACEHOLDER_IMG);
+  imgWrapper.appendChild(img);
+  left.appendChild(imgWrapper);
+
+  // Tap to view in corner box
+  imgWrapper.onclick = () => {
+    showImagePreview(src, index + 1, images.length);
+  };
+});
+
+// -------------------------------
+// Image preview box (corner)
+// -------------------------------
+function showImagePreview(src, currentIndex, total) {
+  // Remove existing if any
+  const existing = document.getElementById("imagePreviewBox");
+  if (existing) existing.remove();
+
+  const preview = document.createElement("div");
+  preview.id = "imagePreviewBox";
+  preview.className = "image-preview-box";
+
+  preview.innerHTML = `
+    <span class="close-preview">×</span>
+    <img src="${src}" onerror="this.src='${PLACEHOLDER_IMG}'" />
+    <div class="image-count">${currentIndex} / ${total}</div>
+  `;
+
+  document.body.appendChild(preview);
+
+  // Close preview
+  preview.querySelector(".close-preview").onclick = () => preview.remove();
+}
+
+// -------------------------------
+// Add CSS for scrollable gallery and preview
+// -------------------------------
+const style = document.createElement("style");
+style.textContent = `
+.scrollable-gallery {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.gallery-img-wrapper {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 600px;
+  cursor: pointer;
+}
+.gallery-img-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.image-preview-box {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 220px;
+  max-width: 40vw;
+  background: rgba(0,0,0,0.8);
+  padding: 8px;
+  border-radius: 8px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+.image-preview-box img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.image-preview-box .image-count {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.image-preview-box .close-preview {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  cursor: pointer;
+  font-size: 18px;
+}
+`;
+document.head.appendChild(style);
 
   // -------------------------------
   // Layout
