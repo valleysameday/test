@@ -215,26 +215,64 @@ if (post.description) {
   right.appendChild(desc);
 }
 
-  /* ================= CONTACT BOX ================= */
-  const contactBox = document.createElement("div");
-  contactBox.className = "contact-box";
+/* =====================================================
+   CONTACT BOX
+===================================================== */
+const contactBox = document.createElement("div");
+contactBox.className = "contact-box";
 
-  contactBox.innerHTML = `
-    <h3>Contact Seller</h3>
+contactBox.innerHTML = `
+  <h3>Contact Seller</h3>
 
-    <textarea
-      id="messageInput"
-      class="message-input"
-      rows="3"
-    >Hi, is this still available?</textarea>
+  <!-- PRIMARY MESSAGE -->
+  <textarea
+    id="messageInput"
+    class="message-input"
+    rows="3"
+  >Hi, is this still available?</textarea>
 
+  <!-- ACTIONS -->
+  <div class="contact-actions">
+    <!-- MESSAGE (PRIMARY) -->
     <button id="msgSellerBtn" class="primary-btn">
       Send Message
     </button>
-  `;
 
-  right.appendChild(contactBox);
+    <!-- CONTACT (MOBILE FALLBACK) -->
+    <button id="contactSellerBtn" class="secondary-btn">
+      Contact
+    </button>
 
+    <!-- WHATSAPP (ONLY IF ALLOWED) -->
+    ${
+      post.whatsapp
+        ? `<a
+             href="https://wa.me/${post.whatsapp}"
+             target="_blank"
+             rel="noopener"
+             class="secondary-btn whatsapp-btn"
+           >
+             WhatsApp
+           </a>`
+        : ``
+    }
+  </div>
+`;
+  const contactBtn = right.querySelector("#contactSellerBtn");
+
+contactBtn.onclick = () => {
+  if (!window.currentUser) {
+    showToast("Please log in to contact the seller", "error");
+    window.loginRedirect = "stay";
+    setTimeout(() => window.openLoginModal(), 600);
+    return;
+  }
+
+  showToast("Please use messages or WhatsApp to contact the seller");
+};
+
+right.appendChild(contactBox);
+  
   const messageInput = contactBox.querySelector("#messageInput");
   const msgBtn = contactBox.querySelector("#msgSellerBtn");
 
