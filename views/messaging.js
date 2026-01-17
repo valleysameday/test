@@ -13,6 +13,9 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+/* ==========================
+   STATE
+========================== */
 let unsubscribeMessages = null;
 let currentConversationId = null;
 let currentOtherUserId = null;
@@ -35,21 +38,11 @@ function setupUIListeners() {
   const sendBtn = document.getElementById("convSend");
   const input = document.getElementById("convInput");
 
-  if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      closeConversation();
-    });
-  }
-
-  if (sendBtn) {
-    sendBtn.addEventListener("click", sendMessage);
-  }
-
-  if (input) {
-    input.addEventListener("keypress", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-  }
+  if (backBtn) backBtn.addEventListener("click", closeConversation);
+  if (sendBtn) sendBtn.addEventListener("click", sendMessage);
+  if (input) input.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+  });
 }
 
 /* ==========================
@@ -71,13 +64,10 @@ export async function loadConversations() {
   );
 
   const snap = await getDocs(q);
-
   let html = "";
 
   for (const docSnap of snap.docs) {
     const data = docSnap.data();
-
-    // Detect the other user
     const otherUserId = data.participants.find(id => id !== uid);
 
     // Load their name
@@ -90,16 +80,16 @@ export async function loadConversations() {
     const unread = data.unread?.[uid];
 
     html += `
-  <div class="conversation-item ${unread ? "unread" : ""}"
-       data-id="${docSnap.id}"
-       data-other="${otherUserId}"
-       data-name="${escapeHtml(otherName)}">
-    <strong>${escapeHtml(otherName)}</strong>
-    <div class="conversation-post-title">${escapeHtml(data.postTitle || "Item")}</div>
-    ${unread ? '<span class="unread-dot"></span>' : ""}
-    <div class="conversation-last-message">${escapeHtml(data.lastMessage || "")}</div>
-  </div>
-`;
+      <div class="conversation-item ${unread ? "unread" : ""}"
+           data-id="${docSnap.id}"
+           data-other="${otherUserId}"
+           data-name="${escapeHtml(otherName)}">
+        <strong>${escapeHtml(otherName)}</strong>
+        <div class="conversation-post-title">${escapeHtml(data.postTitle || "Item")}</div>
+        ${unread ? '<span class="unread-dot"></span>' : ""}
+        <div class="conversation-last-message">${escapeHtml(data.lastMessage || "")}</div>
+      </div>
+    `;
   }
 
   listEl.innerHTML = html;
@@ -124,33 +114,25 @@ export async function openConversation(id, name, otherUserId) {
   currentOtherUserName = name;
 
   showSection("conversationView");
-
   document.getElementById("convName").textContent = name;
 
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
-
-  // Ensure unread map exists
   const convRef = doc(db, "conversations", id);
   const convSnap = await getDoc(convRef);
   const data = convSnap.data();
 
+  // Ensure unread map exists
   if (!data.unread) {
     await updateDoc(convRef, {
-      unread: {
-        [uid]: false,
-        [otherUserId]: true
-      }
+      unread: { [uid]: false, [otherUserId]: true }
     });
   } else {
-    await updateDoc(convRef, {
-      [`unread.${uid}`]: false
-    });
+    await updateDoc(convRef, { [`unread.${uid}`]: false });
   }
 
   await loadConversations();
   await checkUnreadMessages();
-
   listenForMessages(id);
 }
 
@@ -170,7 +152,6 @@ function closeConversation() {
 ========================== */
 async function listenForMessages(conversationId) {
   const { db } = await getFirebase();
-
   if (unsubscribeMessages) unsubscribeMessages();
 
   const messagesRef = collection(db, "conversations", conversationId, "messages");
@@ -181,7 +162,6 @@ async function listenForMessages(conversationId) {
     if (!container) return;
 
     container.innerHTML = "";
-
     snap.forEach(docSnap => {
       const m = docSnap.data();
       const mine = m.senderId === window.currentUser.uid;
@@ -208,19 +188,10 @@ async function sendMessage() {
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
 
-  const msgRef = collection(
-    db,
-    "conversations",
-    currentConversationId,
-    "messages"
-  );
+  const msgRef = collection(db, "conversations", currentConversationId, "messages");
 
   // Create message
-  await addDoc(msgRef, {
-    senderId: uid,
-    text,
-    createdAt: serverTimestamp()
-  });
+  await addDoc(msgRef, { senderId: uid, text, createdAt: serverTimestamp() });
 
   // Update conversation metadata
   await updateDoc(doc(db, "conversations", currentConversationId), {
@@ -243,19 +214,10 @@ export async function checkUnreadMessages() {
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
 
-  const q = query(
-    collection(db, "conversations"),
-    where("participants", "array-contains", uid)
-  );
-
+  const q = query(collection(db, "conversations"), where("participants", "array-contains", uid));
   const snap = await getDocs(q);
 
-  let unread = false;
-
-  snap.forEach(docSnap => {
-    if (docSnap.data().unread?.[uid]) unread = true;
-  });
-
+  const unread = snap.docs.some(docSnap => docSnap.data().unread?.[uid]);
   dot.classList.toggle("hidden", !unread);
 }
 
@@ -263,13 +225,9 @@ export async function checkUnreadMessages() {
    UTIL
 ========================== */
 function showSection(id) {
-  document.querySelectorAll(".dash-section").forEach(sec => {
-    sec.classList.add("hidden");
-  });
-
+  document.querySelectorAll(".dash-section").forEach(sec => sec.classList.add("hidden"));
   const target = document.getElementById(id);
   if (target) target.classList.remove("hidden");
-
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
