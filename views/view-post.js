@@ -1,7 +1,19 @@
 console.log("✅ view-post.js loaded");
 
 import { getFirebase } from "/index/js/firebase/init.js";
-import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  increment,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 import { toggleFollow, isFollowing } from "/index/js/social/follow.js";
 
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
@@ -21,6 +33,46 @@ function showToast(msg, type = "success") {
     toast.classList.remove("show");
     setTimeout(() => toast.remove(), 300);
   }, 2500);
+}
+
+/* =====================================================
+   MESSAGE CONFIRM MODAL
+===================================================== */
+function showMessageConfirmModal({ message, onConfirm }) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <h3>Confirm message to seller</h3>
+
+      <p class="modal-advice">
+        ⚠️ Safety reminder:<br>
+        • Never pay before seeing the item<br>
+        • Meet in a public place where possible
+      </p>
+
+      <label>Your message</label>
+      <textarea class="modal-message-preview">${message}</textarea>
+
+      <div class="modal-actions">
+        <button class="secondary-btn cancel-btn">Cancel</button>
+        <button class="primary-btn confirm-btn">Confirm & Send</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const textarea = overlay.querySelector(".modal-message-preview");
+
+  overlay.querySelector(".cancel-btn").onclick = () => overlay.remove();
+  overlay.querySelector(".confirm-btn").onclick = () => {
+    const finalText = textarea.value.trim();
+    if (!finalText) return;
+    overlay.remove();
+    onConfirm(finalText);
+  };
 }
 
 /* =====================================================
@@ -86,9 +138,7 @@ async function loadPost(postId) {
   const post = { id: snap.id, ...snap.data() };
 
   /* 🔢 Safe view increment */
-  updateDoc(doc(db, "posts", postId), {
-    views: increment(1)
-  }).catch(() => {});
+  updateDoc(doc(db, "posts", postId), { views: increment(1) }).catch(() => {});
 
   await renderPost(container, post);
 }
@@ -101,7 +151,9 @@ async function renderPost(container, post) {
 
   const currentUser = window.currentUser || null;
 
+  // -------------------------------
   // Seller defaults
+  // -------------------------------
   let sellerName = "Local Seller";
   let sellerAvatar = PLACEHOLDER_IMG;
   let sellerSince = null;
@@ -121,14 +173,18 @@ async function renderPost(container, post) {
     }
   }
 
+  // -------------------------------
   // Images
+  // -------------------------------
   const images = post.imageUrls?.length
     ? post.imageUrls
     : post.imageUrl
     ? [post.imageUrl]
     : [PLACEHOLDER_IMG];
 
+  // -------------------------------
   // Layout
+  // -------------------------------
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
@@ -144,37 +200,34 @@ async function renderPost(container, post) {
   const right = document.createElement("div");
   right.className = "view-post-right";
 
+  // -------------------------------
+  // Post content + seller header + follow button
+  // -------------------------------
   right.innerHTML = `
   <div id="sellerHeaderClickable" class="post-seller-header">
     <img class="seller-header-avatar" src="${sellerAvatar}">
     <div class="seller-header-info">
       <p class="posted-by"><strong>${sellerName}</strong></p>
       <p class="posted-on">RCT-X</p>
-      ${
-        sellerSince
-          ? `<p class="posted-since">Posting since: ${sellerSince}</p>`
-          : ""
-      }
+      ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
     </div>
   </div>
 
   <h1>${post.title || "Untitled post"}</h1>
 `;
 
-  /* =====================================================
-     FOLLOW BUTTON (ALWAYS VISIBLE)
-  ===================================================== */
+  // -------------------------------
+  // FOLLOW BUTTON
+  // -------------------------------
   const sellerInfo = right.querySelector(".seller-header-info");
   const followBtn = document.createElement("button");
   followBtn.className = "follow-btn";
   followBtn.textContent = "Follow";
 
-  // Hide if current user is the seller
   if (currentUser?.uid === post.userId) {
     followBtn.style.display = "none";
   } else {
     sellerInfo.appendChild(followBtn);
-
     const setupFollowButton = async () => {
       if (currentUser?.uid) {
         const viewerId = currentUser.uid;
@@ -202,36 +255,29 @@ async function renderPost(container, post) {
           }
         };
       } else {
-        // Guest click
-followBtn.onclick = () => {
-  showToast("You must be logged in to follow sellers", "error");
-
-  // Save where we are so we can return after login
-  window.loginRedirect = "stay";
-
-  setTimeout(() => {
-    if (typeof window.openLoginModal === "function") {
-      window.openLoginModal();
-    }
-  }, 4000);
-};
+        followBtn.onclick = () => {
+          showToast("You must be logged in to follow sellers", "error");
+          window.loginRedirect = "stay";
+          setTimeout(() => window.openLoginModal?.(), 4000);
+        };
       }
     };
-
     setupFollowButton();
   }
 
-   const sellerHeader = right.querySelector("#sellerHeaderClickable");
+  // -------------------------------
+  // SELLER HEADER CLICK
+  // -------------------------------
+  const sellerHeader = right.querySelector("#sellerHeaderClickable");
+  sellerHeader.addEventListener("click", e => {
+    if (e.target.closest(".follow-btn")) return;
+    window.selectedSellerId = post.userId;
+    window.loadView("seller-profile");
+  });
 
-sellerHeader.addEventListener("click", (e) => {
-  // Prevent click if user taps the follow button
-  if (e.target.closest(".follow-btn")) return;
-
-  window.selectedSellerId = post.userId;
-  window.loadView("seller-profile");
-});
-   
-  // Price
+  // -------------------------------
+  // Price & Description
+  // -------------------------------
   if (post.price !== undefined) {
     const price = document.createElement("h2");
     price.className = "post-price";
@@ -239,13 +285,120 @@ sellerHeader.addEventListener("click", (e) => {
     right.appendChild(price);
   }
 
-  // Description
-  const desc = document.createElement("p");
-  desc.className = "view-post-desc";
-  desc.textContent = post.description || "";
-  right.appendChild(desc);
+  if (post.description) {
+    const desc = document.createElement("p");
+    desc.className = "view-post-desc";
+    desc.textContent = post.description;
+    right.appendChild(desc);
+  }
 
-  // Footer
+  // -------------------------------
+  // CONTACT BOX (Message + Contact + WhatsApp)
+  // -------------------------------
+  const contactBox = document.createElement("div");
+  contactBox.className = "contact-box";
+  contactBox.innerHTML = `
+    <h3>Contact Seller</h3>
+    <textarea id="messageInput" class="message-input" rows="3">Hi, is this still available?</textarea>
+    <div class="contact-actions">
+      <button id="msgSellerBtn" class="primary-btn">Send Message</button>
+      ${post.phone ? `<button id="contactSellerBtn" class="secondary-btn">Contact</button>` : ""}
+      ${post.allowWhatsApp && post.phone ? `<a href="https://wa.me/44${post.phone.replace(/^0/, "")}" target="_blank" rel="noopener" class="secondary-btn whatsapp-btn">WhatsApp</a>` : ""}
+    </div>
+  `;
+  right.appendChild(contactBox);
+
+  const messageInput = contactBox.querySelector("#messageInput");
+  const msgBtn = contactBox.querySelector("#msgSellerBtn");
+  const contactBtn = contactBox.querySelector("#contactSellerBtn");
+
+  function requireLogin() {
+    if (!window.currentUser) {
+      showToast("Please log in to contact the seller", "error");
+      window.loginRedirect = "stay";
+      setTimeout(() => window.openLoginModal?.(), 600);
+      return false;
+    }
+    return true;
+  }
+
+  msgBtn.onclick = async () => {
+    if (!requireLogin()) return;
+    if (currentUser.uid === post.userId) {
+      showToast("You can’t message your own post", "error");
+      return;
+    }
+
+    const draftText = messageInput.value.trim();
+    if (!draftText) {
+      showToast("Please enter a message", "error");
+      return;
+    }
+
+    showMessageConfirmModal({
+      message: draftText,
+      onConfirm: async finalText => {
+        const buyerId = currentUser.uid;
+        const sellerId = post.userId;
+
+        const convRef = collection(db, "conversations");
+        const q = query(
+          convRef,
+          where("participants", "array-contains", buyerId),
+          where("postId", "==", post.id)
+        );
+
+        const snap = await getDocs(q);
+        let conversationId;
+
+        if (!snap.empty) {
+          conversationId = snap.docs[0].id;
+        } else {
+          const newConv = await addDoc(convRef, {
+            participants: [buyerId, sellerId],
+            postId: post.id,
+            postTitle: post.title || "Item",
+            postImage: images[0] || null,
+            lastMessage: finalText,
+            lastSenderId: buyerId,
+            unread: { [buyerId]: false, [sellerId]: true },
+            deletedFor: { [buyerId]: false, [sellerId]: false },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          });
+          conversationId = newConv.id;
+        }
+
+        await addDoc(collection(db, "conversations", conversationId, "messages"), {
+          senderId: buyerId,
+          text: finalText,
+          createdAt: serverTimestamp()
+        });
+
+        await updateDoc(doc(db, "conversations", conversationId), {
+          lastMessage: finalText,
+          lastSenderId: buyerId,
+          updatedAt: serverTimestamp(),
+          [`unread.${sellerId}`]: true
+        });
+
+        messageInput.value = "";
+        showToast("Message sent to seller");
+      }
+    });
+  };
+
+  if (contactBtn) {
+    contactBtn.onclick = async () => {
+      if (!requireLogin()) return;
+      await updateDoc(doc(db, "posts", post.id), { contactClicks: increment(1) });
+      showToast("Contact clicked");
+    };
+  }
+
+  // -------------------------------
+  // FOOTER
+  // -------------------------------
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
   const backBtn = document.createElement("button");
@@ -256,4 +409,4 @@ sellerHeader.addEventListener("click", (e) => {
 
   layout.append(left, right);
   container.append(layout, footer);
-}
+  }
