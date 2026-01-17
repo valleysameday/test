@@ -139,8 +139,11 @@ export function initUI() {
     }
 
     await auth.signOut();
-    window.currentUser = null;
-    updateHeaderAuthState();
+window.currentUser = null;
+updateHeaderAuthState();
+
+// Load logout confirmation page
+window.loadView("logout");
   });
 
   /* ==========================
@@ -185,9 +188,12 @@ fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
     }
 
     await auth.signOut();
-    window.currentUser = null;
-    updateHeaderAuthState();
-    fullscreenMenu.style.display = "none";
+window.currentUser = null;
+updateHeaderAuthState();
+
+// Close menu + load logout confirmation page
+fullscreenMenu.style.display = "none";
+window.loadView("logout");
   });
 
   /* ==========================
