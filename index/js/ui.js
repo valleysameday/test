@@ -148,6 +148,11 @@ export function initUI() {
   ========================== */
 
   const fullscreenMenu = document.getElementById("fullscreenMenu");
+   fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
+  item.addEventListener("click", () => {
+    fullscreenMenu.style.display = "none";
+  });
+});
   const closeMenuBtn = fullscreenMenu?.querySelector(".close-menu");
 
   const menuLogin = document.getElementById("menu-login");
