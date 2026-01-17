@@ -258,7 +258,12 @@ contactBox.innerHTML = `
     }
   </div>
 `;
-  const contactBtn = right.querySelector("#contactSellerBtn");
+
+/* ✅ APPEND FIRST */
+right.appendChild(contactBox);
+
+/* ✅ THEN QUERY FROM contactBox */
+const contactBtn = contactBox.querySelector("#contactSellerBtn");
 
 contactBtn.onclick = () => {
   if (!window.currentUser) {
@@ -271,7 +276,6 @@ contactBtn.onclick = () => {
   showToast("Please use messages or WhatsApp to contact the seller");
 };
 
-right.appendChild(contactBox);
   
   const messageInput = contactBox.querySelector("#messageInput");
   const msgBtn = contactBox.querySelector("#msgSellerBtn");
