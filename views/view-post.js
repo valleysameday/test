@@ -1,10 +1,18 @@
 console.log("✅ view-post.js loaded");
 
 import { getFirebase } from "/index/js/firebase/init.js";
-import { 
-  doc, getDoc, updateDoc, increment,
-  collection, query, where, getDocs, addDoc 
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  increment,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 import { toggleFollow, isFollowing } from "/index/js/social/follow.js";
 
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
@@ -88,7 +96,7 @@ async function loadPost(postId) {
 
   const post = { id: snap.id, ...snap.data() };
 
-  /* 🔢 Safe view increment */
+  // Safe view increment
   updateDoc(doc(db, "posts", postId), {
     views: increment(1)
   }).catch(() => {});
@@ -148,80 +156,57 @@ async function renderPost(container, post) {
   right.className = "view-post-right";
 
   right.innerHTML = `
-  <div id="sellerHeaderClickable" class="post-seller-header">
-    <img class="seller-header-avatar" src="${sellerAvatar}">
-    <div class="seller-header-info">
-      <p class="posted-by"><strong>${sellerName}</strong></p>
-      <p class="posted-on">RCT-X</p>
-      ${
-        sellerSince
-          ? `<p class="posted-since">Posting since: ${sellerSince}</p>`
-          : ""
-      }
+    <div id="sellerHeaderClickable" class="post-seller-header">
+      <img class="seller-header-avatar" src="${sellerAvatar}">
+      <div class="seller-header-info">
+        <p class="posted-by"><strong>${sellerName}</strong></p>
+        <p class="posted-on">RCT-X</p>
+        ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
+      </div>
     </div>
-  </div>
 
-  <h1>${post.title || "Untitled post"}</h1>
-`;
+    <h1>${post.title || "Untitled post"}</h1>
+  `;
 
   /* =====================================================
-     FOLLOW BUTTON (ALWAYS VISIBLE)
+     FOLLOW BUTTON
   ===================================================== */
   const sellerInfo = right.querySelector(".seller-header-info");
   const followBtn = document.createElement("button");
   followBtn.className = "follow-btn";
   followBtn.textContent = "Follow";
 
-  if (currentUser?.uid === post.userId) {
-    followBtn.style.display = "none";
-  } else {
+  if (currentUser?.uid !== post.userId) {
     sellerInfo.appendChild(followBtn);
 
-    const setupFollowButton = async () => {
-      if (currentUser?.uid) {
-        const viewerId = currentUser.uid;
-        const sellerId = post.userId;
+    if (currentUser?.uid) {
+      const following = await isFollowing(currentUser.uid, post.userId);
+      followBtn.textContent = following ? "Following" : "Follow";
 
-        try {
-          const following = await isFollowing(viewerId, sellerId);
-          followBtn.textContent = following ? "Following" : "Follow";
-        } catch {
-          followBtn.textContent = "Follow";
-        }
-
-        followBtn.onclick = async () => {
-          try {
-            const res = await toggleFollow(viewerId, sellerId);
-            followBtn.textContent = res.following ? "Following" : "Follow";
-            showToast(
-              res.following
-                ? "You’re now following this seller"
-                : "Unfollowed seller"
-            );
-          } catch (err) {
-            console.error(err);
-            showToast("Action not allowed", "error");
-          }
-        };
-      } else {
-        followBtn.onclick = () => {
-          showToast("You must be logged in to follow sellers", "error");
-          window.loginRedirect = "stay";
-          setTimeout(() => window.openLoginModal(), 600);
-        };
-      }
-    };
-
-    setupFollowButton();
+      followBtn.onclick = async () => {
+        const res = await toggleFollow(currentUser.uid, post.userId);
+        followBtn.textContent = res.following ? "Following" : "Follow";
+        showToast(
+          res.following
+            ? "You’re now following this seller"
+            : "Unfollowed seller"
+        );
+      };
+    } else {
+      followBtn.onclick = () => {
+        showToast("You must be logged in to follow sellers", "error");
+        window.loginRedirect = "stay";
+        setTimeout(() => window.openLoginModal(), 600);
+      };
+    }
   }
 
-  const sellerHeader = right.querySelector("#sellerHeaderClickable");
-
-  sellerHeader.addEventListener("click", (e) => {
+  // Seller profile navigation
+  right.querySelector("#sellerHeaderClickable").onclick = e => {
     if (e.target.closest(".follow-btn")) return;
     window.selectedSellerId = post.userId;
     window.loadView("seller-profile");
-  });
+  };
 
   // Price
   if (post.price !== undefined) {
@@ -238,125 +223,89 @@ async function renderPost(container, post) {
   right.appendChild(desc);
 
   /* =====================================================
-     CONTACT BOX (ALWAYS VISIBLE)
+     CONTACT BOX
   ===================================================== */
   const contactBox = document.createElement("div");
   contactBox.className = "contact-box";
 
   contactBox.innerHTML = `
     <h3>Contact Seller</h3>
-
     <button id="msgSellerBtn" class="primary-btn">Message Seller</button>
-
-    ${
-      post.allowWhatsApp && post.phone
-        ? `<button id="whatsappBtn" class="whatsapp-btn">WhatsApp</button>`
-        : ""
-    }
-
-    ${
-      post.phone
-        ? `<button id="callBtn" class="secondary-btn">Call Seller</button>`
-        : ""
-    }
   `;
 
   right.appendChild(contactBox);
 
-  /* =====================================================
-     CONTACT BUTTON LOGIC (AFTER DOM INSERT)
-  ===================================================== */
   const msgBtn = right.querySelector("#msgSellerBtn");
-  const whatsappBtn = right.querySelector("#whatsappBtn");
-  const callBtn = right.querySelector("#callBtn");
 
   function requireLogin() {
     if (!window.currentUser) {
-      window.loginRedirect = "stay";
       showToast("Please log in to contact the seller", "error");
+      window.loginRedirect = "stay";
       setTimeout(() => window.openLoginModal(), 600);
       return false;
     }
     return true;
   }
 
+  /* =====================================================
+     MESSAGE SELLER (FIXED v9)
+  ===================================================== */
   msgBtn.onclick = async () => {
-  if (!requireLogin()) return;
+    if (!requireLogin()) return;
 
-  const buyerId = window.currentUser.uid;
-  const sellerId = post.userId;
-  const postId = post.id;
-  const defaultMessage = "Hi, is this still available?";
+    const buyerId = currentUser.uid;
+    const sellerId = post.userId;
+    const postId = post.id;
+    const defaultMessage = "Hi, is this still available?";
 
-  // 1. Check for existing conversation
-  const convQuery = await db
-    .collection("conversations")
-    .where("participants", "array-contains", buyerId)
-    .where("postId", "==", postId)
-    .get();
+    const convRef = collection(db, "conversations");
+    const q = query(
+      convRef,
+      where("participants", "array-contains", buyerId),
+      where("postId", "==", postId)
+    );
 
-  let conversationId = null;
+    const snap = await getDocs(q);
+    let conversationId;
 
-  if (!convQuery.empty) {
-    // Conversation already exists
-    conversationId = convQuery.docs[0].id;
-  } else {
-    // 2. Create new conversation
-    const newConv = await db.collection("conversations").add({
-      participants: [buyerId, sellerId],
-      postId,
+    if (!snap.empty) {
+      conversationId = snap.docs[0].id;
+    } else {
+      const newConv = await addDoc(convRef, {
+        participants: [buyerId, sellerId],
+        postId,
+        lastMessage: defaultMessage,
+        unread: {
+          [buyerId]: false,
+          [sellerId]: true
+        },
+        deletedFor: {
+          [buyerId]: false,
+          [sellerId]: false
+        },
+        updatedAt: Date.now()
+      });
+
+      conversationId = newConv.id;
+    }
+
+    await addDoc(
+      collection(db, "conversations", conversationId, "messages"),
+      {
+        senderId: buyerId,
+        text: defaultMessage,
+        timestamp: Date.now()
+      }
+    );
+
+    await updateDoc(doc(db, "conversations", conversationId), {
       lastMessage: defaultMessage,
-      unread: {
-        [buyerId]: false,
-        [sellerId]: true
-      },
-      deletedFor: {
-        [buyerId]: false,
-        [sellerId]: false
-      },
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      [`unread.${sellerId}`]: true
     });
 
-    conversationId = newConv.id;
-  }
-
-  // 3. Add message to messages subcollection
-  await db
-    .collection("conversations")
-    .doc(conversationId)
-    .collection("messages")
-    .add({
-      senderId: buyerId,
-      text: defaultMessage,
-      timestamp: Date.now()
-    });
-
-  // 4. Update conversation metadata
-  await db.collection("conversations").doc(conversationId).update({
-    lastMessage: defaultMessage,
-    updatedAt: Date.now(),
-    [`unread.${sellerId}`]: true
-  });
-
-  // 5. Toast + stay on page
-  showToast("Message sent to seller");
-};
-
-  if (whatsappBtn) {
-    whatsappBtn.onclick = () => {
-      if (!requireLogin()) return;
-      const number = post.phone.replace(/\D/g, "");
-      window.open(`https://wa.me/${number}`, "_blank");
-    };
-  }
-
-  if (callBtn) {
-    callBtn.onclick = () => {
-      if (!requireLogin()) return;
-      const number = post.phone.replace(/\D/g, "");
-      window.location.href = `tel:${number}`;
-    };
-  }
+    showToast("Message sent to seller");
+  };
 
   /* =====================================================
      FOOTER
