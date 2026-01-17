@@ -148,16 +148,17 @@ export function initUI() {
   ========================== */
 
   const fullscreenMenu = document.getElementById("fullscreenMenu");
-   fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
-  item.addEventListener("click", () => {
-    fullscreenMenu.style.display = "none";
-  });
-});
   const closeMenuBtn = fullscreenMenu?.querySelector(".close-menu");
 
   const menuLogin = document.getElementById("menu-login");
   const menuDashboard = document.getElementById("menu-dashboard");
   const menuLogout = document.getElementById("menu-logout");
+   // Close menu whenever any menu item is clicked
+fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
+  item.addEventListener("click", () => {
+    fullscreenMenu.style.display = "none";
+  });
+});
 
   menuBtn?.addEventListener("click", () => {
     fullscreenMenu.style.display = "flex";
