@@ -49,8 +49,7 @@ function showMessageConfirmModal({ message, onConfirm }) {
       <p class="modal-advice">
         ⚠️ Safety reminder:<br>
         • Never pay before seeing the item<br>
-        • Meet in a public place where possible<br>
-        • RCT-X does not handle payments or deliveries
+        • Meet in a public place where possible
       </p>
 
       <label>Your message</label>
@@ -208,6 +207,13 @@ async function renderPost(container, post) {
 
     <h1>${post.title || "Untitled post"}</h1>
   `;
+  // Description
+if (post.description) {
+  const desc = document.createElement("p");
+  desc.className = "view-post-desc";
+  desc.textContent = post.description;
+  right.appendChild(desc);
+}
 
   /* ================= CONTACT BOX ================= */
   const contactBox = document.createElement("div");
