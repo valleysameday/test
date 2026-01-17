@@ -36,6 +36,50 @@ function showToast(msg, type = "success") {
 }
 
 /* =====================================================
+   MESSAGE CONFIRM MODAL
+===================================================== */
+function showMessageConfirmModal({ message, onConfirm }) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <h3>Confirm message to seller</h3>
+
+      <p class="modal-advice">
+        ⚠️ Safety reminder:<br>
+        • Never pay before seeing the item<br>
+        • Meet in a public place where possible<br>
+        • RCT-X does not handle payments or deliveries
+      </p>
+
+      <label>Your message</label>
+      <textarea class="modal-message-preview">${message}</textarea>
+
+      <div class="modal-actions">
+        <button class="secondary-btn cancel-btn">Cancel</button>
+        <button class="primary-btn confirm-btn">Confirm & Send</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const textarea = overlay.querySelector(".modal-message-preview");
+
+  overlay.querySelector(".cancel-btn").onclick = () => {
+    overlay.remove();
+  };
+
+  overlay.querySelector(".confirm-btn").onclick = () => {
+    const finalText = textarea.value.trim();
+    if (!finalText) return;
+    overlay.remove();
+    onConfirm(finalText);
+  };
+}
+
+/* =====================================================
    SPA ENTRY
 ===================================================== */
 export async function init() {
@@ -97,7 +141,6 @@ async function loadPost(postId) {
 
   const post = { id: snap.id, ...snap.data() };
 
-  // Safe view increment
   updateDoc(doc(db, "posts", postId), {
     views: increment(1)
   }).catch(() => {});
@@ -113,7 +156,6 @@ async function renderPost(container, post) {
 
   const currentUser = window.currentUser || null;
 
-  // Seller defaults
   let sellerName = "Local Seller";
   let sellerAvatar = PLACEHOLDER_IMG;
   let sellerSince = null;
@@ -133,14 +175,12 @@ async function renderPost(container, post) {
     }
   }
 
-  // Images
   const images = post.imageUrls?.length
     ? post.imageUrls
     : post.imageUrl
     ? [post.imageUrl]
     : [PLACEHOLDER_IMG];
 
-  // Layout
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
@@ -169,63 +209,7 @@ async function renderPost(container, post) {
     <h1>${post.title || "Untitled post"}</h1>
   `;
 
-  /* =====================================================
-     FOLLOW BUTTON
-  ===================================================== */
-  const sellerInfo = right.querySelector(".seller-header-info");
-  const followBtn = document.createElement("button");
-  followBtn.className = "follow-btn";
-  followBtn.textContent = "Follow";
-
-  if (currentUser?.uid !== post.userId) {
-    sellerInfo.appendChild(followBtn);
-
-    if (currentUser?.uid) {
-      const following = await isFollowing(currentUser.uid, post.userId);
-      followBtn.textContent = following ? "Following" : "Follow";
-
-      followBtn.onclick = async () => {
-        const res = await toggleFollow(currentUser.uid, post.userId);
-        followBtn.textContent = res.following ? "Following" : "Follow";
-        showToast(
-          res.following
-            ? "You’re now following this seller"
-            : "Unfollowed seller"
-        );
-      };
-    } else {
-      followBtn.onclick = () => {
-        showToast("You must be logged in to follow sellers", "error");
-        window.loginRedirect = "stay";
-        setTimeout(() => window.openLoginModal(), 600);
-      };
-    }
-  }
-
-  // Seller profile navigation
-  right.querySelector("#sellerHeaderClickable").onclick = e => {
-    if (e.target.closest(".follow-btn")) return;
-    window.selectedSellerId = post.userId;
-    window.loadView("seller-profile");
-  };
-
-  // Price
-  if (post.price !== undefined) {
-    const price = document.createElement("h2");
-    price.className = "post-price";
-    price.textContent = post.price === 0 ? "FREE" : `£${post.price}`;
-    right.appendChild(price);
-  }
-
-  // Description
-  const desc = document.createElement("p");
-  desc.className = "view-post-desc";
-  desc.textContent = post.description || "";
-  right.appendChild(desc);
-
-  /* =====================================================
-     CONTACT BOX
-  ===================================================== */
+  /* ================= CONTACT BOX ================= */
   const contactBox = document.createElement("div");
   contactBox.className = "contact-box";
 
@@ -245,8 +229,9 @@ async function renderPost(container, post) {
 
   right.appendChild(contactBox);
 
-  const msgBtn = right.querySelector("#msgSellerBtn");
-  const messageInput = right.querySelector("#messageInput");
+  const messageInput = contactBox.querySelector("#messageInput");
+  const msgBtn = contactBox.querySelector("#msgSellerBtn");
+
   messageInput.focus();
   messageInput.setSelectionRange(
     messageInput.value.length,
@@ -263,9 +248,7 @@ async function renderPost(container, post) {
     return true;
   }
 
-  /* =====================================================
-     MESSAGE SELLER (Corrected)
-  ===================================================== */
+  /* ================= SEND MESSAGE ================= */
   msgBtn.onclick = async () => {
     if (!requireLogin()) return;
     if (currentUser.uid === post.userId) {
@@ -273,38 +256,42 @@ async function renderPost(container, post) {
       return;
     }
 
-    const text = messageInput.value.trim();
-    if (!text) {
+    const draftText = messageInput.value.trim();
+    if (!draftText) {
       showToast("Please enter a message", "error");
-      messageInput.focus();
       return;
     }
 
+    showMessageConfirmModal({
+      message: draftText,
+      onConfirm: async (finalText) => {
+        await sendMessageToSeller(finalText);
+      }
+    });
+  };
+
+  async function sendMessageToSeller(text) {
     const buyerId = currentUser.uid;
     const sellerId = post.userId;
-    const postId = post.id;
 
     const convRef = collection(db, "conversations");
     const q = query(
       convRef,
       where("participants", "array-contains", buyerId),
-      where("postId", "==", postId)
+      where("postId", "==", post.id)
     );
 
     const snap = await getDocs(q);
     let conversationId;
 
-    // Existing conversation
     if (!snap.empty) {
       conversationId = snap.docs[0].id;
-    } 
-    // Create new conversation
-    else {
+    } else {
       const newConv = await addDoc(convRef, {
         participants: [buyerId, sellerId],
-        postId,
+        postId: post.id,
         postTitle: post.title || "Item",
-        postImage: images?.[0] || null,
+        postImage: images[0] || null,
         lastMessage: text,
         lastSenderId: buyerId,
         unread: { [buyerId]: false, [sellerId]: true },
@@ -315,7 +302,6 @@ async function renderPost(container, post) {
       conversationId = newConv.id;
     }
 
-    // Add message to messages subcollection
     await addDoc(
       collection(db, "conversations", conversationId, "messages"),
       {
@@ -325,7 +311,6 @@ async function renderPost(container, post) {
       }
     );
 
-    // Update conversation metadata
     await updateDoc(doc(db, "conversations", conversationId), {
       lastMessage: text,
       lastSenderId: buyerId,
@@ -335,21 +320,8 @@ async function renderPost(container, post) {
 
     messageInput.value = "";
     showToast("Message sent to seller");
-  };
-
-  /* =====================================================
-     FOOTER
-  ===================================================== */
-  const footer = document.createElement("div");
-  footer.className = "view-post-footer";
-
-  const backBtn = document.createElement("button");
-  backBtn.className = "secondary-btn";
-  backBtn.textContent = "← Back";
-  backBtn.onclick = () => window.loadView("home");
-
-  footer.appendChild(backBtn);
+  }
 
   layout.append(left, right);
-  container.append(layout, footer);
+  container.append(layout);
       }
