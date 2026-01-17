@@ -303,3 +303,53 @@
   line-height: 1.2;
   opacity: 0.9;
 }
+
+
+
+
+
+.message-input {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
+
+  padding: 14px 16px;
+  border-radius: 14px;
+
+  font-size: 1rem;
+  line-height: 1.5;
+
+  border: 1.5px solid var(--border-soft);
+  background: #fff;
+  color: var(--text-main);
+
+  outline: none;
+  transition: border 0.15s ease, box-shadow 0.15s ease;
+}
+
+.message-input:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ============================================================
+   CONTACT SELLER BOX
+   ============================================================ */
+.contact-box {
+  background: #f8fafc;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 16px;
+  margin-top: 20px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-box h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--brand-dark);
+  margin-bottom: 4px;
+}
