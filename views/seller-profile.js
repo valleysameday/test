@@ -55,12 +55,56 @@ function renderSellerProfile(seller, sellerId) {
   document.getElementById("sellerReliability").textContent =
     seller.reliability || "";
 
-  document.getElementById("sellerAvatar").style.backgroundImage =
+  const avatarEl = document.getElementById("sellerAvatar");
+  avatarEl.style.backgroundImage =
     `url('${seller.avatarUrl || "/images/avatar-placeholder.png"}')`;
 
   document.getElementById("sellerBio").innerHTML =
     `<p>${seller.bio || "No bio provided."}</p>`;
 
+  /* ============================================================
+     OWNER‑ONLY AVATAR UPLOAD
+  ============================================================ */
+  if (isOwner) {
+    avatarEl.classList.add("avatar-editable");
+
+    // Clicking avatar opens file picker
+    avatarEl.addEventListener("click", () => {
+      document.getElementById("avatarUploadInput").click();
+    });
+
+    // Handle file upload
+    document.getElementById("avatarUploadInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const { storage, db } = await getFirebase();
+
+        // Upload to Firebase Storage
+        const fileRef = window.storageRef(storage, `avatars/${sellerId}.jpg`);
+        await window.uploadBytes(fileRef, file);
+
+        // Get URL
+        const url = await window.getDownloadURL(fileRef);
+
+        // Save to Firestore
+        await updateDoc(doc(db, "users", sellerId), {
+          avatarUrl: url
+        });
+
+        // Update UI instantly
+        avatarEl.style.backgroundImage = `url('${url}')`;
+
+      } catch (err) {
+        console.error("Avatar upload failed:", err);
+      }
+    });
+  }
+
+  /* ============================================================
+     OWNER‑ONLY BIO EDIT BUTTON
+  ============================================================ */
   if (isOwner) {
     const bioEl = document.getElementById("sellerBio");
     const editBtn = document.createElement("button");
@@ -69,6 +113,7 @@ function renderSellerProfile(seller, sellerId) {
     bioEl.appendChild(editBtn);
   }
 
+  /* Contact Seller */
   document.getElementById("contactSellerBtn").onclick = () => {
     window.selectedChatUserId = sellerId;
     window.loadView("chat");
