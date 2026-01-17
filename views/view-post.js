@@ -277,12 +277,67 @@ async function renderPost(container, post) {
     return true;
   }
 
-  msgBtn.onclick = () => {
-    if (!requireLogin()) return;
-    window.selectedChatSeller = post.userId;
-    window.selectedChatPost = post.id;
-    window.loadView("messages");
-  };
+  msgBtn.onclick = async () => {
+  if (!requireLogin()) return;
+
+  const buyerId = window.currentUser.uid;
+  const sellerId = post.userId;
+  const postId = post.id;
+  const defaultMessage = "Hi, is this still available?";
+
+  // 1. Check for existing conversation
+  const convQuery = await db
+    .collection("conversations")
+    .where("participants", "array-contains", buyerId)
+    .where("postId", "==", postId)
+    .get();
+
+  let conversationId = null;
+
+  if (!convQuery.empty) {
+    // Conversation already exists
+    conversationId = convQuery.docs[0].id;
+  } else {
+    // 2. Create new conversation
+    const newConv = await db.collection("conversations").add({
+      participants: [buyerId, sellerId],
+      postId,
+      lastMessage: defaultMessage,
+      unread: {
+        [buyerId]: false,
+        [sellerId]: true
+      },
+      deletedFor: {
+        [buyerId]: false,
+        [sellerId]: false
+      },
+      updatedAt: Date.now()
+    });
+
+    conversationId = newConv.id;
+  }
+
+  // 3. Add message to messages subcollection
+  await db
+    .collection("conversations")
+    .doc(conversationId)
+    .collection("messages")
+    .add({
+      senderId: buyerId,
+      text: defaultMessage,
+      timestamp: Date.now()
+    });
+
+  // 4. Update conversation metadata
+  await db.collection("conversations").doc(conversationId).update({
+    lastMessage: defaultMessage,
+    updatedAt: Date.now(),
+    [`unread.${sellerId}`]: true
+  });
+
+  // 5. Toast + stay on page
+  showToast("Message sent to seller");
+};
 
   if (whatsappBtn) {
     whatsappBtn.onclick = () => {
