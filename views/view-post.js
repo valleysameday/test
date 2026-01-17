@@ -207,93 +207,74 @@ async function renderPost(container, post) {
 
     <h1>${post.title || "Untitled post"}</h1>
   `;
+
   // Description
-if (post.description) {
-  const desc = document.createElement("p");
-  desc.className = "view-post-desc";
-  desc.textContent = post.description;
-  right.appendChild(desc);
-}
+  if (post.description) {
+    const desc = document.createElement("p");
+    desc.className = "view-post-desc";
+    desc.textContent = post.description;
+    right.appendChild(desc);
+  }
 
-/* =====================================================
-   CONTACT BOX
-===================================================== */
-const contactBox = document.createElement("div");
-contactBox.className = "contact-box";
+  /* =====================================================
+     CONTACT BOX
+  ==================================================== */
+  const contactBox = document.createElement("div");
+  contactBox.className = "contact-box";
 
-contactBox.innerHTML = `
-  <h3>Contact Seller</h3>
+  contactBox.innerHTML = `
+    <h3>Contact Seller</h3>
 
-  <!-- PRIMARY MESSAGE -->
-  <textarea
-    id="messageInput"
-    class="message-input"
-    rows="3"
-  >Hi, is this still available?</textarea>
+    <textarea id="messageInput" class="message-input" rows="3">Hi, is this still available?</textarea>
 
-  <!-- ACTIONS -->
-  <div class="contact-actions">
-    <!-- MESSAGE (PRIMARY) -->
-    <button id="msgSellerBtn" class="primary-btn">
-      Send Message
-    </button>
+    <div class="contact-actions">
+      <button id="msgSellerBtn" class="primary-btn">Send Message</button>
+      ${
+        post.phone
+          ? `<button id="contactSellerBtn" class="secondary-btn">Contact</button>`
+          : ``
+      }
+      ${
+        post.allowWhatsApp && post.phone
+          ? `<a href="https://wa.me/44${post.phone.replace(/^0/, "")}" target="_blank" rel="noopener" class="secondary-btn whatsapp-btn">WhatsApp</a>`
+          : ``
+      }
+    </div>
+  `;
 
-    <!-- CONTACT (MOBILE FALLBACK) -->
-    ${
-  post.phone
-    ? `<button id="contactSellerBtn" class="secondary-btn">
-         Contact
-       </button>`
-    : ``
-    }
-    <!-- WHATSAPP (ONLY IF ALLOWED) -->
-${
-  post.allowWhatsApp && post.phone
-    ? `<a
-         href="https://wa.me/44${post.phone.replace(/^0/, "")}"
-         target="_blank"
-         rel="noopener"
-         class="secondary-btn whatsapp-btn"
-       >
-         WhatsApp
-       </a>`
-    : ``
-}
-  </div>
-`;
+  right.appendChild(contactBox);
 
-/* ✅ APPEND FIRST */
-right.appendChild(contactBox);
+  /* =====================================================
+     CONTACT BUTTONS & TRACKING
+  ==================================================== */
+  const contactBtn = contactBox.querySelector("#contactSellerBtn");
+  if (contactBtn) {
+    contactBtn.onclick = async () => {
+      if (!window.currentUser) {
+        showToast("Please log in to contact the seller", "error");
+        window.loginRedirect = "stay";
+        setTimeout(() => window.openLoginModal(), 600);
+        return;
+      }
 
-/* ✅ THEN QUERY FROM contactBox */
-const contactBtn = contactBox.querySelector("#contactSellerBtn");
+      await updateDoc(doc(db, "posts", post.id), {
+        contactClicks: increment(1)
+      });
 
-if (contactBtn) {
-  contactBtn.onclick = async () => {
-    if (!window.currentUser) {
-      showToast("Please log in to contact the seller", "error");
-      window.loginRedirect = "stay";
-      setTimeout(() => window.openLoginModal(), 600);
-      return;
-    }
+      showToast("Message the seller");
+    };
+  }
 
-    // Track click
-    await updateDoc(doc(db, "posts", post.id), {
-      contactClicks: increment(1)
-    });
-
-    showToast("Message the seller");
-  };
   const whatsappLink = contactBox.querySelector(".whatsapp-btn");
-if (whatsappLink) {
-  whatsappLink.onclick = async () => {
-    await updateDoc(doc(db, "posts", post.id), {
-      whatsappClicks: increment(1)
-    });
-  };
-}
+  if (whatsappLink) {
+    whatsappLink.onclick = async () => {
+      await updateDoc(doc(db, "posts", post.id), {
+        whatsappClicks: increment(1)
+      });
+    };
+  }
 
-  
+  /* ================= MESSAGE INPUT & BUTTON ================= */
   const messageInput = contactBox.querySelector("#messageInput");
   const msgBtn = contactBox.querySelector("#msgSellerBtn");
 
@@ -313,7 +294,6 @@ if (whatsappLink) {
     return true;
   }
 
-  /* ================= SEND MESSAGE ================= */
   msgBtn.onclick = async () => {
     if (!requireLogin()) return;
     if (currentUser.uid === post.userId) {
@@ -367,14 +347,11 @@ if (whatsappLink) {
       conversationId = newConv.id;
     }
 
-    await addDoc(
-      collection(db, "conversations", conversationId, "messages"),
-      {
-        senderId: buyerId,
-        text,
-        createdAt: serverTimestamp()
-      }
-    );
+    await addDoc(collection(db, "conversations", conversationId, "messages"), {
+      senderId: buyerId,
+      text,
+      createdAt: serverTimestamp()
+    });
 
     await updateDoc(doc(db, "conversations", conversationId), {
       lastMessage: text,
@@ -387,6 +364,7 @@ if (whatsappLink) {
     showToast("Message sent to seller");
   }
 
+  /* ================= APPEND TO LAYOUT ================= */
   layout.append(left, right);
   container.append(layout);
-      }
+} // end renderPost
