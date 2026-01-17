@@ -196,7 +196,10 @@ async function renderPost(container, post) {
   right.className = "view-post-right";
 
   right.innerHTML = `
-    <div id="sellerHeaderClickable" class="post-seller-header">
+  <div class="post-seller-header">
+
+    <!-- CLICKABLE AREA -->
+    <div id="sellerHeaderClickable" class="seller-click-area">
       <img class="seller-header-avatar" src="${sellerAvatar}">
       <div class="seller-header-info">
         <p class="posted-by"><strong>${sellerName}</strong></p>
@@ -205,8 +208,13 @@ async function renderPost(container, post) {
       </div>
     </div>
 
-    <h1>${post.title || "Untitled post"}</h1>
-  `;
+    <!-- FOLLOW BUTTON (NOT CLICKABLE TO PROFILE) -->
+    <button id="followSellerBtn" class="follow-btn">Follow</button>
+
+  </div>
+
+  <h1>${post.title || "Untitled post"}</h1>
+`;
 
   // Description
   if (post.description) {
@@ -363,6 +371,23 @@ async function renderPost(container, post) {
     messageInput.value = "";
     showToast("Message sent to seller");
   }
+
+  const followBtn = right.querySelector("#followSellerBtn");
+
+if (currentUser && currentUser.uid !== post.userId) {
+  const following = await isFollowing(currentUser.uid, post.userId);
+  followBtn.textContent = following ? "Following" : "Follow";
+
+  followBtn.onclick = async () => {
+    const nowFollowing = await toggleFollow(currentUser.uid, post.userId);
+    followBtn.textContent = nowFollowing ? "Following" : "Follow";
+  };
+} else {
+  followBtn.style.display = "none"; // hide if viewing own post
+}
+  document.getElementById("sellerHeaderClickable").onclick = () => {
+  window.viewProfile(post.userId);
+};
 
   /* ================= APPEND TO LAYOUT ================= */
   layout.append(left, right);
