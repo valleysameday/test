@@ -161,6 +161,55 @@ async function renderPost(container, post) {
   <h1>${post.title || "Untitled post"}</h1>
 `;
 
+   /* ==========================
+   CONTACT BUTTON LOGIC
+========================== */
+
+const msgBtn = document.getElementById("msgSellerBtn");
+const whatsappBtn = document.getElementById("whatsappBtn");
+const callBtn = document.getElementById("callBtn");
+
+// Helper: require login
+function requireLogin(action) {
+  if (!window.currentUser) {
+    window.loginRedirect = "stay";
+    showToast("Please log in to contact the seller", "error");
+    setTimeout(() => window.openLoginModal(), 600);
+    return false;
+  }
+  return true;
+}
+
+/* ---- MESSAGE SELLER ---- */
+msgBtn.onclick = () => {
+  if (!requireLogin()) return;
+
+  // Open messaging view
+  window.selectedChatSeller = post.userId;
+  window.selectedChatPost = post.id;
+  window.loadView("messages");
+};
+
+/* ---- WHATSAPP ---- */
+if (whatsappBtn) {
+  whatsappBtn.onclick = () => {
+    if (!requireLogin()) return;
+
+    const number = post.whatsapp.replace(/\D/g, "");
+    window.open(`https://wa.me/${number}`, "_blank");
+  };
+}
+
+/* ---- CALL SELLER ---- */
+if (callBtn) {
+  callBtn.onclick = () => {
+    if (!requireLogin()) return;
+
+    const number = post.phone.replace(/\D/g, "");
+    window.location.href = `tel:${number}`;
+  };
+}
+
   /* =====================================================
      FOLLOW BUTTON (ALWAYS VISIBLE)
   ===================================================== */
@@ -245,7 +294,31 @@ sellerHeader.addEventListener("click", (e) => {
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-  // Footer
+// Contact Box (always visible)
+const contactBox = document.createElement("div");
+contactBox.className = "contact-box";
+
+contactBox.innerHTML = `
+  <h3>Contact Seller</h3>
+
+  <button id="msgSellerBtn" class="primary-btn">Message Seller</button>
+
+  ${
+    post.whatsapp
+      ? `<button id="whatsappBtn" class="whatsapp-btn">WhatsApp</button>`
+      : ""
+  }
+
+  ${
+    post.phone
+      ? `<button id="callBtn" class="secondary-btn">Call Seller</button>`
+      : ""
+  }
+`;
+
+right.appendChild(contactBox);
+   
+   // Footer
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
   const backBtn = document.createElement("button");
