@@ -156,6 +156,7 @@ window.loadView("logout");
   const menuLogin = document.getElementById("menu-login");
   const menuDashboard = document.getElementById("menu-dashboard");
   const menuLogout = document.getElementById("menu-logout");
+   const menuPost = document.getElementById("menu-post");
    // Close menu whenever any menu item is clicked
 fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
   item.addEventListener("click", () => {
@@ -176,6 +177,18 @@ fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
     fullscreenMenu.style.display = "none";
     window.loadView("dashboard");
   });
+
+   menuPost?.addEventListener("click", () => {
+  fullscreenMenu.style.display = "none";
+
+  if (!window.currentUser) {
+    window.loginRedirect = "post";
+    openLoginModal();
+    return;
+  }
+
+  openScreen("post");
+});
 
   /* ---- MENU: LOGOUT ---- */
   menuLogout?.addEventListener("click", async () => {
