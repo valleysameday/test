@@ -57,7 +57,7 @@ function renderSellerProfile(seller, sellerId) {
 
   const avatarEl = document.getElementById("sellerAvatar");
   avatarEl.style.backgroundImage =
-    `url('${seller.avatarUrl || "/images/avatar-placeholder.png"}')`;
+    `url('${seller.avatarUrl || "/index/images/webholder.svg"}')`;
 
   document.getElementById("sellerBio").innerHTML =
     `<p>${seller.bio || "No bio provided."}</p>`;
