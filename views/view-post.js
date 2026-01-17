@@ -229,13 +229,24 @@ async function renderPost(container, post) {
   contactBox.className = "contact-box";
 
   contactBox.innerHTML = `
-    <h3>Contact Seller</h3>
-    <button id="msgSellerBtn" class="primary-btn">Message Seller</button>
-  `;
+  <h3>Contact Seller</h3>
+
+  <textarea
+    id="messageInput"
+    class="message-input"
+    placeholder="Write your message to the seller..."
+    rows="3"
+  ></textarea>
+
+  <button id="msgSellerBtn" class="primary-btn">
+    Send Message
+  </button>
+`;
 
   right.appendChild(contactBox);
 
   const msgBtn = right.querySelector("#msgSellerBtn");
+  const messageInput = right.querySelector("#messageInput");
 
   function requireLogin() {
     if (!window.currentUser) {
@@ -247,66 +258,82 @@ async function renderPost(container, post) {
     return true;
   }
 
+  if (currentUser.uid === post.userId) {
+  showToast("You can’t message your own post", "error");
+  return;
+  }
+
   /* =====================================================
      MESSAGE SELLER (FIXED v9)
   ===================================================== */
-  msgBtn.onclick = async () => {
-    if (!requireLogin()) return;
+msgBtn.onclick = async () => {
+  if (!requireLogin()) return;
 
-    const buyerId = currentUser.uid;
-    const sellerId = post.userId;
-    const postId = post.id;
-    const defaultMessage = "Hi, is this still available?";
+  const text = messageInput.value.trim();
+  if (!text) {
+    showToast("Please enter a message", "error");
+    messageInput.focus();
+    return;
+  }
 
-    const convRef = collection(db, "conversations");
-    const q = query(
-      convRef,
-      where("participants", "array-contains", buyerId),
-      where("postId", "==", postId)
-    );
+  const buyerId = currentUser.uid;
+  const sellerId = post.userId;
+  const postId = post.id;
 
-    const snap = await getDocs(q);
-    let conversationId;
+  const convRef = collection(db, "conversations");
+  const q = query(
+    convRef,
+    where("participants", "array-contains", buyerId),
+    where("postId", "==", postId)
+  );
 
-    if (!snap.empty) {
-      conversationId = snap.docs[0].id;
-    } else {
-      const newConv = await addDoc(convRef, {
-        participants: [buyerId, sellerId],
-        postId,
-        lastMessage: defaultMessage,
-        unread: {
-          [buyerId]: false,
-          [sellerId]: true
-        },
-        deletedFor: {
-          [buyerId]: false,
-          [sellerId]: false
-        },
-        updatedAt: Date.now()
-      });
+  const snap = await getDocs(q);
+  let conversationId;
 
-      conversationId = newConv.id;
-    }
-
-    await addDoc(
-      collection(db, "conversations", conversationId, "messages"),
-      {
-        senderId: buyerId,
-        text: defaultMessage,
-        timestamp: Date.now()
-      }
-    );
-
-    await updateDoc(doc(db, "conversations", conversationId), {
-      lastMessage: defaultMessage,
-      updatedAt: Date.now(),
-      [`unread.${sellerId}`]: true
+  // Existing conversation
+  if (!snap.empty) {
+    conversationId = snap.docs[0].id;
+  } 
+  // Create new conversation
+  else {
+    const newConv = await addDoc(convRef, {
+      participants: [buyerId, sellerId],
+      postId,
+      lastMessage: text,
+      unread: {
+        [buyerId]: false,
+        [sellerId]: true
+      },
+      deletedFor: {
+        [buyerId]: false,
+        [sellerId]: false
+      },
+      updatedAt: Date.now()
     });
 
-    showToast("Message sent to seller");
-  };
+    conversationId = newConv.id;
+  }
 
+  // Add message
+  await addDoc(
+    collection(db, "conversations", conversationId, "messages"),
+    {
+      senderId: buyerId,
+      text,
+      timestamp: Date.now()
+    }
+  );
+
+  // Update conversation metadata
+  await updateDoc(doc(db, "conversations", conversationId), {
+    lastMessage: text,
+    updatedAt: Date.now(),
+    [`unread.${sellerId}`]: true
+  });
+
+  messageInput.value = "";
+  showToast("Message sent to seller");
+};
   /* =====================================================
      FOOTER
   ===================================================== */
