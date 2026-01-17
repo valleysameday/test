@@ -148,7 +148,10 @@ export function initUI() {
 
   const fullscreenMenu = document.getElementById("fullscreenMenu");
   const closeMenuBtn = fullscreenMenu?.querySelector(".close-menu");
-  const menuLogoutBtn = document.getElementById("menu-logout");
+
+  const menuLogin = document.getElementById("menu-login");
+  const menuDashboard = document.getElementById("menu-dashboard");
+  const menuLogout = document.getElementById("menu-logout");
 
   menuBtn?.addEventListener("click", () => {
     fullscreenMenu.style.display = "flex";
@@ -158,7 +161,14 @@ export function initUI() {
     fullscreenMenu.style.display = "none";
   });
 
-  menuLogoutBtn?.addEventListener("click", async () => {
+  /* ---- MENU: DASHBOARD ---- */
+  menuDashboard?.addEventListener("click", () => {
+    fullscreenMenu.style.display = "none";
+    window.loadView("dashboard");
+  });
+
+  /* ---- MENU: LOGOUT ---- */
+  menuLogout?.addEventListener("click", async () => {
     const fb = await getFirebase();
     const auth = fb.auth || fb.firebase?.auth;
 
@@ -179,19 +189,19 @@ export function initUI() {
   function updateHeaderAuthState() {
     const loggedIn = !!window.currentUser;
 
+    // Header buttons
     loginBtn.style.display = loggedIn ? "none" : "flex";
     logoutBtn.style.display = loggedIn ? "flex" : "none";
 
     // Menu items
-    const menuLogin = fullscreenMenu.querySelector("[onclick='openLoginModal()']");
-    const menuLogout = document.getElementById("menu-logout");
-
     if (loggedIn) {
       menuLogin.style.display = "none";
       menuLogout.style.display = "block";
+      menuDashboard.style.display = "block";
     } else {
       menuLogin.style.display = "block";
       menuLogout.style.display = "none";
+      menuDashboard.style.display = "none";
     }
   }
 
