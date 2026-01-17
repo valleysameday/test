@@ -1,7 +1,10 @@
 console.log("✅ view-post.js loaded");
 
 import { getFirebase } from "/index/js/firebase/init.js";
-import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { 
+  doc, getDoc, updateDoc, increment,
+  collection, query, where, getDocs, addDoc 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { toggleFollow, isFollowing } from "/index/js/social/follow.js";
 
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
