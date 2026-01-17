@@ -150,11 +150,15 @@ async function loadPost(postId) {
 /* =====================================================
    RENDER POST
 ===================================================== */
+
 async function renderPost(container, post) {
   container.innerHTML = "";
 
   const currentUser = window.currentUser || null;
 
+  // -------------------------------
+  // Seller info
+  // -------------------------------
   let sellerName = "Local Seller";
   let sellerAvatar = PLACEHOLDER_IMG;
   let sellerSince = null;
@@ -174,6 +178,9 @@ async function renderPost(container, post) {
     }
   }
 
+  // -------------------------------
+  // Images
+  // -------------------------------
   const images = post.imageUrls?.length
     ? post.imageUrls
     : post.imageUrl
@@ -195,6 +202,9 @@ async function renderPost(container, post) {
   const right = document.createElement("div");
   right.className = "view-post-right";
 
+  // -------------------------------
+  // Post content + seller header + follow
+  // -------------------------------
   right.innerHTML = `
   <div class="post-seller-header">
 
@@ -208,7 +218,7 @@ async function renderPost(container, post) {
       </div>
     </div>
 
-    <!-- FOLLOW BUTTON (NOT CLICKABLE TO PROFILE) -->
+    <!-- FOLLOW BUTTON -->
     <button id="followSellerBtn" class="follow-btn">Follow</button>
 
   </div>
@@ -224,9 +234,9 @@ async function renderPost(container, post) {
     right.appendChild(desc);
   }
 
-  /* =====================================================
-     CONTACT BOX
-  ==================================================== */
+  // -------------------------------
+  // Contact box
+  // -------------------------------
   const contactBox = document.createElement("div");
   contactBox.className = "contact-box";
 
@@ -252,9 +262,9 @@ async function renderPost(container, post) {
 
   right.appendChild(contactBox);
 
-  /* =====================================================
-     CONTACT BUTTONS & TRACKING
-  ==================================================== */
+  // -------------------------------
+  // Contact buttons + tracking
+  // -------------------------------
   const contactBtn = contactBox.querySelector("#contactSellerBtn");
   if (contactBtn) {
     contactBtn.onclick = async () => {
@@ -282,7 +292,9 @@ async function renderPost(container, post) {
     };
   }
 
-  /* ================= MESSAGE INPUT & BUTTON ================= */
+  // -------------------------------
+  // Message input + send
+  // -------------------------------
   const messageInput = contactBox.querySelector("#messageInput");
   const msgBtn = contactBox.querySelector("#msgSellerBtn");
 
@@ -372,24 +384,38 @@ async function renderPost(container, post) {
     showToast("Message sent to seller");
   }
 
+  // -------------------------------
+  // Follow button logic
+  // -------------------------------
   const followBtn = right.querySelector("#followSellerBtn");
 
-if (currentUser && currentUser.uid !== post.userId) {
-  const following = await isFollowing(currentUser.uid, post.userId);
-  followBtn.textContent = following ? "Following" : "Follow";
+  if (followBtn) {
+    if (currentUser && currentUser.uid !== post.userId) {
+      const following = await isFollowing(currentUser.uid, post.userId);
+      followBtn.textContent = following ? "Following" : "Follow";
 
-  followBtn.onclick = async () => {
-    const nowFollowing = await toggleFollow(currentUser.uid, post.userId);
-    followBtn.textContent = nowFollowing ? "Following" : "Follow";
-  };
-} else {
-  followBtn.style.display = "none"; // hide if viewing own post
-}
-  document.getElementById("sellerHeaderClickable").onclick = () => {
-  window.viewProfile(post.userId);
-};
+      followBtn.onclick = async () => {
+        const nowFollowing = await toggleFollow(currentUser.uid, post.userId);
+        followBtn.textContent = nowFollowing ? "Following" : "Follow";
+      };
+    } else {
+      followBtn.style.display = "none"; // hide if viewing own post
+    }
+  }
 
-  /* ================= APPEND TO LAYOUT ================= */
+  // -------------------------------
+  // Seller header clickable
+  // -------------------------------
+  const sellerHeader = right.querySelector("#sellerHeaderClickable");
+  if (sellerHeader) {
+    sellerHeader.onclick = () => {
+      window.viewProfile(post.userId);
+    };
+  }
+
+  // -------------------------------
+  // Append layout
+  // -------------------------------
   layout.append(left, right);
   container.append(layout);
-} // end renderPost
+  }
