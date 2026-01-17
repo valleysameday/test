@@ -1,54 +1,46 @@
-/* =====================================================
-   IMAGE COMPRESSION
-===================================================== */
-function compressImage(file, maxWidth = 1200, quality = 0.7) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = img.width > maxWidth ? maxWidth / img.width : 1;
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(b => resolve(b || file), "image/jpeg", quality);
-    };
-    img.src = URL.createObjectURL(file);
-  });
-}
+const RCT_POSTCODES = [
+  "CF15","CF35","CF37","CF38","CF39",
+  "CF40","CF41","CF42","CF43","CF44","CF45","CF72"
+];
 
-window.compressPostImage = compressImage;
+let currentStep = 0;
 
-/* =====================================================
-   POST MEDIA INITIALISATION
-===================================================== */
-export function initPostMedia() {
-  const input = document.getElementById("postImage");
-  const preview = document.getElementById("imagePreview");
-  const chooseBtn = document.getElementById("chooseImageBtn");
+export function initPostFlow() {
+  const steps = document.querySelectorAll(".post-step");
+  const nextBtns = document.querySelectorAll(".post-next");
+  const prevBtns = document.querySelectorAll(".post-prev");
 
-  if (!input || !chooseBtn || !preview) {
-    console.warn("⚠️ post-media.js: Elements not found yet");
-    return;
+  function showStep(step) {
+    steps.forEach(s => {
+      s.style.display =
+        Number(s.dataset.step) === step ? "block" : "none";
+    });
+    currentStep = step;
   }
 
-  /* -----------------------------
-     OPEN FILE PICKER
-  ----------------------------- */
-  chooseBtn.addEventListener("click", () => {
-    input.click();
-  });
-
-  /* -----------------------------
-     PREVIEW SELECTED IMAGES
-  ----------------------------- */
-  input.addEventListener("change", () => {
-    preview.innerHTML = "";
-
-    [...input.files].forEach(file => {
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      img.className = "preview-img";
-      preview.appendChild(img);
+  nextBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (currentStep === 0) {
+        const pc = document.getElementById("postPostcode")?.value || "";
+        const outward = pc.toUpperCase().slice(0,4);
+        if (!RCT_POSTCODES.includes(outward)) {
+          document.getElementById("rhondda-warning")?.classList.remove("hidden");
+          return;
+        }
+        sessionStorage.setItem("rhonddaThanksShown","true");
+      }
+      showStep(currentStep + 1);
     });
   });
+
+  prevBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      showStep(Math.max(0, currentStep - 1));
+    });
+  });
+
+  const skipPostcode =
+    window.currentUser || sessionStorage.getItem("rhonddaThanksShown");
+
+  showStep(skipPostcode ? 1 : 0);
 }
