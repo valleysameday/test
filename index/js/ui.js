@@ -55,7 +55,6 @@ export function initUI() {
     closeAll();
 
     if (name === "post") {
-    if (name === "post") {
   await loadPostModal();
 
   routes.post = document.getElementById("postModal");
