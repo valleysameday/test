@@ -45,16 +45,13 @@ function showMessageConfirmModal({ message, onConfirm }) {
   overlay.innerHTML = `
     <div class="modal-content">
       <h3>Confirm message to seller</h3>
-
       <p class="modal-advice">
         ⚠️ Safety reminder:<br>
         • Never pay before seeing the item<br>
         • Meet in a public place where possible
       </p>
-
       <label>Your message</label>
       <textarea class="modal-message-preview">${message}</textarea>
-
       <div class="modal-actions">
         <button class="secondary-btn cancel-btn">Cancel</button>
         <button class="primary-btn confirm-btn">Confirm & Send</button>
@@ -65,11 +62,7 @@ function showMessageConfirmModal({ message, onConfirm }) {
   document.body.appendChild(overlay);
 
   const textarea = overlay.querySelector(".modal-message-preview");
-
-  overlay.querySelector(".cancel-btn").onclick = () => {
-    overlay.remove();
-  };
-
+  overlay.querySelector(".cancel-btn").onclick = () => overlay.remove();
   overlay.querySelector(".confirm-btn").onclick = () => {
     const finalText = textarea.value.trim();
     if (!finalText) return;
@@ -140,6 +133,7 @@ async function loadPost(postId) {
 
   const post = { id: snap.id, ...snap.data() };
 
+  // Increment views safely
   updateDoc(doc(db, "posts", postId), {
     views: increment(1)
   }).catch(() => {});
@@ -150,7 +144,6 @@ async function loadPost(postId) {
 /* =====================================================
    RENDER POST
 ===================================================== */
-
 async function renderPost(container, post) {
   container.innerHTML = "";
 
@@ -203,12 +196,10 @@ async function renderPost(container, post) {
   right.className = "view-post-right";
 
   // -------------------------------
-  // Post content + seller header + follow
+  // Post content + seller header
   // -------------------------------
   right.innerHTML = `
   <div class="post-seller-header">
-
-    <!-- CLICKABLE AREA -->
     <div id="sellerHeaderClickable" class="seller-click-area">
       <img class="seller-header-avatar" src="${sellerAvatar}">
       <div class="seller-header-info">
@@ -217,16 +208,60 @@ async function renderPost(container, post) {
         ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
       </div>
     </div>
-
-    <!-- FOLLOW BUTTON -->
-    <button id="followSellerBtn" class="follow-btn">Follow</button>
-
   </div>
 
   <h1>${post.title || "Untitled post"}</h1>
 `;
 
+  // -------------------------------
+  // Follow button
+  // -------------------------------
+  const sellerInfo = right.querySelector(".seller-header-info");
+  const followBtn = document.createElement("button");
+  followBtn.className = "follow-btn";
+  followBtn.textContent = "Follow";
+
+  if (currentUser?.uid === post.userId) {
+    followBtn.style.display = "none";
+  } else {
+    sellerInfo.appendChild(followBtn);
+
+    const setupFollowButton = async () => {
+      if (currentUser?.uid) {
+        const following = await isFollowing(currentUser.uid, post.userId);
+        followBtn.textContent = following ? "Following" : "Follow";
+
+        followBtn.onclick = async () => {
+          const nowFollowing = await toggleFollow(currentUser.uid, post.userId);
+          followBtn.textContent = nowFollowing ? "Following" : "Follow";
+        };
+      } else {
+        followBtn.onclick = () => {
+          showToast("You must be logged in to follow sellers", "error");
+          window.loginRedirect = "stay";
+          setTimeout(() => window.openLoginModal?.(), 4000);
+        };
+      }
+    };
+
+    setupFollowButton();
+  }
+
+  // -------------------------------
+  // Seller header clickable
+  // -------------------------------
+  const sellerHeader = right.querySelector("#sellerHeaderClickable");
+  if (sellerHeader) {
+    sellerHeader.addEventListener("click", (e) => {
+      if (e.target.closest(".follow-btn")) return; // ignore clicks on follow
+      window.selectedSellerId = post.userId;
+      window.loadView("seller-profile");
+    });
+  }
+
+  // -------------------------------
   // Description
+  // -------------------------------
   if (post.description) {
     const desc = document.createElement("p");
     desc.className = "view-post-desc";
@@ -239,12 +274,9 @@ async function renderPost(container, post) {
   // -------------------------------
   const contactBox = document.createElement("div");
   contactBox.className = "contact-box";
-
   contactBox.innerHTML = `
     <h3>Contact Seller</h3>
-
     <textarea id="messageInput" class="message-input" rows="3">Hi, is this still available?</textarea>
-
     <div class="contact-actions">
       <button id="msgSellerBtn" class="primary-btn">Send Message</button>
       ${
@@ -259,26 +291,19 @@ async function renderPost(container, post) {
       }
     </div>
   `;
-
   right.appendChild(contactBox);
 
-  // -------------------------------
-  // Contact buttons + tracking
-  // -------------------------------
+  // Contact buttons
   const contactBtn = contactBox.querySelector("#contactSellerBtn");
   if (contactBtn) {
     contactBtn.onclick = async () => {
-      if (!window.currentUser) {
+      if (!currentUser) {
         showToast("Please log in to contact the seller", "error");
         window.loginRedirect = "stay";
-        setTimeout(() => window.openLoginModal(), 600);
+        setTimeout(() => window.openLoginModal?.(), 600);
         return;
       }
-
-      await updateDoc(doc(db, "posts", post.id), {
-        contactClicks: increment(1)
-      });
-
+      await updateDoc(doc(db, "posts", post.id), { contactClicks: increment(1) });
       showToast("Message the seller");
     };
   }
@@ -286,52 +311,37 @@ async function renderPost(container, post) {
   const whatsappLink = contactBox.querySelector(".whatsapp-btn");
   if (whatsappLink) {
     whatsappLink.onclick = async () => {
-      await updateDoc(doc(db, "posts", post.id), {
-        whatsappClicks: increment(1)
-      });
+      await updateDoc(doc(db, "posts", post.id), { whatsappClicks: increment(1) });
     };
   }
 
   // -------------------------------
-  // Message input + send
+  // Messaging
   // -------------------------------
   const messageInput = contactBox.querySelector("#messageInput");
   const msgBtn = contactBox.querySelector("#msgSellerBtn");
 
-  messageInput.focus();
-  messageInput.setSelectionRange(
-    messageInput.value.length,
-    messageInput.value.length
-  );
-
-  function requireLogin() {
-    if (!window.currentUser) {
+  msgBtn.onclick = async () => {
+    if (!currentUser) {
       showToast("Please log in to contact the seller", "error");
       window.loginRedirect = "stay";
-      setTimeout(() => window.openLoginModal(), 600);
-      return false;
+      setTimeout(() => window.openLoginModal?.(), 600);
+      return;
     }
-    return true;
-  }
-
-  msgBtn.onclick = async () => {
-    if (!requireLogin()) return;
     if (currentUser.uid === post.userId) {
       showToast("You can’t message your own post", "error");
       return;
     }
 
-    const draftText = messageInput.value.trim();
-    if (!draftText) {
+    const text = messageInput.value.trim();
+    if (!text) {
       showToast("Please enter a message", "error");
       return;
     }
 
     showMessageConfirmModal({
-      message: draftText,
-      onConfirm: async (finalText) => {
-        await sendMessageToSeller(finalText);
-      }
+      message: text,
+      onConfirm: async (finalText) => sendMessageToSeller(finalText)
     });
   };
 
@@ -340,15 +350,10 @@ async function renderPost(container, post) {
     const sellerId = post.userId;
 
     const convRef = collection(db, "conversations");
-    const q = query(
-      convRef,
-      where("participants", "array-contains", buyerId),
-      where("postId", "==", post.id)
-    );
-
+    const q = query(convRef, where("participants", "array-contains", buyerId), where("postId", "==", post.id));
     const snap = await getDocs(q);
-    let conversationId;
 
+    let conversationId;
     if (!snap.empty) {
       conversationId = snap.docs[0].id;
     } else {
@@ -385,37 +390,8 @@ async function renderPost(container, post) {
   }
 
   // -------------------------------
-  // Follow button logic
-  // -------------------------------
-  const followBtn = right.querySelector("#followSellerBtn");
-
-  if (followBtn) {
-    if (currentUser && currentUser.uid !== post.userId) {
-      const following = await isFollowing(currentUser.uid, post.userId);
-      followBtn.textContent = following ? "Following" : "Follow";
-
-      followBtn.onclick = async () => {
-        const nowFollowing = await toggleFollow(currentUser.uid, post.userId);
-        followBtn.textContent = nowFollowing ? "Following" : "Follow";
-      };
-    } else {
-      followBtn.style.display = "none"; // hide if viewing own post
-    }
-  }
-
-  // -------------------------------
-  // Seller header clickable
-  // -------------------------------
-  const sellerHeader = right.querySelector("#sellerHeaderClickable");
-  if (sellerHeader) {
-    sellerHeader.onclick = () => {
-      window.viewProfile(post.userId);
-    };
-  }
-
-  // -------------------------------
   // Append layout
   // -------------------------------
   layout.append(left, right);
   container.append(layout);
-  }
+}
