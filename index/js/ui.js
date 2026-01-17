@@ -1,3 +1,4 @@
+import { getFirebase } from "/index/js/firebase/init.js";
 let uiInit = false;
 let loginLoaded = false;
 let postGateLoaded = false;
