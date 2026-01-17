@@ -234,9 +234,8 @@ async function renderPost(container, post) {
   <textarea
     id="messageInput"
     class="message-input"
-    placeholder="Write your message to the seller..."
     rows="3"
-  ></textarea>
+  >Hi, is this still available?</textarea>
 
   <button id="msgSellerBtn" class="primary-btn">
     Send Message
@@ -247,6 +246,11 @@ async function renderPost(container, post) {
 
   const msgBtn = right.querySelector("#msgSellerBtn");
   const messageInput = right.querySelector("#messageInput");
+  messageInput.focus();
+messageInput.setSelectionRange(
+  messageInput.value.length,
+  messageInput.value.length
+);
 
   function requireLogin() {
     if (!window.currentUser) {
