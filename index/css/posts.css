@@ -340,3 +340,42 @@
   color: var(--brand-dark);
   margin-bottom: 4px;
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  max-width: 420px;
+  width: 90%;
+}
+
+.modal-advice {
+  font-size: 0.9rem;
+  background: #f8f8f8;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.modal-content textarea {
+  width: 100%;
+  min-height: 80px;
+  margin-top: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
