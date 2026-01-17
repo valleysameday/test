@@ -10,7 +10,8 @@ import {
   query,
   where,
   getDocs,
-  addDoc
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { toggleFollow, isFollowing } from "/index/js/social/follow.js";
@@ -229,28 +230,28 @@ async function renderPost(container, post) {
   contactBox.className = "contact-box";
 
   contactBox.innerHTML = `
-  <h3>Contact Seller</h3>
+    <h3>Contact Seller</h3>
 
-  <textarea
-    id="messageInput"
-    class="message-input"
-    rows="3"
-  >Hi, is this still available?</textarea>
+    <textarea
+      id="messageInput"
+      class="message-input"
+      rows="3"
+    >Hi, is this still available?</textarea>
 
-  <button id="msgSellerBtn" class="primary-btn">
-    Send Message
-  </button>
-`;
+    <button id="msgSellerBtn" class="primary-btn">
+      Send Message
+    </button>
+  `;
 
   right.appendChild(contactBox);
 
   const msgBtn = right.querySelector("#msgSellerBtn");
   const messageInput = right.querySelector("#messageInput");
   messageInput.focus();
-messageInput.setSelectionRange(
-  messageInput.value.length,
-  messageInput.value.length
-);
+  messageInput.setSelectionRange(
+    messageInput.value.length,
+    messageInput.value.length
+  );
 
   function requireLogin() {
     if (!window.currentUser) {
@@ -263,88 +264,79 @@ messageInput.setSelectionRange(
   }
 
   /* =====================================================
-     MESSAGE SELLER (FIXED v9)
+     MESSAGE SELLER (Corrected)
   ===================================================== */
-msgBtn.onclick = async () => {
-  if (!requireLogin()) return;
-  if (currentUser.uid === post.userId) {
-  showToast("You can’t message your own post", "error");
-  return;
-  }
-
-  const text = messageInput.value.trim();
-  if (!text) {
-    showToast("Please enter a message", "error");
-    messageInput.focus();
-    return;
-  }
-
-  const buyerId = currentUser.uid;
-  const sellerId = post.userId;
-  const postId = post.id;
-
-  const convRef = collection(db, "conversations");
-  const q = query(
-    convRef,
-    where("participants", "array-contains", buyerId),
-    where("postId", "==", postId)
-  );
-
-  const snap = await getDocs(q);
-  let conversationId;
-
-  // Existing conversation
-  if (!snap.empty) {
-    conversationId = snap.docs[0].id;
-  } 
-  // Create new conversation
-  else {
-const newConv = await addDoc(convRef, {
-  participants: [buyerId, sellerId],
-
-  postId,
-  postTitle: post.title || "Item",
-  postImage: images?.[0] || null,
-
-  lastMessage: text,
-  lastSenderId: buyerId,
-
-  unread: {
-    [buyerId]: false,
-    [sellerId]: true
-  },
-
-  deletedFor: {
-    [buyerId]: false,
-    [sellerId]: false
-  },
-
-  createdAt: Date.now(),
-  updatedAt: Date.now()
-});
-    conversationId = newConv.id;
-  }
-
-  // Add message
-  await addDoc(
-    collection(db, "conversations", conversationId, "messages"),
-    {
-      senderId: buyerId,
-      text,
-      timestamp: Date.now()
+  msgBtn.onclick = async () => {
+    if (!requireLogin()) return;
+    if (currentUser.uid === post.userId) {
+      showToast("You can’t message your own post", "error");
+      return;
     }
-  );
 
-  // Update conversation metadata
-  await updateDoc(doc(db, "conversations", conversationId), {
-    lastMessage: text,
-    updatedAt: Date.now(),
-    [`unread.${sellerId}`]: true
-  });
+    const text = messageInput.value.trim();
+    if (!text) {
+      showToast("Please enter a message", "error");
+      messageInput.focus();
+      return;
+    }
 
-  messageInput.value = "";
-  showToast("Message sent to seller");
-};
+    const buyerId = currentUser.uid;
+    const sellerId = post.userId;
+    const postId = post.id;
+
+    const convRef = collection(db, "conversations");
+    const q = query(
+      convRef,
+      where("participants", "array-contains", buyerId),
+      where("postId", "==", postId)
+    );
+
+    const snap = await getDocs(q);
+    let conversationId;
+
+    // Existing conversation
+    if (!snap.empty) {
+      conversationId = snap.docs[0].id;
+    } 
+    // Create new conversation
+    else {
+      const newConv = await addDoc(convRef, {
+        participants: [buyerId, sellerId],
+        postId,
+        postTitle: post.title || "Item",
+        postImage: images?.[0] || null,
+        lastMessage: text,
+        lastSenderId: buyerId,
+        unread: { [buyerId]: false, [sellerId]: true },
+        deletedFor: { [buyerId]: false, [sellerId]: false },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      conversationId = newConv.id;
+    }
+
+    // Add message to messages subcollection
+    await addDoc(
+      collection(db, "conversations", conversationId, "messages"),
+      {
+        senderId: buyerId,
+        text,
+        createdAt: serverTimestamp()
+      }
+    );
+
+    // Update conversation metadata
+    await updateDoc(doc(db, "conversations", conversationId), {
+      lastMessage: text,
+      lastSenderId: buyerId,
+      updatedAt: serverTimestamp(),
+      [`unread.${sellerId}`]: true
+    });
+
+    messageInput.value = "";
+    showToast("Message sent to seller");
+  };
+
   /* =====================================================
      FOOTER
   ===================================================== */
@@ -360,4 +352,4 @@ const newConv = await addDoc(convRef, {
 
   layout.append(left, right);
   container.append(layout, footer);
-}
+      }
