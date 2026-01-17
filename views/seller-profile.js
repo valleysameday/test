@@ -155,4 +155,3 @@ async function loadSellerAds(sellerId, db) {
   export async function init() {
   return initSellerProfile();
   }
-}
