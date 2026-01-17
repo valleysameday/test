@@ -269,7 +269,7 @@ right.appendChild(contactBox);
 const contactBtn = contactBox.querySelector("#contactSellerBtn");
 
 if (contactBtn) {
-  contactBtn.onclick = () => {
+  contactBtn.onclick = async () => {
     if (!window.currentUser) {
       showToast("Please log in to contact the seller", "error");
       window.loginRedirect = "stay";
@@ -277,7 +277,19 @@ if (contactBtn) {
       return;
     }
 
+    // Track click
+    await updateDoc(doc(db, "posts", post.id), {
+      contactClicks: increment(1)
+    });
+
     showToast("Message the seller");
+  };
+  const whatsappLink = contactBox.querySelector(".whatsapp-btn");
+if (whatsappLink) {
+  whatsappLink.onclick = async () => {
+    await updateDoc(doc(db, "posts", post.id), {
+      whatsappClicks: increment(1)
+    });
   };
 }
 
