@@ -1,0 +1,63 @@
+.logout-screen {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.logout-screen h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.logout-screen p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.primary-btn,
+.secondary-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: 0.2s ease;
+}
+
+.primary-btn {
+  background: #007bff;
+  color: white;
+}
+
+.primary-btn:hover {
+  background: #006ae0;
+}
+
+.secondary-btn {
+  background: #f2f2f2;
+  color: #333;
+}
+
+.secondary-btn:hover {
+  background: #e5e5e5;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
