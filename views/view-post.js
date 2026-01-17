@@ -207,24 +207,102 @@ async function renderPost(container, post) {
     };
   });
 
+  // -------------------------------
+  // Image preview box (corner)
+  // -------------------------------
+  function showImagePreview(src, currentIndex, total) {
+    const existing = document.getElementById("imagePreviewBox");
+    if (existing) existing.remove();
+
+    const preview = document.createElement("div");
+    preview.id = "imagePreviewBox";
+    preview.className = "image-preview-box";
+
+    preview.innerHTML = `
+      <span class="close-preview">×</span>
+      <img src="${src}" onerror="this.src='${PLACEHOLDER_IMG}'" />
+      <div class="image-count">${currentIndex} / ${total}</div>
+    `;
+
+    document.body.appendChild(preview);
+
+    preview.querySelector(".close-preview").onclick = () => preview.remove();
+  }
+
+  // -------------------------------
+  // CSS for gallery + preview
+  // -------------------------------
+  const style = document.createElement("style");
+  style.textContent = `
+.scrollable-gallery {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.gallery-img-wrapper {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 600px;
+  cursor: pointer;
+}
+.gallery-img-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.image-preview-box {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 220px;
+  max-width: 40vw;
+  background: rgba(0,0,0,0.8);
+  padding: 8px;
+  border-radius: 8px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+.image-preview-box img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.image-preview-box .image-count {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.image-preview-box .close-preview {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  cursor: pointer;
+  font-size: 18px;
+}
+`;
+  document.head.appendChild(style);
+
+  // -------------------------------
+  // Right section
+  // -------------------------------
   const right = document.createElement("div");
   right.className = "view-post-right";
 
-  // -------------------------------
-  // Post content + seller header + follow button
-  // -------------------------------
   right.innerHTML = `
-  <div id="sellerHeaderClickable" class="post-seller-header">
-    <img class="seller-header-avatar" src="${sellerAvatar}">
-    <div class="seller-header-info">
-      <p class="posted-by"><strong>${sellerName}</strong></p>
-      <p class="posted-on">RCT-X</p>
-      ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
+    <div id="sellerHeaderClickable" class="post-seller-header">
+      <img class="seller-header-avatar" src="${sellerAvatar}">
+      <div class="seller-header-info">
+        <p class="posted-by"><strong>${sellerName}</strong></p>
+        <p class="posted-on">RCT-X</p>
+        ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
+      </div>
     </div>
-  </div>
 
-  <h1>${post.title || "Untitled post"}</h1>
-`;
+    <h1>${post.title || "Untitled post"}</h1>
+  `;
 
   // -------------------------------
   // FOLLOW BUTTON
@@ -313,7 +391,7 @@ async function renderPost(container, post) {
     <div class="contact-actions">
       <button id="msgSellerBtn" class="primary-btn">Send Message</button>
       ${post.phone ? `<button id="contactSellerBtn" class="secondary-btn">Contact</button>` : ""}
-      ${post.allowWhatsApp && post.phone ? `<a href="https://wa.me/44${post.phone.replace(/^0/, "")}" target="_blank" rel="noopener" class="secondary-btn whatsapp-btn">WhatsApp</a>` : ""}
+      ${post.allowWhatsApp && post.phone ? `<a href="https://wa.me/44${post.phone.replace(/^0/, "")}" target="_blank" rel="noopener" id="whatsappBtn" class="secondary-btn whatsapp-btn">WhatsApp</a>` : ""}
     </div>
   `;
   right.appendChild(contactBox);
@@ -321,6 +399,7 @@ async function renderPost(container, post) {
   const messageInput = contactBox.querySelector("#messageInput");
   const msgBtn = contactBox.querySelector("#msgSellerBtn");
   const contactBtn = contactBox.querySelector("#contactSellerBtn");
+  const whatsappBtn = contactBox.querySelector("#whatsappBtn");
 
   function requireLogin() {
     if (!window.currentUser) {
@@ -332,6 +411,7 @@ async function renderPost(container, post) {
     return true;
   }
 
+  // Message button
   msgBtn.onclick = async () => {
     if (!requireLogin()) return;
     if (currentUser.uid === post.userId) {
@@ -398,11 +478,23 @@ async function renderPost(container, post) {
     });
   };
 
+  // Contact button
   if (contactBtn) {
     contactBtn.onclick = async () => {
       if (!requireLogin()) return;
       await updateDoc(doc(db, "posts", post.id), { contactClicks: increment(1) });
       showToast("Contact clicked");
+    };
+  }
+
+  // WhatsApp button
+  if (whatsappBtn) {
+    whatsappBtn.onclick = e => {
+      if (!requireLogin()) {
+        e.preventDefault(); // prevent opening WhatsApp if not logged in
+        return;
+      }
+      // otherwise normal link works
     };
   }
 
@@ -419,82 +511,4 @@ async function renderPost(container, post) {
 
   layout.append(left, right);
   container.append(layout, footer);
-
-  // -------------------------------
-  // IMAGE PREVIEW BOX
-  // -------------------------------
-  function showImagePreview(src, currentIndex, total) {
-    const existing = document.getElementById("imagePreviewBox");
-    if (existing) existing.remove();
-
-    const preview = document.createElement("div");
-    preview.id = "imagePreviewBox";
-    preview.className = "image-preview-box";
-
-    preview.innerHTML = `
-      <span class="close-preview">×</span>
-      <img src="${src}" onerror="this.src='${PLACEHOLDER_IMG}'" />
-      <div class="image-count">${currentIndex} / ${total}</div>
-    `;
-
-    document.body.appendChild(preview);
-
-    preview.querySelector(".close-preview").onclick = () => preview.remove();
-  }
-
-  // -------------------------------
-  // IMAGE SCROLLABLE STYLING
-  // -------------------------------
-  const style = document.createElement("style");
-  style.textContent = `
-    .scrollable-gallery {
-      display: flex;
-      overflow-x: auto;
-      gap: 8px;
-      padding-bottom: 8px;
-    }
-    .gallery-img-wrapper {
-      flex: 0 0 auto;
-      width: 100%;
-      max-width: 600px;
-      cursor: pointer;
-    }
-    .gallery-img-wrapper img {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      border-radius: 8px;
-    }
-    .image-preview-box {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      width: 220px;
-      max-width: 40vw;
-      background: rgba(0,0,0,0.8);
-      padding: 8px;
-      border-radius: 8px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #fff;
-    }
-    .image-preview-box img {
-      max-width: 100%;
-      border-radius: 6px;
-    }
-    .image-preview-box .image-count {
-      margin-top: 4px;
-      font-size: 12px;
-    }
-    .image-preview-box .close-preview {
-      position: absolute;
-      top: 4px;
-      right: 6px;
-      cursor: pointer;
-      font-size: 18px;
-    }
-  `;
-  document.head.appendChild(style);
-  }
+      }
