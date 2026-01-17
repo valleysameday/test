@@ -246,7 +246,7 @@ async function renderPost(container, post) {
     <button id="msgSellerBtn" class="primary-btn">Message Seller</button>
 
     ${
-      post.whatsapp
+      post.allowWhatsApp && post.phone
         ? `<button id="whatsappBtn" class="whatsapp-btn">WhatsApp</button>`
         : ""
     }
@@ -287,7 +287,7 @@ async function renderPost(container, post) {
   if (whatsappBtn) {
     whatsappBtn.onclick = () => {
       if (!requireLogin()) return;
-      const number = post.whatsapp.replace(/\D/g, "");
+      const number = post.phone.replace(/\D/g, "");
       window.open(`https://wa.me/${number}`, "_blank");
     };
   }
