@@ -268,16 +268,18 @@ right.appendChild(contactBox);
 /* ✅ THEN QUERY FROM contactBox */
 const contactBtn = contactBox.querySelector("#contactSellerBtn");
 
-contactBtn.onclick = () => {
-  if (!window.currentUser) {
-    showToast("Please log in to contact the seller", "error");
-    window.loginRedirect = "stay";
-    setTimeout(() => window.openLoginModal(), 600);
-    return;
-  }
+if (contactBtn) {
+  contactBtn.onclick = () => {
+    if (!window.currentUser) {
+      showToast("Please log in to contact the seller", "error");
+      window.loginRedirect = "stay";
+      setTimeout(() => window.openLoginModal(), 600);
+      return;
+    }
 
-  showToast("Please use messages or WhatsApp to contact the seller");
-};
+    showToast("Message the seller");
+  };
+}
 
   
   const messageInput = contactBox.querySelector("#messageInput");
