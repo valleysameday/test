@@ -19,7 +19,7 @@ import {
 /* ============================================================
    MAIN ENTRY POINT
 ============================================================ */
-export async function initSellerProfile() {
+async function initSellerProfile() {
   const { db } = await getFirebase();
 
   const sellerId = window.selectedSellerId;
@@ -28,9 +28,6 @@ export async function initSellerProfile() {
     return;
   }
 
-  /* -----------------------------
-     LOAD SELLER DOCUMENT
-  ----------------------------- */
   const sellerRef = doc(db, "users", sellerId);
   const snap = await getDoc(sellerRef);
 
@@ -42,14 +39,7 @@ export async function initSellerProfile() {
 
   const seller = snap.data();
 
-  /* -----------------------------
-     RENDER PROFILE
-  ----------------------------- */
   renderSellerProfile(seller, sellerId);
-
-  /* -----------------------------
-     LOAD SELLER'S OTHER ADS
-  ----------------------------- */
   loadSellerAds(sellerId, db);
 }
 
@@ -71,7 +61,6 @@ function renderSellerProfile(seller, sellerId) {
   document.getElementById("sellerBio").innerHTML =
     `<p>${seller.bio || "No bio provided."}</p>`;
 
-  /* Owner-only edit hook (disabled until you want it) */
   if (isOwner) {
     const bioEl = document.getElementById("sellerBio");
     const editBtn = document.createElement("button");
@@ -80,7 +69,6 @@ function renderSellerProfile(seller, sellerId) {
     bioEl.appendChild(editBtn);
   }
 
-  /* Contact Seller */
   document.getElementById("contactSellerBtn").onclick = () => {
     window.selectedChatUserId = sellerId;
     window.loadView("chat");
@@ -151,7 +139,11 @@ async function loadSellerAds(sellerId, db) {
 
     container.appendChild(card);
   });
+}
 
-  export async function init() {
+/* ============================================================
+   SPA ENTRY POINT (must be top-level)
+============================================================ */
+export async function init() {
   return initSellerProfile();
-  }
+}
