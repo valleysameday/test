@@ -90,15 +90,16 @@ export async function loadConversations() {
     const unread = data.unread?.[uid];
 
     html += `
-      <div class="conversation-item ${unread ? "unread" : ""}"
-           data-id="${docSnap.id}"
-           data-other="${otherUserId}"
-           data-name="${escapeHtml(otherName)}">
-        <strong>${escapeHtml(otherName)}</strong>
-        ${unread ? '<span class="unread-dot"></span>' : ""}
-        <div>${escapeHtml(data.lastMessage || "")}</div>
-      </div>
-    `;
+  <div class="conversation-item ${unread ? "unread" : ""}"
+       data-id="${docSnap.id}"
+       data-other="${otherUserId}"
+       data-name="${escapeHtml(otherName)}">
+    <strong>${escapeHtml(otherName)}</strong>
+    <div class="conversation-post-title">${escapeHtml(data.postTitle || "Item")}</div>
+    ${unread ? '<span class="unread-dot"></span>' : ""}
+    <div class="conversation-last-message">${escapeHtml(data.lastMessage || "")}</div>
+  </div>
+`;
   }
 
   listEl.innerHTML = html;
