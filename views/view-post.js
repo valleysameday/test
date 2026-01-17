@@ -161,55 +161,6 @@ async function renderPost(container, post) {
   <h1>${post.title || "Untitled post"}</h1>
 `;
 
-   /* ==========================
-   CONTACT BUTTON LOGIC
-========================== */
-
-const msgBtn = document.getElementById("msgSellerBtn");
-const whatsappBtn = document.getElementById("whatsappBtn");
-const callBtn = document.getElementById("callBtn");
-
-// Helper: require login
-function requireLogin(action) {
-  if (!window.currentUser) {
-    window.loginRedirect = "stay";
-    showToast("Please log in to contact the seller", "error");
-    setTimeout(() => window.openLoginModal(), 600);
-    return false;
-  }
-  return true;
-}
-
-/* ---- MESSAGE SELLER ---- */
-msgBtn.onclick = () => {
-  if (!requireLogin()) return;
-
-  // Open messaging view
-  window.selectedChatSeller = post.userId;
-  window.selectedChatPost = post.id;
-  window.loadView("messages");
-};
-
-/* ---- WHATSAPP ---- */
-if (whatsappBtn) {
-  whatsappBtn.onclick = () => {
-    if (!requireLogin()) return;
-
-    const number = post.whatsapp.replace(/\D/g, "");
-    window.open(`https://wa.me/${number}`, "_blank");
-  };
-}
-
-/* ---- CALL SELLER ---- */
-if (callBtn) {
-  callBtn.onclick = () => {
-    if (!requireLogin()) return;
-
-    const number = post.phone.replace(/\D/g, "");
-    window.location.href = `tel:${number}`;
-  };
-}
-
   /* =====================================================
      FOLLOW BUTTON (ALWAYS VISIBLE)
   ===================================================== */
@@ -218,7 +169,6 @@ if (callBtn) {
   followBtn.className = "follow-btn";
   followBtn.textContent = "Follow";
 
-  // Hide if current user is the seller
   if (currentUser?.uid === post.userId) {
     followBtn.style.display = "none";
   } else {
@@ -251,35 +201,25 @@ if (callBtn) {
           }
         };
       } else {
-        // Guest click
-followBtn.onclick = () => {
-  showToast("You must be logged in to follow sellers", "error");
-
-  // Save where we are so we can return after login
-  window.loginRedirect = "stay";
-
-  setTimeout(() => {
-    if (typeof window.openLoginModal === "function") {
-      window.openLoginModal();
-    }
-  }, 4000);
-};
+        followBtn.onclick = () => {
+          showToast("You must be logged in to follow sellers", "error");
+          window.loginRedirect = "stay";
+          setTimeout(() => window.openLoginModal(), 600);
+        };
       }
     };
 
     setupFollowButton();
   }
 
-   const sellerHeader = right.querySelector("#sellerHeaderClickable");
+  const sellerHeader = right.querySelector("#sellerHeaderClickable");
 
-sellerHeader.addEventListener("click", (e) => {
-  // Prevent click if user taps the follow button
-  if (e.target.closest(".follow-btn")) return;
+  sellerHeader.addEventListener("click", (e) => {
+    if (e.target.closest(".follow-btn")) return;
+    window.selectedSellerId = post.userId;
+    window.loadView("seller-profile");
+  });
 
-  window.selectedSellerId = post.userId;
-  window.loadView("seller-profile");
-});
-   
   // Price
   if (post.price !== undefined) {
     const price = document.createElement("h2");
@@ -294,37 +234,83 @@ sellerHeader.addEventListener("click", (e) => {
   desc.textContent = post.description || "";
   right.appendChild(desc);
 
-// Contact Box (always visible)
-const contactBox = document.createElement("div");
-contactBox.className = "contact-box";
+  /* =====================================================
+     CONTACT BOX (ALWAYS VISIBLE)
+  ===================================================== */
+  const contactBox = document.createElement("div");
+  contactBox.className = "contact-box";
 
-contactBox.innerHTML = `
-  <h3>Contact Seller</h3>
+  contactBox.innerHTML = `
+    <h3>Contact Seller</h3>
 
-  <button id="msgSellerBtn" class="primary-btn">Message Seller</button>
+    <button id="msgSellerBtn" class="primary-btn">Message Seller</button>
 
-  ${
-    post.whatsapp
-      ? `<button id="whatsappBtn" class="whatsapp-btn">WhatsApp</button>`
-      : ""
+    ${
+      post.whatsapp
+        ? `<button id="whatsappBtn" class="whatsapp-btn">WhatsApp</button>`
+        : ""
+    }
+
+    ${
+      post.phone
+        ? `<button id="callBtn" class="secondary-btn">Call Seller</button>`
+        : ""
+    }
+  `;
+
+  right.appendChild(contactBox);
+
+  /* =====================================================
+     CONTACT BUTTON LOGIC (AFTER DOM INSERT)
+  ===================================================== */
+  const msgBtn = right.querySelector("#msgSellerBtn");
+  const whatsappBtn = right.querySelector("#whatsappBtn");
+  const callBtn = right.querySelector("#callBtn");
+
+  function requireLogin() {
+    if (!window.currentUser) {
+      window.loginRedirect = "stay";
+      showToast("Please log in to contact the seller", "error");
+      setTimeout(() => window.openLoginModal(), 600);
+      return false;
+    }
+    return true;
   }
 
-  ${
-    post.phone
-      ? `<button id="callBtn" class="secondary-btn">Call Seller</button>`
-      : ""
-  }
-`;
+  msgBtn.onclick = () => {
+    if (!requireLogin()) return;
+    window.selectedChatSeller = post.userId;
+    window.selectedChatPost = post.id;
+    window.loadView("messages");
+  };
 
-right.appendChild(contactBox);
-   
-   // Footer
+  if (whatsappBtn) {
+    whatsappBtn.onclick = () => {
+      if (!requireLogin()) return;
+      const number = post.whatsapp.replace(/\D/g, "");
+      window.open(`https://wa.me/${number}`, "_blank");
+    };
+  }
+
+  if (callBtn) {
+    callBtn.onclick = () => {
+      if (!requireLogin()) return;
+      const number = post.phone.replace(/\D/g, "");
+      window.location.href = `tel:${number}`;
+    };
+  }
+
+  /* =====================================================
+     FOOTER
+  ===================================================== */
   const footer = document.createElement("div");
   footer.className = "view-post-footer";
+
   const backBtn = document.createElement("button");
   backBtn.className = "secondary-btn";
   backBtn.textContent = "← Back";
   backBtn.onclick = () => window.loadView("home");
+
   footer.appendChild(backBtn);
 
   layout.append(left, right);
