@@ -151,4 +151,8 @@ async function loadSellerAds(sellerId, db) {
 
     container.appendChild(card);
   });
+
+  export async function init() {
+  return initSellerProfile();
+  }
 }
