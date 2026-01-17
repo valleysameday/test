@@ -1,5 +1,3 @@
-// /index/js/ui.js
-
 let uiInit = false;
 let loginLoaded = false;
 let postGateLoaded = false;
@@ -55,7 +53,6 @@ export function initUI() {
   async function openScreen(name) {
     closeAll();
 
-    // POST MODAL
     if (name === "post") {
       await loadPostModal();
 
@@ -78,13 +75,11 @@ export function initUI() {
       return;
     }
 
-    // OTHER STATIC MODALS
     if (!routes[name]) return;
 
     document.body.classList.add("modal-open");
     routes[name].style.display = "flex";
 
-    // Lazy-load login
     if (name === "login" && !loginLoaded) {
       loginLoaded = true;
       import("/index/js/post-gate/login.js")
@@ -103,14 +98,13 @@ export function initUI() {
     });
   }
 
-  // Expose globally
   window.openScreen = openScreen;
   window.closeScreens = closeAll;
   window.openLoginModal = () => openScreen("login");
 
   /* ==========================
      HEADER ICON LOGIC
-========================== */
+  ========================== */
 
   const postAdBtn = document.getElementById("post-ad-btn");
   const loginBtn = document.getElementById("auth-logged-out");
@@ -135,15 +129,48 @@ export function initUI() {
 
   /* ---- LOGOUT ---- */
   logoutBtn?.addEventListener("click", async () => {
-    const { auth } = await getFirebase();
+    const fb = await getFirebase();
+    const auth = fb.auth || fb.firebase?.auth;
+
+    if (!auth) {
+      console.error("Auth not found in getFirebase()");
+      return;
+    }
+
     await auth.signOut();
     window.currentUser = null;
     updateHeaderAuthState();
   });
 
-  /* ---- MENU BUTTON ---- */
+  /* ==========================
+     FULLSCREEN MENU LOGIC
+  ========================== */
+
+  const fullscreenMenu = document.getElementById("fullscreenMenu");
+  const closeMenuBtn = fullscreenMenu?.querySelector(".close-menu");
+  const menuLogoutBtn = document.getElementById("menu-logout");
+
   menuBtn?.addEventListener("click", () => {
-    window.loadView("menu"); // or open a dropdown later
+    fullscreenMenu.style.display = "flex";
+  });
+
+  closeMenuBtn?.addEventListener("click", () => {
+    fullscreenMenu.style.display = "none";
+  });
+
+  menuLogoutBtn?.addEventListener("click", async () => {
+    const fb = await getFirebase();
+    const auth = fb.auth || fb.firebase?.auth;
+
+    if (!auth) {
+      console.error("Auth not found in getFirebase()");
+      return;
+    }
+
+    await auth.signOut();
+    window.currentUser = null;
+    updateHeaderAuthState();
+    fullscreenMenu.style.display = "none";
   });
 
   /* ==========================
@@ -154,9 +181,19 @@ export function initUI() {
 
     loginBtn.style.display = loggedIn ? "none" : "flex";
     logoutBtn.style.display = loggedIn ? "flex" : "none";
-  }
 
-  updateHeaderAuthState();
+    // Menu items
+    const menuLogin = fullscreenMenu.querySelector("[onclick='openLoginModal()']");
+    const menuLogout = document.getElementById("menu-logout");
+
+    if (loggedIn) {
+      menuLogin.style.display = "none";
+      menuLogout.style.display = "block";
+    } else {
+      menuLogin.style.display = "block";
+      menuLogout.style.display = "none";
+    }
+  }
 
   if (window.onAuthStateChanged) {
     window.onAuthStateChanged(user => {
