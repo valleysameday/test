@@ -239,10 +239,13 @@ contactBox.innerHTML = `
     </button>
 
     <!-- CONTACT (MOBILE FALLBACK) -->
-    <button id="contactSellerBtn" class="secondary-btn">
-      Contact
-    </button>
-
+    ${
+  post.phone
+    ? `<button id="contactSellerBtn" class="secondary-btn">
+         Contact
+       </button>`
+    : ``
+    }
     <!-- WHATSAPP (ONLY IF ALLOWED) -->
 ${
   post.allowWhatsApp && post.phone
