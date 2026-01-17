@@ -55,25 +55,27 @@ export function initUI() {
     closeAll();
 
     if (name === "post") {
-      await loadPostModal();
+    if (name === "post") {
+  await loadPostModal();
 
-      routes.post = document.getElementById("postModal");
-      if (!routes.post) {
-        console.error("postModal failed to load");
-        return;
-      }
+  routes.post = document.getElementById("postModal");
+  if (!routes.post) {
+    console.error("postModal failed to load");
+    return;
+  }
 
-      document.body.classList.add("modal-open");
-      routes.post.style.display = "flex";
+  document.body.classList.add("modal-open");
+  routes.post.style.display = "flex";
 
-      if (!postGateLoaded) {
-        postGateLoaded = true;
-        import("/index/js/post-gate/post-gate.js")
-          .then(m => m?.initPostGate?.())
-          .catch(err => console.error("Post gate load failed:", err));
-      }
+  // ⭐ Wait for DOM to fully render the modal
+  await new Promise(r => setTimeout(r, 30));
 
-      return;
+  // ⭐ Now load post gate (media + submit)
+  import("/index/js/post-gate/post-gate.js")
+    .then(m => m?.initPostGate?.())
+    .catch(err => console.error("Post gate load failed:", err));
+
+  return;
     }
 
     if (!routes[name]) return;
