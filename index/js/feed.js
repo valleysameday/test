@@ -133,8 +133,14 @@ function renderPosts(category) {
   const searchTerm = (window.currentSearch || "").toLowerCase().trim();
 
   const filtered = allPosts.filter((p) => {
+
+    // 🔥 Hide expired or inactive ads
+    if (p.isActive === false || p.status === "expired") return false;
+
+    // Category filter
     if (category !== "all" && p.category !== category) return false;
 
+    // Search filter
     if (!searchTerm) return true;
 
     const priceText =
@@ -163,7 +169,6 @@ function renderPosts(category) {
 
   postsContainer.appendChild(fragment);
 }
-
 /* --------------------------------------------------
    BUILD SINGLE CARD (Gumtree layout)
 -------------------------------------------------- */
