@@ -22,6 +22,31 @@ export function renderPost({
   const layout = document.createElement("div");
   layout.className = "view-post-layout";
 
+  function timeAgo(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return "Just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
+
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
+
+  const years = Math.floor(days / 365);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
+  }
   // -------------------------------------------------------
   // LEFT: GALLERY
   // -------------------------------------------------------
@@ -56,6 +81,18 @@ export function renderPost({
   const title = document.createElement("h1");
   title.textContent = post.title || "Untitled post";
   right.appendChild(title);
+  // Posted time
+if (post.createdAt) {
+  const postedTime = document.createElement("p");
+  postedTime.className = "posted-time";
+
+  const ts = post.createdAt?.toMillis
+    ? post.createdAt.toMillis()
+    : post.createdAt;
+
+  postedTime.textContent = `Posted ${timeAgo(ts)}`;
+  right.appendChild(postedTime);
+}
 
   // Price
   if (post.price !== undefined) {
