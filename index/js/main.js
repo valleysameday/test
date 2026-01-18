@@ -1,3 +1,5 @@
+// /index/js/main.js
+
 import { getFirebase } from "/index/js/firebase/init.js";
 import { initUI } from "/index/js/ui.js";
 
@@ -5,6 +7,7 @@ import { initUI } from "/index/js/ui.js";
    SPA VIEW LOADER
 ========================== */
 const viewModules = {};
+let currentView = null;
 
 async function ensureViewScript(view) {
   if (viewModules[view]) return viewModules[view];
@@ -13,9 +16,16 @@ async function ensureViewScript(view) {
   return mod;
 }
 
-export async function loadView(view) {
+export async function loadView(view, addToHistory = true) {
   const app = document.getElementById("app");
   if (!app) return;
+
+  // 🔁 Push browser history (required for mobile back button)
+  if (addToHistory && currentView !== view) {
+    history.pushState({ view }, "", `#${view}`);
+  }
+
+  currentView = view;
 
   // Load HTML
   try {
@@ -28,19 +38,32 @@ export async function loadView(view) {
     return;
   }
 
-  // Load JS module
+  // Load JS
   const mod = await ensureViewScript(view);
   if (typeof mod.init === "function") mod.init();
 }
 
+// Make available globally
 window.loadView = loadView;
+
+/* ==========================
+   BROWSER / MOBILE BACK BUTTON
+========================== */
+window.addEventListener("popstate", (e) => {
+  const view = e.state?.view || "home";
+  loadView(view, false); // ❗ do NOT add history again
+});
 
 /* ==========================
    APP START
 ========================== */
 function startApp() {
-  initUI();           // Initialize modals & UI
-  loadView("home");   // Load homepage by default
+  initUI();
+
+  // Load view from URL hash or default to home
+  const initialView = location.hash.replace("#", "") || "home";
+
+  loadView(initialView, false);
 }
 
 getFirebase().then(() => {
@@ -51,11 +74,13 @@ getFirebase().then(() => {
   }
 });
 
+/* ==========================
+   HELPERS
+========================== */
 window.navigateToDashboard = () => {
   if (!window.currentUser) {
-    window.loadView("home");
+    loadView("home");
     return;
   }
-
-  window.loadView("dashboard");
+  loadView("dashboard");
 };
