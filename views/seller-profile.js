@@ -39,9 +39,9 @@ async function initSellerProfile() {
 
   const seller = snap.data();
 
-  document.getElementById("sellerBackBtn").onclick = () => {
+document.getElementById("sellerBackBtn").onclick = () => {
   console.log("⬅️ Seller Profile Back clicked");
-window.history.back();
+  window.loadView("view-post");
 };
 
   renderSellerProfile(seller, sellerId);
