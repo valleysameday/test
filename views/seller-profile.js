@@ -1,7 +1,11 @@
 import { getFirebase } from "/index/js/firebase/init.js";
 import { 
-  doc, getDoc, collection, query, where, orderBy, getDocs 
+  doc, getDoc, collection, query, where, orderBy, getDocs, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+import { 
+  ref, uploadBytes, getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 /* ============================================================
    AUTO‑LOAD CSS (only once)
@@ -39,10 +43,10 @@ async function initSellerProfile() {
 
   const seller = snap.data();
 
-document.getElementById("sellerBackBtn").onclick = () => {
-  console.log("⬅️ Seller Profile Back clicked");
-  window.loadView("view-post");
-};
+  document.getElementById("sellerBackBtn").onclick = () => {
+    console.log("⬅️ Seller Profile Back clicked");
+    window.loadView("view-post");
+  };
 
   renderSellerProfile(seller, sellerId);
   loadSellerAds(sellerId, db);
@@ -86,12 +90,14 @@ function renderSellerProfile(seller, sellerId) {
       try {
         const { storage, db } = await getFirebase();
 
-        // Upload to Firebase Storage
-        const fileRef = window.storageRef(storage, `avatars/${sellerId}.jpg`);
-        await window.uploadBytes(fileRef, file);
+        // Create reference in Firebase Storage
+        const fileRef = ref(storage, `avatars/${sellerId}.jpg`);
+
+        // Upload file
+        await uploadBytes(fileRef, file);
 
         // Get URL
-        const url = await window.getDownloadURL(fileRef);
+        const url = await getDownloadURL(fileRef);
 
         // Save to Firestore
         await updateDoc(doc(db, "users", sellerId), {
