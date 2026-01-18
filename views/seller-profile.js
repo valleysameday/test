@@ -8,6 +8,31 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 /* ============================================================
+   IMAGE COMPRESSION HELPER
+============================================================ */
+function compressImage(file, maxSize = 600) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error("Compression failed"));
+      }, "image/jpeg", 0.8);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* ============================================================
    AUTO‑LOAD CSS (only once)
 ============================================================ */
 (function loadSellerProfileCSS() {
@@ -77,24 +102,29 @@ function renderSellerProfile(seller, sellerId) {
   if (isOwner) {
     avatarEl.classList.add("avatar-editable");
 
-    // Clicking avatar opens file picker
     avatarEl.addEventListener("click", () => {
       document.getElementById("avatarUploadInput").click();
     });
 
-    // Handle file upload
     document.getElementById("avatarUploadInput").addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
+      // Spinner
+      const spinner = document.createElement("div");
+      spinner.className = "upload-spinner";
+      spinner.textContent = "Uploading…";
+      avatarEl.appendChild(spinner);
+
       try {
         const { storage, db } = await getFirebase();
 
-        // Create reference in Firebase Storage
-        const fileRef = ref(storage, `avatars/${sellerId}.jpg`);
+        // Compress image
+        const compressed = await compressImage(file);
 
-        // Upload file
-        await uploadBytes(fileRef, file);
+        // Upload
+        const fileRef = ref(storage, `avatars/${sellerId}.jpg`);
+        await uploadBytes(fileRef, compressed);
 
         // Get URL
         const url = await getDownloadURL(fileRef);
@@ -104,11 +134,15 @@ function renderSellerProfile(seller, sellerId) {
           avatarUrl: url
         });
 
-        // Update UI instantly
+        // Update UI
         avatarEl.style.backgroundImage = `url('${url}')`;
+        showToast("Avatar updated successfully");
 
       } catch (err) {
         console.error("Avatar upload failed:", err);
+        showToast("Upload failed. Try again", "error");
+      } finally {
+        spinner.remove();
       }
     });
   }
@@ -198,7 +232,7 @@ async function loadSellerAds(sellerId, db) {
 }
 
 /* ============================================================
-   SPA ENTRY POINT (must be top-level)
+   SPA ENTRY POINT
 ============================================================ */
 export async function init() {
   return initSellerProfile();
