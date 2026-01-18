@@ -28,6 +28,8 @@ export async function init() {
   db = fb.db;
 
   await waitForAuth();
+  // Add browser history entry so mobile back works
+history.pushState({ view: "post" }, "", location.href);
 
   let postId = null;
 
@@ -67,6 +69,10 @@ function waitForAuth(timeout = 1500) {
   });
 }
 
+window.addEventListener("popstate", () => {
+  // Return to previous SPA view
+  window.loadView?.("home");
+});
 // ---------------------------------------------------------
 // LOAD POST
 // ---------------------------------------------------------
