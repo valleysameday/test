@@ -195,7 +195,9 @@ function buildContactBox({ post, seller, images, onSendMessage, onContactClick }
   const contactBtn = box.querySelector("#contactSellerBtn");
   const whatsappBtn = box.querySelector("#whatsappBtn");
 
-  // Send message
+  // ---------------------------------------------------------
+  // SEND MESSAGE
+  // ---------------------------------------------------------
   msgBtn.onclick = () => {
     console.log("✉️ Send Message clicked");
 
@@ -214,15 +216,36 @@ function buildContactBox({ post, seller, images, onSendMessage, onContactClick }
     });
   };
 
-  // Contact button
+  // ---------------------------------------------------------
+  // CONTACT BUTTON (REVEAL PHONE NUMBER)
+  // ---------------------------------------------------------
   if (contactBtn) {
     contactBtn.onclick = () => {
       console.log("📞 Contact clicked");
+
+      // Not logged in → show login modal
+      if (!window.currentUser) {
+        showToast("Please log in to contact the seller", "error");
+        window.loginRedirect = "stay";
+        setTimeout(() => window.openLoginModal?.(), 600);
+        return;
+      }
+
+      // Logged in → increment analytics
       onContactClick(post.id);
+
+      // Reveal phone number
+      contactBtn.textContent = post.phone;
+      contactBtn.classList.add("revealed-number");
+
+      // Disable further clicks
+      contactBtn.disabled = true;
     };
   }
 
-  // WhatsApp button
+  // ---------------------------------------------------------
+  // WHATSAPP BUTTON
+  // ---------------------------------------------------------
   if (whatsappBtn) {
     whatsappBtn.onclick = e => {
       console.log("💬 WhatsApp clicked");
@@ -237,4 +260,4 @@ function buildContactBox({ post, seller, images, onSendMessage, onContactClick }
   }
 
   return box;
-  }
+}
