@@ -1,83 +1,28 @@
 console.log("✅ view-post.js loaded");
 
+// Firebase init
 import { getFirebase } from "/index/js/firebase/init.js";
+
+// Firestore helpers (moved out of this file)
 import {
-  doc,
-  getDoc,
-  updateDoc,
-  increment,
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  getPostById,
+  getUserById,
+  incrementPostViews,
+  incrementContactClicks,
+  sendMessageToSeller,
+  findOrCreateConversation
+} from "/postViews/firestore.js";
 
-import { toggleFollow, isFollowing } from "/index/js/social/follow.js";
+// UI + DOM modules
+import { renderPost } from "/postViews/render.js";
+import { showToast } from "/postViews/toast.js";
+import { showMessageConfirmModal } from "/postViews/modals.js";
 
-const PLACEHOLDER_IMG = "/index/images/webholder.svg";
-let db;
+let db = null;
 
-/* =====================================================
-   TOAST
-===================================================== */
-function showToast(msg, type = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.classList.add("show"), 10);
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 2500);
-}
-
-/* =====================================================
-   MESSAGE CONFIRM MODAL
-===================================================== */
-function showMessageConfirmModal({ message, onConfirm }) {
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-
-  overlay.innerHTML = `
-    <div class="modal-content">
-      <h3>Confirm message to seller</h3>
-
-      <p class="modal-advice">
-        ⚠️ Safety reminder:<br>
-        • Never pay before seeing the item<br>
-        • Meet in a public place where possible
-      </p>
-
-      <label>Your message</label>
-      <textarea class="modal-message-preview">${message}</textarea>
-
-      <div class="modal-actions">
-        <button class="secondary-btn cancel-btn">Cancel</button>
-        <button class="primary-btn confirm-btn">Confirm & Send</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(overlay);
-
-  const textarea = overlay.querySelector(".modal-message-preview");
-
-  overlay.querySelector(".cancel-btn").onclick = () => overlay.remove();
-  overlay.querySelector(".confirm-btn").onclick = () => {
-    const finalText = textarea.value.trim();
-    if (!finalText) return;
-    overlay.remove();
-    onConfirm(finalText);
-  };
-}
-
-/* =====================================================
-   SPA ENTRY
-===================================================== */
+// ---------------------------------------------------------
+// INIT
+// ---------------------------------------------------------
 export async function init() {
   const fb = await getFirebase();
   db = fb.db;
@@ -85,11 +30,13 @@ export async function init() {
   await waitForAuth();
 
   let postId = null;
+
+  // Wait for post ID from session or SPA
   await new Promise(resolve => {
-    const check = setInterval(() => {
+    const timer = setInterval(() => {
       postId = sessionStorage.getItem("viewPostId") || window.selectedPostId;
       if (postId) {
-        clearInterval(check);
+        clearInterval(timer);
         resolve();
       }
     }, 30);
@@ -99,416 +46,109 @@ export async function init() {
   await loadPost(postId);
 }
 
-/* =====================================================
-   WAIT FOR AUTH
-===================================================== */
+// ---------------------------------------------------------
+// WAIT FOR AUTH
+// ---------------------------------------------------------
 function waitForAuth(timeout = 1500) {
   return new Promise(resolve => {
     if (window.currentUser !== undefined) return resolve();
 
     const start = Date.now();
-    const check = setInterval(() => {
+    const timer = setInterval(() => {
       if (window.currentUser !== undefined) {
-        clearInterval(check);
+        clearInterval(timer);
         resolve();
       }
       if (Date.now() - start > timeout) {
-        clearInterval(check);
+        clearInterval(timer);
         resolve();
       }
     }, 50);
   });
 }
 
-/* =====================================================
-   LOAD POST
-===================================================== */
+// ---------------------------------------------------------
+// LOAD POST
+// ---------------------------------------------------------
 async function loadPost(postId) {
   const container = document.getElementById("viewPostContent");
   if (!container) return;
 
   container.innerHTML = "<p class='loading'>Loading post…</p>";
 
-  const snap = await getDoc(doc(db, "posts", postId));
-  if (!snap.exists()) {
+  const post = await getPostById(db, postId);
+
+  if (!post) {
     container.textContent = "Post not found.";
     return;
   }
 
-  const post = { id: snap.id, ...snap.data() };
+  // Increment views (non-blocking)
+  incrementPostViews(db, postId).catch(() => {});
 
-  /* 🔢 Safe view increment */
-  updateDoc(doc(db, "posts", postId), { views: increment(1) }).catch(() => {});
-
-  await renderPost(container, post);
-}
-
-/* =====================================================
-   RENDER POST
-===================================================== */
-async function renderPost(container, post) {
-  container.innerHTML = "";
-
-  const currentUser = window.currentUser || null;
-
-  // -------------------------------
-  // Seller defaults
-  // -------------------------------
-  let sellerName = "Local Seller";
-  let sellerAvatar = PLACEHOLDER_IMG;
-  let sellerSince = null;
-
+  // Fetch seller
+  let seller = null;
   if (post.userId) {
-    const u = await getDoc(doc(db, "users", post.userId));
-    if (u.exists()) {
-      const data = u.data();
-      sellerName = data.firstName || sellerName;
-      sellerAvatar = data.profileImage || PLACEHOLDER_IMG;
-      sellerSince = data.createdAt
-        ? new Date(data.createdAt).toLocaleDateString("en-GB", {
-            year: "numeric",
-            month: "long"
-          })
-        : null;
-    }
+    seller = await getUserById(db, post.userId);
   }
 
-  // -------------------------------
-  // Images
-  // -------------------------------
-  const images = post.imageUrls?.length
-    ? post.imageUrls
-    : post.imageUrl
-    ? [post.imageUrl]
-    : [PLACEHOLDER_IMG];
-
-  // -------------------------------
-  // Layout
-  // -------------------------------
-  const layout = document.createElement("div");
-  layout.className = "view-post-layout";
-
-  const left = document.createElement("div");
-  left.className = "view-post-left gallery scrollable-gallery";
-
-  // Full-width, scrollable images
-  images.forEach((src, index) => {
-    const imgWrapper = document.createElement("div");
-    imgWrapper.className = "gallery-img-wrapper";
-    const img = document.createElement("img");
-    img.src = src;
-    img.onerror = () => (img.src = PLACEHOLDER_IMG);
-    imgWrapper.appendChild(img);
-    left.appendChild(imgWrapper);
-
-    // Tap to view in corner box
-    imgWrapper.onclick = () => {
-      showImagePreview(src, index + 1, images.length);
-    };
+  // Render UI
+  renderPost({
+    container,
+    post,
+    seller,
+    db,
+    onSendMessage: handleSendMessage,
+    onContactClick: handleContactClick
   });
+}
 
-  // -------------------------------
-  // Image preview box (corner)
-  // -------------------------------
-  function showImagePreview(src, currentIndex, total) {
-    const existing = document.getElementById("imagePreviewBox");
-    if (existing) existing.remove();
+// ---------------------------------------------------------
+// MESSAGE HANDLER
+// ---------------------------------------------------------
+async function handleSendMessage({ post, sellerId, messageText, imageUrl }) {
+  const user = window.currentUser;
 
-    const preview = document.createElement("div");
-    preview.id = "imagePreviewBox";
-    preview.className = "image-preview-box";
-
-    preview.innerHTML = `
-      <span class="close-preview">×</span>
-      <img src="${src}" onerror="this.src='${PLACEHOLDER_IMG}'" />
-      <div class="image-count">${currentIndex} / ${total}</div>
-    `;
-
-    document.body.appendChild(preview);
-
-    preview.querySelector(".close-preview").onclick = () => preview.remove();
+  if (!user) {
+    showToast("Please log in to contact the seller", "error");
+    window.loginRedirect = "stay";
+    setTimeout(() => window.openLoginModal?.(), 600);
+    return;
   }
 
-  // -------------------------------
-  // CSS for gallery + preview
-  // -------------------------------
-  const style = document.createElement("style");
-  style.textContent = `
-.scrollable-gallery {
-  display: flex;
-  overflow-x: auto;
-  gap: 8px;
-  padding-bottom: 8px;
-}
-.gallery-img-wrapper {
-  flex: 0 0 auto;
-  width: 100%;
-  max-width: 600px;
-  cursor: pointer;
-}
-.gallery-img-wrapper img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  border-radius: 8px;
-}
-.image-preview-box {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  width: 220px;
-  max-width: 40vw;
-  background: rgba(0,0,0,0.8);
-  padding: 8px;
-  border-radius: 8px;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #fff;
-}
-.image-preview-box img {
-  max-width: 100%;
-  border-radius: 6px;
-}
-.image-preview-box .image-count {
-  margin-top: 4px;
-  font-size: 12px;
-}
-.image-preview-box .close-preview {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  cursor: pointer;
-  font-size: 18px;
-}
-`;
-  document.head.appendChild(style);
-
-  // -------------------------------
-  // Right section
-  // -------------------------------
-  const right = document.createElement("div");
-  right.className = "view-post-right";
-
-  right.innerHTML = `
-    <div id="sellerHeaderClickable" class="post-seller-header">
-      <img class="seller-header-avatar" src="${sellerAvatar}">
-      <div class="seller-header-info">
-        <p class="posted-by"><strong>${sellerName}</strong></p>
-        <p class="posted-on">RCT-X</p>
-        ${sellerSince ? `<p class="posted-since">Posting since: ${sellerSince}</p>` : ""}
-      </div>
-    </div>
-
-    <h1>${post.title || "Untitled post"}</h1>
-  `;
-
-  // -------------------------------
-  // FOLLOW BUTTON
-  // -------------------------------
-  const sellerInfo = right.querySelector(".seller-header-info");
-  const followBtn = document.createElement("button");
-  followBtn.className = "follow-btn";
-  followBtn.textContent = "Follow";
-
-  if (currentUser?.uid === post.userId) {
-    followBtn.style.display = "none";
-  } else {
-    sellerInfo.appendChild(followBtn);
-    const setupFollowButton = async () => {
-      if (currentUser?.uid) {
-        const viewerId = currentUser.uid;
-        const sellerId = post.userId;
-
-        try {
-          const following = await isFollowing(viewerId, sellerId);
-          followBtn.textContent = following ? "Following" : "Follow";
-        } catch {
-          followBtn.textContent = "Follow";
-        }
-
-        followBtn.onclick = async () => {
-          try {
-            const res = await toggleFollow(viewerId, sellerId);
-            followBtn.textContent = res.following ? "Following" : "Follow";
-            showToast(
-              res.following
-                ? "You’re now following this seller"
-                : "Unfollowed seller"
-            );
-          } catch (err) {
-            console.error(err);
-            showToast("Action not allowed", "error");
-          }
-        };
-      } else {
-        followBtn.onclick = () => {
-          showToast("You must be logged in to follow sellers", "error");
-          window.loginRedirect = "stay";
-          setTimeout(() => window.openLoginModal?.(), 4000);
-        };
-      }
-    };
-    setupFollowButton();
+  if (user.uid === sellerId) {
+    showToast("You can’t message your own post", "error");
+    return;
   }
 
-  // -------------------------------
-  // SELLER HEADER CLICK
-  // -------------------------------
-  const sellerHeader = right.querySelector("#sellerHeaderClickable");
-  sellerHeader.addEventListener("click", e => {
-    if (e.target.closest(".follow-btn")) return;
-    window.selectedSellerId = post.userId;
-    window.loadView("seller-profile");
+  if (!messageText.trim()) {
+    showToast("Please enter a message", "error");
+    return;
+  }
+
+  showMessageConfirmModal({
+    message: messageText,
+    async onConfirm(finalMessage) {
+      const convoId = await findOrCreateConversation(db, {
+        buyerId: user.uid,
+        sellerId,
+        post
+      });
+
+      await sendMessageToSeller(db, convoId, {
+        senderId: user.uid,
+        text: finalMessage
+      });
+
+      showToast("Message sent to seller");
+    }
   });
+}
 
-  // -------------------------------
-  // Price & Description
-  // -------------------------------
-  if (post.price !== undefined) {
-    const price = document.createElement("h2");
-    price.className = "post-price";
-    price.textContent = post.price === 0 ? "FREE" : `£${post.price}`;
-    right.appendChild(price);
-  }
-
-  if (post.description) {
-    const desc = document.createElement("p");
-    desc.className = "view-post-desc";
-    desc.textContent = post.description;
-    right.appendChild(desc);
-  }
-
-  // -------------------------------
-  // CONTACT BOX (Message + Contact + WhatsApp)
-  // -------------------------------
-  const contactBox = document.createElement("div");
-  contactBox.className = "contact-box";
-  contactBox.innerHTML = `
-    <h3>Contact Seller</h3>
-    <textarea id="messageInput" class="message-input" rows="3">Hi, is this still available?</textarea>
-    <div class="contact-actions">
-      <button id="msgSellerBtn" class="primary-btn">Send Message</button>
-      ${post.phone ? `<button id="contactSellerBtn" class="secondary-btn">Contact</button>` : ""}
-      ${post.allowWhatsApp && post.phone ? `<a href="https://wa.me/44${post.phone.replace(/^0/, "")}" target="_blank" rel="noopener" id="whatsappBtn" class="secondary-btn whatsapp-btn">WhatsApp</a>` : ""}
-    </div>
-  `;
-  right.appendChild(contactBox);
-
-  const messageInput = contactBox.querySelector("#messageInput");
-  const msgBtn = contactBox.querySelector("#msgSellerBtn");
-  const contactBtn = contactBox.querySelector("#contactSellerBtn");
-  const whatsappBtn = contactBox.querySelector("#whatsappBtn");
-
-  function requireLogin() {
-    if (!window.currentUser) {
-      showToast("Please log in to contact the seller", "error");
-      window.loginRedirect = "stay";
-      setTimeout(() => window.openLoginModal?.(), 600);
-      return false;
-    }
-    return true;
-  }
-
-  // Message button
-  msgBtn.onclick = async () => {
-    if (!requireLogin()) return;
-    if (currentUser.uid === post.userId) {
-      showToast("You can’t message your own post", "error");
-      return;
-    }
-
-    const draftText = messageInput.value.trim();
-    if (!draftText) {
-      showToast("Please enter a message", "error");
-      return;
-    }
-
-    showMessageConfirmModal({
-      message: draftText,
-      onConfirm: async finalText => {
-        const buyerId = currentUser.uid;
-        const sellerId = post.userId;
-
-        const convRef = collection(db, "conversations");
-        const q = query(
-          convRef,
-          where("participants", "array-contains", buyerId),
-          where("postId", "==", post.id)
-        );
-
-        const snap = await getDocs(q);
-        let conversationId;
-
-        if (!snap.empty) {
-          conversationId = snap.docs[0].id;
-        } else {
-          const newConv = await addDoc(convRef, {
-            participants: [buyerId, sellerId],
-            postId: post.id,
-            postTitle: post.title || "Item",
-            postImage: images[0] || null,
-            lastMessage: finalText,
-            lastSenderId: buyerId,
-            unread: { [buyerId]: false, [sellerId]: true },
-            deletedFor: { [buyerId]: false, [sellerId]: false },
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-          conversationId = newConv.id;
-        }
-
-        await addDoc(collection(db, "conversations", conversationId, "messages"), {
-          senderId: buyerId,
-          text: finalText,
-          createdAt: serverTimestamp()
-        });
-
-        await updateDoc(doc(db, "conversations", conversationId), {
-          lastMessage: finalText,
-          lastSenderId: buyerId,
-          updatedAt: serverTimestamp(),
-          [`unread.${sellerId}`]: true
-        });
-
-        messageInput.value = "";
-        showToast("Message sent to seller");
-      }
-    });
-  };
-
-  // Contact button
-  if (contactBtn) {
-    contactBtn.onclick = async () => {
-      if (!requireLogin()) return;
-      await updateDoc(doc(db, "posts", post.id), { contactClicks: increment(1) });
-      showToast("Contact clicked");
-    };
-  }
-
-  // WhatsApp button
-  if (whatsappBtn) {
-    whatsappBtn.onclick = e => {
-      if (!requireLogin()) {
-        e.preventDefault(); // prevent opening WhatsApp if not logged in
-        return;
-      }
-      // otherwise normal link works
-    };
-  }
-
-  // -------------------------------
-  // FOOTER
-  // -------------------------------
-  const footer = document.createElement("div");
-  footer.className = "view-post-footer";
-  const backBtn = document.createElement("button");
-  backBtn.className = "secondary-btn";
-  backBtn.textContent = "← Back";
-  backBtn.onclick = () => window.loadView("home");
-  footer.appendChild(backBtn);
-
-  layout.append(left, right);
-  container.append(layout, footer);
-      }
+// ---------------------------------------------------------
+// CONTACT BUTTON HANDLER
+// ---------------------------------------------------------
+async function handleContactClick(postId) {
+  await incrementContactClicks(db, postId);
+  showToast("Contact clicked");
+}
