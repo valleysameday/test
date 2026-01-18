@@ -1,8 +1,11 @@
+// /index/js/posts/post-submit.js
+
 import { getFirebase } from "/index/js/firebase/init.js";
 import {
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
   ref,
@@ -31,7 +34,8 @@ export function initPostSubmit() {
     const area = document.getElementById("postArea")?.value.trim() || null;
 
     const phone = document.getElementById("postPhone")?.value.trim() || null;
-    const allowWhatsApp = document.getElementById("postWhatsApp")?.checked || false;
+    const allowWhatsApp =
+      document.getElementById("postWhatsApp")?.checked || false;
 
     if (!title || !description || !category) {
       feedback.textContent = "❌ Complete required fields.";
@@ -48,10 +52,12 @@ export function initPostSubmit() {
 
     for (const file of files) {
       const blob = await window.compressPostImage(file);
+
       const storageRef = ref(
         storage,
         `posts/${auth.currentUser.uid}/${Date.now()}.jpg`
       );
+
       await uploadBytes(storageRef, blob);
       imageUrls.push(await getDownloadURL(storageRef));
     }
@@ -64,21 +70,35 @@ export function initPostSubmit() {
     ].map(b => b.value);
 
     /* ============================
+       SYSTEM FIELDS
+    ============================ */
+    const expiresAt = Timestamp.fromDate(
+      new Date(Date.now() + 21 * 24 * 60 * 60 * 1000) // 21 days
+    );
+
+    /* ============================
        BASE DATA OBJECT
     ============================ */
     const data = {
-  title,
-  description,
-  category,
-  area,
-  phone,
-  allowWhatsApp,
-  badges,
-  imageUrl: imageUrls[0] || null,
-  imageUrls,
-  createdAt: serverTimestamp(),
-  userId: auth.currentUser.uid
-};
+      title,
+      description,
+      category,
+      area,
+      phone,
+      allowWhatsApp,
+      badges,
+
+      imageUrl: imageUrls[0] || null,
+      imageUrls,
+
+      // 🔒 system-managed fields
+      createdAt: serverTimestamp(),
+      expiresAt,
+      isActive: true,
+      status: "active",
+
+      userId: auth.currentUser.uid
+    };
 
     /* ============================
        CATEGORY-SPECIFIC FIELDS
@@ -87,7 +107,8 @@ export function initPostSubmit() {
     // FOR SALE / FREE
     if (category === "forsale" || category === "free") {
       data.condition =
-        document.querySelector("input[name='postCondition']:checked")?.value || null;
+        document.querySelector("input[name='postCondition']:checked")?.value ||
+        null;
 
       const price = document.getElementById("postPrice")?.value || null;
       data.price = price ? Number(price) : null;
@@ -96,7 +117,9 @@ export function initPostSubmit() {
     // PROPERTY
     if (category === "property") {
       data.propertyListingType =
-        document.querySelector("input[name='propertyListingType']:checked")?.value || null;
+        document.querySelector(
+          "input[name='propertyListingType']:checked"
+        )?.value || null;
 
       data.propertySalePrice =
         document.getElementById("postPropertySalePrice")?.value || null;
@@ -121,7 +144,8 @@ export function initPostSubmit() {
     if (category === "jobs") {
       data.jobType = document.getElementById("jobType")?.value || null;
       data.jobSalary = document.getElementById("jobSalary")?.value || null;
-      data.jobSalaryFrequency = document.getElementById("jobSalaryFrequency")?.value || null;
+      data.jobSalaryFrequency =
+        document.getElementById("jobSalaryFrequency")?.value || null;
       data.jobCompany = document.getElementById("jobCompany")?.value || null;
     }
 
@@ -129,12 +153,14 @@ export function initPostSubmit() {
     if (category === "events") {
       data.eventDate = document.getElementById("eventDate")?.value || null;
       data.eventTime = document.getElementById("eventTime")?.value || null;
-      data.eventLocation = document.getElementById("eventLocation")?.value || null;
+      data.eventLocation =
+        document.getElementById("eventLocation")?.value || null;
     }
 
     // COMMUNITY
     if (category === "community") {
-      data.communityTopic = document.getElementById("communityTopic")?.value || null;
+      data.communityTopic =
+        document.getElementById("communityTopic")?.value || null;
     }
 
     /* ============================
