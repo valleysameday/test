@@ -146,3 +146,9 @@
   border-radius: 6px;
   cursor: pointer;
 }
+.revealed-number {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  cursor: default;
+}
