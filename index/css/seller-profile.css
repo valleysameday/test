@@ -152,3 +152,15 @@
   border: 1px solid #ccc;
   cursor: default;
 }
+.upload-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.9);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  z-index: 10;
+}
