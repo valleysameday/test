@@ -147,16 +147,51 @@ function renderSellerProfile(seller, sellerId) {
     });
   }
 
-  /* ============================================================
-     OWNER‑ONLY BIO EDIT BUTTON
-  ============================================================ */
-  if (isOwner) {
-    const bioEl = document.getElementById("sellerBio");
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit Bio";
-    editBtn.className = "edit-btn";
-    bioEl.appendChild(editBtn);
-  }
+/* ============================================================
+   OWNER‑ONLY BIO EDIT BUTTON
+============================================================ */
+if (isOwner) {
+  const bioEl = document.getElementById("sellerBio");
+  const editBtn = document.createElement("button");
+  editBtn.textContent = "Edit Bio";
+  editBtn.className = "edit-btn";
+  bioEl.appendChild(editBtn);
+
+  editBtn.onclick = async () => {
+    const currentBio = seller.bio || "";
+
+    // Turn bio into editable textarea
+    bioEl.innerHTML = `
+      <textarea id="bioEditArea" class="bio-textarea">${currentBio}</textarea>
+      <button id="saveBioBtn" class="primary-btn">Save</button>
+    `;
+
+    const saveBtn = document.getElementById("saveBioBtn");
+    const textarea = document.getElementById("bioEditArea");
+
+    saveBtn.onclick = async () => {
+      const newBio = textarea.value.trim();
+
+      try {
+        const { db } = await getFirebase();
+
+        await updateDoc(doc(db, "users", sellerId), {
+          bio: newBio
+        });
+
+        // Update UI
+        bioEl.innerHTML = `<p>${newBio || "No bio provided."}</p>`;
+        bioEl.appendChild(editBtn);
+
+        showToast("Bio updated successfully");
+
+      } catch (err) {
+        console.error("Bio update failed:", err);
+        showToast("Failed to update bio", "error");
+      }
+    };
+  };
+}
 
   /* Contact Seller */
   document.getElementById("contactSellerBtn").onclick = () => {
