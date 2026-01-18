@@ -139,3 +139,10 @@
   font-size: 0.8rem;
   color: #64748b;
 }
+.seller-back-btn {
+  margin: 12px;
+  padding: 8px 14px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+}
