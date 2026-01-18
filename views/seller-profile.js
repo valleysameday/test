@@ -39,6 +39,11 @@ async function initSellerProfile() {
 
   const seller = snap.data();
 
+  document.getElementById("sellerBackBtn").onclick = () => {
+  console.log("⬅️ Seller Profile Back clicked");
+window.history.back();
+};
+
   renderSellerProfile(seller, sellerId);
   loadSellerAds(sellerId, db);
 }
