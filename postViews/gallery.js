@@ -38,13 +38,12 @@ function injectStyles() {
       scroll-snap-align: start;
       cursor: pointer;
     }
-    .gallery-img-wrapper img {
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-
+.gallery-img-wrapper img {
+  width: 100%;
+  height: 300px; /* or 250px, 280px, whatever fits your design */
+  border-radius: 8px;
+  object-fit: cover;
+}
     /* Fullscreen lightbox */
     .lightbox-overlay {
       position: fixed;
