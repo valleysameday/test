@@ -116,7 +116,7 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = `
     <div id="sellerHeaderClickable" class="post-seller-header">
-      <img class="seller-header-avatar" src="${seller?.profileImage || "/index/images/webholder.svg"}">
+      <img class="seller-header-avatar" src="${seller?.avatarUrl || "/index/images/webholder.svg"}">
       <div class="seller-header-info">
         <p class="posted-by"><strong>${seller?.firstName || "Local Seller"}</strong></p>
         <p class="posted-on">RCT-X</p>
