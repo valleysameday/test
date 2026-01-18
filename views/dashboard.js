@@ -155,24 +155,29 @@ async function loadMyAds() {
       ? p.createdAt.toDate().toLocaleDateString("en-GB")
       : "";
 
-    html += `
-      <div class="my-ad-item" data-id="${docSnap.id}">
-        <div class="my-ad-top">
-          <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
-          <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
-        </div>
-        <div class="my-ad-meta">
-          ${escapeHtml(p.area || "Rhondda")} · ${views} view${views === 1 ? "" : "s"}
-          ${created ? " · " + created : ""}
-        </div>
-        <div class="my-ad-actions">
-          <button data-action="view">View</button>
-          <button data-action="renew">Renew</button>
-          <button data-action="edit">Edit</button>
-          <button data-action="delete">Delete</button>
-        </div>
-      </div>
-    `;
+    const isExpired = p.isActive === false || p.status === "expired";
+
+html += `
+  <div class="my-ad-item ${isExpired ? "expired" : ""}" data-id="${docSnap.id}">
+    <div class="my-ad-top">
+      <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
+      <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
+      ${isExpired ? `<span class="ad-badge expired-badge">Expired</span>` : ""}
+    </div>
+
+    <div class="my-ad-meta">
+      ${escapeHtml(p.area || "Rhondda")} · ${views} view${views === 1 ? "" : "s"}
+      ${created ? " · " + created : ""}
+    </div>
+
+    <div class="my-ad-actions">
+      <button data-action="view">View</button>
+      ${isExpired ? `<button data-action="renew">Renew</button>` : ""}
+      <button data-action="edit">Edit</button>
+      <button data-action="delete">Delete</button>
+    </div>
+  </div>
+`;
   });
 
   listEl.innerHTML = html;
@@ -203,7 +208,15 @@ function handleAdAction(action, id) {
 
 async function renewAd(id) {
   const { db } = await getFirebase();
-  await updateDoc(doc(db, "posts", id), { createdAt: serverTimestamp() });
+
+  const newExpiry = Date.now() + (21 * 24 * 60 * 60 * 1000); // 21 days
+
+  await updateDoc(doc(db, "posts", id), {
+    expiresAt: newExpiry,
+    isActive: true,
+    status: "active"
+  });
+
   loadMyAds();
 }
 
