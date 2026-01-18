@@ -130,7 +130,7 @@ function renderSellerProfile(seller, sellerId) {
 ============================================================ */
 async function loadSellerAds(sellerId, db) {
   const container = document.getElementById("sellerAdsContainer");
-  const PLACEHOLDER = "/images/post-placeholder.jpg";
+  const PLACEHOLDER = "/index/images/webholder.svg";
 
   const q = query(
     collection(db, "posts"),
