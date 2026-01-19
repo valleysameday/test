@@ -1,16 +1,72 @@
+/* Base layout - matches about-view for consistency */
 .contact-view {
-  padding: 20px;
+  max-width: 850px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #1e293b;
+  background: transparent;
 }
 
+/* Impactful Heading */
 .contact-view h1 {
-  margin-bottom: 10px;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  color: var(--rhondda-green);
+  margin-bottom: 2rem;
+  letter-spacing: -0.05em;
+  line-height: 1;
 }
 
+/* Lead text */
 .contact-view .lead {
-  font-size: 1.2rem;
-  margin-bottom: 15px;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 500;
+  color: var(--rhondda-green);
+  line-height: 1.4;
+  margin-bottom: 3rem;
+  max-width: 90%;
 }
 
+/* Contact Details Styling */
+.contact-view p {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: var(--valley-slate);
+  margin-bottom: 2rem;
+  max-width: 65ch;
+}
+
+/* Support Email highlighting */
 .contact-view strong {
-  font-size: 1.1rem;
+  display: block;
+  font-size: 1.5rem;
+  color: var(--rhondda-green);
+  margin-top: 0.5rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: #cbd5e1;
+  text-underline-offset: 4px;
+}
+
+/* Tagline - Divider style */
+.contact-view .tagline {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  font-weight: 700;
+  color: var(--rhondda-green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .contact-view {
+    margin: 2rem auto;
+  }
+  .contact-view strong {
+    font-size: 1.25rem;
+  }
 }
