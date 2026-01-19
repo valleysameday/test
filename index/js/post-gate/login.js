@@ -133,6 +133,7 @@ export async function initLogin() {
     window.closeScreens?.();
   if (window.loginRedirect === "dashboard") {
   window.navigateToDashboard();
+    window.initDashboard?.();
 } else if (window.loginRedirect === "post") {
   openScreen("post");
 } else {
