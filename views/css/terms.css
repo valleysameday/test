@@ -1,0 +1,21 @@
+.terms-view {
+  padding: 20px;
+}
+
+.terms-view h1 {
+  margin-bottom: 10px;
+}
+
+.terms-view .lead {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.terms-view ul {
+  margin: 15px 0;
+  padding-left: 20px;
+}
+
+.terms-view li {
+  margin-bottom: 8px;
+}
