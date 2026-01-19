@@ -1,6 +1,9 @@
 // /postViews/gallery.js
 console.log("📄 NEW gallery.js loaded");
 
+import { galleryAds } from "/postViews/galleryAds.js";
+import { trackAdView, trackAdClick } from "/postViews/trackAd.js";
+
 const PLACEHOLDER_IMG = "/index/images/webholder.svg";
 
 let stylesInjected = false;
@@ -37,13 +40,30 @@ function injectStyles() {
       max-width: 600px;
       scroll-snap-align: start;
       cursor: pointer;
+      position: relative;
     }
-.gallery-img-wrapper img {
-  width: 100%;
-  height: 300px; /* or 250px, 280px, whatever fits your design */
-  border-radius: 8px;
-  object-fit: cover;
-}
+    .gallery-img-wrapper img {
+      width: 100%;
+      height: 300px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    /* Ad banner */
+    .ad-banner {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: #ffcc00;
+      color: #000;
+      padding: 4px 10px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 4px;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
     /* Fullscreen lightbox */
     .lightbox-overlay {
       position: fixed;
@@ -107,23 +127,62 @@ export function createGallery(images) {
 
   injectStyles();
 
+  // -----------------------------
+  // Add the ad slide at the end
+  // -----------------------------
+  const ad = galleryAds[0]; // first ad for now
+
+  const finalImages = [
+    ...images.map(src => ({ src, isAd: false })),
+    {
+      src: ad.src,
+      isAd: true,
+      adId: ad.adId,
+      link: ad.link,
+      label: ad.label
+    }
+  ];
+
+  // Track ad view immediately
+  trackAdView(ad.adId);
+
   const gallery = document.createElement("div");
   gallery.className = "scrollable-gallery";
 
-  images.forEach((src, index) => {
+  finalImages.forEach((item, index) => {
     const wrap = document.createElement("div");
     wrap.className = "gallery-img-wrapper";
 
     const img = document.createElement("img");
-    img.src = src;
+    img.src = item.src;
     img.onerror = () => (img.src = PLACEHOLDER_IMG);
 
     wrap.appendChild(img);
+
+    // -----------------------------
+    // Ad banner
+    // -----------------------------
+    if (item.isAd) {
+      const banner = document.createElement("div");
+      banner.className = "ad-banner";
+      banner.textContent = item.label || "Ad";
+      wrap.appendChild(banner);
+    }
+
     gallery.appendChild(wrap);
 
+    // -----------------------------
+    // Click behaviour
+    // -----------------------------
     wrap.onclick = () => {
+      if (item.isAd) {
+        trackAdClick(item.adId);
+        window.open(item.link, "_blank");
+        return;
+      }
+
       console.log("🔍 Opening lightbox at index:", index);
-      openLightbox(images, index);
+      openLightbox(finalImages.map(i => i.src), index);
     };
   });
 
@@ -164,7 +223,6 @@ function openLightbox(images, startIndex) {
   overlay.append(img, closeBtn, leftArrow, rightArrow, count);
   document.body.appendChild(overlay);
 
-  // Navigation logic
   function updateImage() {
     img.src = images[index];
     count.textContent = `${index + 1} / ${images.length}`;
@@ -172,34 +230,24 @@ function openLightbox(images, startIndex) {
 
   leftArrow.onclick = () => {
     index = (index - 1 + images.length) % images.length;
-    console.log("⬅️ Lightbox prev:", index);
     updateImage();
   };
 
   rightArrow.onclick = () => {
     index = (index + 1) % images.length;
-    console.log("➡️ Lightbox next:", index);
     updateImage();
   };
 
-  closeBtn.onclick = () => {
-    console.log("❌ Lightbox closed");
-    overlay.remove();
-  };
+  closeBtn.onclick = () => overlay.remove();
 
   overlay.onclick = e => {
-    if (e.target === overlay) {
-      console.log("❌ Lightbox closed (background click)");
-      overlay.remove();
-    }
+    if (e.target === overlay) overlay.remove();
   };
 
-  // ESC to close
   document.addEventListener(
     "keydown",
     function escHandler(e) {
       if (e.key === "Escape") {
-        console.log("❌ Lightbox closed (ESC)");
         overlay.remove();
         document.removeEventListener("keydown", escHandler);
       }
@@ -207,7 +255,6 @@ function openLightbox(images, startIndex) {
     { once: true }
   );
 
-  // Swipe support (mobile)
   let startX = 0;
 
   overlay.addEventListener("touchstart", e => {
@@ -219,13 +266,9 @@ function openLightbox(images, startIndex) {
     const diff = endX - startX;
 
     if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        index = (index - 1 + images.length) % images.length;
-        console.log("📱 Swipe right → prev:", index);
-      } else {
-        index = (index + 1) % images.length;
-        console.log("📱 Swipe left → next:", index);
-      }
+      if (diff > 0) index = (index - 1 + images.length) % images.length;
+      else index = (index + 1) % images.length;
+
       updateImage();
     }
   });
