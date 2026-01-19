@@ -7,7 +7,7 @@ export async function startPaymentFlow(amount, description) {
   }
 
   const publishableKey = featureFlags.stripeLiveMode
-    ? window.STRIPE_PUBLISHABLE_KEY_LIVE
+    ? window.STRIPE_PUBLISHABLE_KEY
     : window.STRIPE_PUBLISHABLE_KEY_TEST;
 
   const stripe = Stripe(publishableKey);
