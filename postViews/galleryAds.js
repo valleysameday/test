@@ -2,8 +2,9 @@
 
 export const galleryAds = [
   {
-    src: "/ads/rctx-ad-1.jpg",
-    link: "https://rctx.wales/upgrade",
+    adId: "rctx-ad-1",
+    src: "/images/Ads/viewPostAd.svg",
+    ///link: "https://rctx.wales/upgrade",
     label: "Sponsored"
   },
   {
