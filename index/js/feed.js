@@ -131,16 +131,13 @@ function renderPosts(category) {
   if (!postsContainer) return;
 
   const searchTerm = (window.currentSearch || "").toLowerCase().trim();
+  const now = Date.now();
 
+  // Filter by category + search
   const filtered = allPosts.filter((p) => {
-
-    // 🔥 Hide expired or inactive ads
     if (p.isActive === false || p.status === "expired") return false;
-
-    // Category filter
     if (category !== "all" && p.category !== category) return false;
 
-    // Search filter
     if (!searchTerm) return true;
 
     const priceText =
@@ -153,7 +150,23 @@ function renderPosts(category) {
     );
   });
 
-  if (!filtered.length) {
+  // Split boosted vs normal
+  const boosted = filtered.filter(
+    (p) => p.isBoosted === true && p.boostEnd > now
+  );
+
+  const normal = filtered.filter(
+    (p) => !p.isBoosted || p.boostEnd <= now
+  );
+
+  // Sort both groups by createdAt (newest first)
+  boosted.sort((a, b) => b.createdAt - a.createdAt);
+  normal.sort((a, b) => b.createdAt - a.createdAt);
+
+  // Combine
+  const finalList = [...boosted, ...normal];
+
+  if (!finalList.length) {
     postsContainer.innerHTML =
       "<p>No posts found. Try another search or category.</p>";
     return;
@@ -162,7 +175,7 @@ function renderPosts(category) {
   postsContainer.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
-  filtered.forEach((post) => {
+  finalList.forEach((post) => {
     const card = buildPostCard(post, category);
     fragment.appendChild(card);
   });
@@ -170,7 +183,7 @@ function renderPosts(category) {
   postsContainer.appendChild(fragment);
 }
 /* --------------------------------------------------
-   BUILD SINGLE CARD (Gumtree layout)
+   BUILD SINGLE CARD ( layout)
 -------------------------------------------------- */
 function buildPostCard(post, category) {
   const card = document.createElement("div");
