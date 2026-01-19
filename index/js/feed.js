@@ -79,46 +79,53 @@ export async function initFeed() {
 
     categoriesEl.dataset.bound = "true";
   }
-/* --------------------------------------------------
-   SEARCH BAR LISTENER
--------------------------------------------------- */
-const searchInput = document.getElementById("searchInput");
 
-if (searchInput && !searchInput.dataset.bound) {
-  searchInput.value = window.currentSearch || "";
+  /* --------------------------------------------------
+     SEARCH BAR LISTENER
+  -------------------------------------------------- */
+  const searchInput = document.getElementById("searchInput");
 
-  searchInput.addEventListener("input", () => {
-    window.currentSearch = searchInput.value.trim().toLowerCase();
-    sessionStorage.setItem("homeSearch", window.currentSearch);
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.value = window.currentSearch || "";
 
-    const cat = sessionStorage.getItem("homeCategory") || "all";
-    renderPosts(cat);
-  });
+    searchInput.addEventListener("input", () => {
+      window.currentSearch = searchInput.value.trim().toLowerCase();
+      sessionStorage.setItem("homeSearch", window.currentSearch);
 
-  searchInput.dataset.bound = "true";
+      const cat = sessionStorage.getItem("homeCategory") || "all";
+      renderPosts(cat);
+    });
+
+    searchInput.dataset.bound = "true";
+  }
 }
-}
 
 /* --------------------------------------------------
-   FETCH POSTS
+   FETCH POSTS (Boost‑aware)
 -------------------------------------------------- */
 async function fetchPosts() {
   try {
     const q = query(
-  collection(db, "posts"),
-  orderBy("sortScore", "desc"),
-  orderBy("createdAt", "desc")
-);
+      collection(db, "posts"),
+      orderBy("sortScore", "desc"),
+      orderBy("createdAt", "desc")
+    );
+
     const snap = await getDocs(q);
 
     allPosts = snap.docs.map((doc) => {
-  const data = doc.data();
-  return {
-    id: doc.id,
-    ...data,
-    sortScore: data.sortScore ?? data.createdAt ?? 0
-  };
-});
+      const data = doc.data();
+
+      // Convert Firestore timestamp → ms
+      const createdAtMs = data.createdAt?.toMillis?.() ?? 0;
+
+      return {
+        id: doc.id,
+        ...data,
+        // Fallback ensures normal posts still show
+        sortScore: data.sortScore ?? createdAtMs
+      };
+    });
 
     console.log(`📦 Loaded ${allPosts.length} posts`);
   } catch (err) {
@@ -141,14 +148,10 @@ function renderPosts(category) {
   const searchTerm = (window.currentSearch || "").toLowerCase().trim();
 
   const filtered = allPosts.filter((p) => {
-
-    // 🔥 Hide expired or inactive ads
     if (p.isActive === false || p.status === "expired") return false;
 
-    // Category filter
     if (category !== "all" && p.category !== category) return false;
 
-    // Search filter
     if (!searchTerm) return true;
 
     const priceText =
@@ -177,8 +180,9 @@ function renderPosts(category) {
 
   postsContainer.appendChild(fragment);
 }
+
 /* --------------------------------------------------
-   BUILD SINGLE CARD (Gumtree layout)
+   BUILD SINGLE CARD
 -------------------------------------------------- */
 function buildPostCard(post, category) {
   const card = document.createElement("div");
@@ -192,7 +196,7 @@ function buildPostCard(post, category) {
   const area = post.area || "Rhondda";
 
   /* ------------------------------
-     AUTO PROPERTY PRICE LOGIC
+     PRICE LOGIC
   ------------------------------ */
   let price = "";
 
@@ -213,9 +217,7 @@ function buildPostCard(post, category) {
 
     if (isSale) {
       price = salePrice > 0 ? `£${salePrice.toLocaleString()}` : "£—";
-    }
-
-    else if (isRent) {
+    } else if (isRent) {
       if (rentAmount > 0) {
         if (["pcm", "per month", "month"].includes(rentFreq))
           price = `£${rentAmount} pcm`;
@@ -225,26 +227,27 @@ function buildPostCard(post, category) {
       } else {
         price = "£—";
       }
-    }
-
-    else {
+    } else {
       price = post.price ? `£${post.price}` : "£—";
     }
-
   } else {
     price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
   }
 
   /* ------------------------------
-     BADGE OVERLAY
+     BADGE OVERLAY (Boost wins)
   ------------------------------ */
   let badgeHtml = "";
+
   if (post.isBoosted) {
-  badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
+    badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
+  } else if (post.featured) {
+    badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
+  } else if (post.spotlight) {
+    badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
+  } else if (post.urgent) {
+    badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
   }
-  if (post.featured) badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
-  else if (post.spotlight) badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
-  else if (post.urgent) badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
 
   /* ------------------------------
      CARD HTML
