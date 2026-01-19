@@ -138,24 +138,26 @@
       </form>
     </div>
   </div>
-  <!-- BOOST MODAL -->
+<!-- ================= BOOST MODAL ================= -->
 <div id="boostModal" class="edit-modal hidden">
   <div class="edit-modal-inner">
     <h3>Boost Your Ad</h3>
-    <p>Choose where you want boost add to appear:</p>
+    <p>Boost your listing to the top of its category for more views! Choose a boost option below:</p>
 
-    <button id="boostGlobalBtn" class="primary-btn">
-      ⭐ Boost to ALL Feed
-    </button>
+    <div class="boost-options">
+      <button data-boost-size="small" data-boost-days="1" class="primary-btn">
+        ⭐ Small — 1 day (£2.00)
+      </button>
+      <button data-boost-size="medium" data-boost-days="3" class="primary-btn">
+        📈 Medium — 3 days (£3.50)
+      </button>
+      <button data-boost-size="large" data-boost-days="7" class="primary-btn">
+        🚀 Large — 7 days (£5.50)
+      </button>
+    </div>
 
-    <button id="boostCategoryBtn" class="secondary-btn">
-      📌 Boost to Category
-    </button>
-
-    <button id="boostCancel" class="secondary-btn">Cancel</button>
+    <button class="secondary-btn boost-cancel-btn">Cancel</button>
   </div>
-</div>
-
 </div>
 
 <script type="module" src="/views/dashboard.js"></script>
