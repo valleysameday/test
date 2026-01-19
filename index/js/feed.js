@@ -19,6 +19,25 @@ let db;
 let allPosts = [];
 
 /* --------------------------------------------------
+   SAFE TIMESTAMP HANDLER
+-------------------------------------------------- */
+function getMillis(ts) {
+  if (!ts) return 0;
+
+  // Firestore Timestamp
+  if (typeof ts.toMillis === "function") {
+    return ts.toMillis();
+  }
+
+  // Already milliseconds
+  if (typeof ts === "number") {
+    return ts;
+  }
+
+  return 0;
+}
+
+/* --------------------------------------------------
    PUBLIC INIT
 -------------------------------------------------- */
 export function init() {
@@ -71,32 +90,33 @@ export async function initFeed() {
         .forEach((b) => b.classList.remove("active"));
 
       btn.classList.add("active");
-      const cat = btn.dataset.category || "all";
 
+      const cat = btn.dataset.category || "all";
       sessionStorage.setItem("homeCategory", cat);
       renderPosts(cat);
     });
 
     categoriesEl.dataset.bound = "true";
   }
-/* --------------------------------------------------
-   SEARCH BAR LISTENER
--------------------------------------------------- */
-const searchInput = document.getElementById("searchInput");
 
-if (searchInput && !searchInput.dataset.bound) {
-  searchInput.value = window.currentSearch || "";
+  /* --------------------------------------------------
+     SEARCH BAR
+  -------------------------------------------------- */
+  const searchInput = document.getElementById("searchInput");
 
-  searchInput.addEventListener("input", () => {
-    window.currentSearch = searchInput.value.trim().toLowerCase();
-    sessionStorage.setItem("homeSearch", window.currentSearch);
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.value = window.currentSearch || "";
 
-    const cat = sessionStorage.getItem("homeCategory") || "all";
-    renderPosts(cat);
-  });
+    searchInput.addEventListener("input", () => {
+      window.currentSearch = searchInput.value.trim().toLowerCase();
+      sessionStorage.setItem("homeSearch", window.currentSearch);
 
-  searchInput.dataset.bound = "true";
-}
+      const cat = sessionStorage.getItem("homeCategory") || "all";
+      renderPosts(cat);
+    });
+
+    searchInput.dataset.bound = "true";
+  }
 }
 
 /* --------------------------------------------------
@@ -107,14 +127,15 @@ async function fetchPosts() {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
     const snap = await getDocs(q);
 
-    allPosts = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
+    allPosts = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data()
     }));
 
     console.log(`📦 Loaded ${allPosts.length} posts`);
   } catch (err) {
     console.error("🔥 Failed to fetch posts:", err);
+
     const postsContainer = document.getElementById("postsContainer");
     if (postsContainer) {
       postsContainer.innerHTML =
@@ -133,7 +154,6 @@ function renderPosts(category) {
   const searchTerm = (window.currentSearch || "").toLowerCase().trim();
   const now = Date.now();
 
-  // Filter by category + search
   const filtered = allPosts.filter((p) => {
     if (p.isActive === false || p.status === "expired") return false;
     if (category !== "all" && p.category !== category) return false;
@@ -150,20 +170,17 @@ function renderPosts(category) {
     );
   });
 
-  // Split boosted vs normal
   const boosted = filtered.filter(
-    (p) => p.isBoosted === true && p.boostEnd > now
+    (p) => p.isBoosted === true && getMillis(p.boostEnd) > now
   );
 
   const normal = filtered.filter(
-    (p) => !p.isBoosted || p.boostEnd <= now
+    (p) => !p.isBoosted || getMillis(p.boostEnd) <= now
   );
 
-  // Sort both groups by createdAt (newest first)
   boosted.sort((a, b) => b.createdAt - a.createdAt);
   normal.sort((a, b) => b.createdAt - a.createdAt);
 
-  // Combine
   const finalList = [...boosted, ...normal];
 
   if (!finalList.length) {
@@ -176,14 +193,14 @@ function renderPosts(category) {
   const fragment = document.createDocumentFragment();
 
   finalList.forEach((post) => {
-    const card = buildPostCard(post, category);
-    fragment.appendChild(card);
+    fragment.appendChild(buildPostCard(post, category));
   });
 
   postsContainer.appendChild(fragment);
 }
+
 /* --------------------------------------------------
-   BUILD SINGLE CARD ( layout)
+   BUILD SINGLE CARD
 -------------------------------------------------- */
 function buildPostCard(post, category) {
   const card = document.createElement("div");
@@ -197,139 +214,65 @@ function buildPostCard(post, category) {
   const area = post.area || "Rhondda";
 
   /* ------------------------------
-     AUTO PROPERTY PRICE LOGIC
+     PRICE LOGIC
   ------------------------------ */
   let price = "";
 
   if (post.category === "property") {
-    const listingType = post.propertyListingType || null;
+    const sale = Number(post.propertySalePrice || 0);
+    const rent = Number(post.propertyRentAmount || 0);
+    const freq = (post.propertyRentFrequency || "").toLowerCase();
 
-    const salePrice = Number(post.propertySalePrice || 0);
-    const rentAmount = Number(post.propertyRentAmount || 0);
-    const rentFreq = (post.propertyRentFrequency || "").toLowerCase().trim();
-
-    let isSale = listingType === "sale";
-    let isRent = listingType === "rent";
-
-    if (!listingType) {
-      if (rentAmount > 0) isRent = true;
-      else if (salePrice > 0) isSale = true;
+    if (rent > 0) {
+      price = ["pw", "weekly"].includes(freq)
+        ? `£${rent} pw`
+        : `£${rent} pcm`;
+    } else if (sale > 0) {
+      price = `£${sale.toLocaleString()}`;
+    } else {
+      price = "£—";
     }
-
-    if (isSale) {
-      price = salePrice > 0 ? `£${salePrice.toLocaleString()}` : "£—";
-    }
-
-    else if (isRent) {
-      if (rentAmount > 0) {
-        if (["pcm", "per month", "month"].includes(rentFreq))
-          price = `£${rentAmount} pcm`;
-        else if (["pw", "weekly", "per week", "week", "wk"].includes(rentFreq))
-          price = `£${rentAmount} pw`;
-        else price = `£${rentAmount}`;
-      } else {
-        price = "£—";
-      }
-    }
-
-    else {
-      price = post.price ? `£${post.price}` : "£—";
-    }
-
   } else {
     price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
   }
 
   /* ------------------------------
-     BADGE OVERLAY
+     BADGES
   ------------------------------ */
-let badgeHtml = "";
+  let badgeHtml = "";
 
-if (post.isBoosted && post.boostEnd.toMillis() > Date.now()) {
-  badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
-} else if (post.featured) {
-  badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
-} else if (post.spotlight) {
-  badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
-} else if (post.urgent) {
-  badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
-}
-
+  if (post.isBoosted && getMillis(post.boostEnd) > Date.now()) {
+    badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
+  } else if (post.featured) {
+    badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
+  } else if (post.spotlight) {
+    badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
+  } else if (post.urgent) {
+    badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
+  }
 
   /* ------------------------------
      CARD HTML
   ------------------------------ */
   card.innerHTML = `
     <div class="post-image">
-      <img src="${img}" alt="${escapeHtml(post.title || "Listing image")}" loading="lazy"
+      <img src="${img}" loading="lazy"
            onerror="this.src='/index/images/image-webholder.webp'">
       ${badgeHtml}
     </div>
 
     <div class="post-body">
-      <div class="post-meta">
-        <span class="post-price">${price}</span>
-
-        <button class="heart-btn" data-id="${post.id}" aria-label="Save Post">
-          <svg viewBox="0 0 24 24" width="20" height="20">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
-                     2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09
-                     C13.09 3.81 14.76 3 16.5 3 
-                     19.58 3 22 5.42 22 8.5
-                     c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"/>
-          </svg>
-        </button>
-      </div>
-
-      <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
-      <span class="post-area">📍 ${escapeHtml(area)}</span>
+      <span class="post-price">${price}</span>
+      <h3>${escapeHtml(post.title || "Untitled post")}</h3>
+      <span>📍 ${escapeHtml(area)}</span>
     </div>
   `;
 
-  /* ------------------------------
-     HEART BUTTON
-  ------------------------------ */
-  const heartBtn = card.querySelector(".heart-btn");
-
-  heartBtn.addEventListener("click", async (ev) => {
-    ev.stopPropagation();
-
-    if (!window.currentUser) {
-      window.openLoginModal?.();
-      return;
-    }
-
-    const postId = heartBtn.dataset.id;
-    const { db } = await getFirebase();
-    const uid = window.currentUser.uid;
-
-    const ref = doc(db, "users", uid, "saved", postId);
-    const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-      await deleteDoc(ref);
-      heartBtn.classList.remove("saved");
-    } else {
-      await setDoc(ref, {
-        postId,
-        savedAt: Date.now()
-      });
-      heartBtn.classList.add("saved");
-    }
-  });
-
-  /* ------------------------------
-     CARD CLICK → OPEN POST
-  ------------------------------ */
   card.addEventListener("click", () => {
     sessionStorage.setItem("viewPostId", post.id);
     sessionStorage.setItem("homeScroll", window.scrollY);
     sessionStorage.setItem("homeCategory", category);
     sessionStorage.setItem("homeSearch", window.currentSearch || "");
-
     window.loadView?.("view-post");
   });
 
@@ -345,4 +288,4 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-      }
+}
