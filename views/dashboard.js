@@ -8,7 +8,6 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  serverTimestamp,
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -44,17 +43,17 @@ export async function init() {
     profileSince.textContent = d.toLocaleDateString("en-GB");
   }
 
-  /* ✅ FOLLOWER COUNT (shared logic) */
+  /* FOLLOWER COUNT */
   if (window.currentUser?.uid && followersEl) {
     try {
       const count = await getFollowerCount(window.currentUser.uid);
       followersEl.textContent = count;
     } catch (err) {
-      console.error("Follower count failed:", err);
       followersEl.textContent = "0";
     }
   }
 
+  /* Card navigation */
   document.querySelectorAll(".dash-card").forEach(card => {
     card.addEventListener("click", () => {
       showSection(card.dataset.section);
@@ -79,7 +78,7 @@ export async function init() {
   await loadMyAds();
   await Messaging.initMessaging();
 
-  /* 🔁 Open conversation from session */
+  /* Open conversation from session */
   const openConv = sessionStorage.getItem("openConversationId");
   if (openConv) {
     sessionStorage.removeItem("openConversationId");
@@ -110,6 +109,8 @@ function showSection(id) {
 
   const target = document.getElementById(id);
   if (target) target.classList.remove("hidden");
+
+  if (id === "saved") loadSaved();   // ⭐ LOAD SAVED ITEMS HERE
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -192,6 +193,83 @@ html += `
   });
 }
 
+/* ================= SAVED ITEMS ================= */
+async function loadSaved() {
+  const savedSection = document.getElementById("saved");
+
+  // Inject container if missing
+  savedSection.innerHTML = `
+    <h3>Saved Items</h3>
+    <div id="savedList">Loading…</div>
+  `;
+
+  const listEl = document.getElementById("savedList");
+
+  const { db } = await getFirebase();
+  const uid = window.currentUser?.uid;
+
+  if (!uid) {
+    listEl.textContent = "Not logged in.";
+    return;
+  }
+
+  const savedSnap = await getDocs(collection(db, "users", uid, "saved"));
+
+  if (savedSnap.empty) {
+    listEl.textContent = "You haven't saved anything yet.";
+    return;
+  }
+
+  let html = "";
+
+  for (const saved of savedSnap.docs) {
+    const postId = saved.id;
+    const postSnap = await getDoc(doc(db, "posts", postId));
+    if (!postSnap.exists()) continue;
+
+    const p = postSnap.data();
+
+    html += `
+      <div class="my-ad-item" data-id="${postId}">
+        <div class="my-ad-top">
+          <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
+          <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
+        </div>
+
+        <div class="my-ad-meta">
+          ${escapeHtml(p.area || "Rhondda")} · ${p.views || 0} views
+        </div>
+
+        <div class="my-ad-actions">
+          <button data-action="view">View</button>
+          <button data-action="unsave">Unsave</button>
+        </div>
+      </div>
+    `;
+  }
+
+  listEl.innerHTML = html;
+
+  listEl.querySelectorAll(".my-ad-item").forEach(item => {
+    item.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      const id = item.dataset.id;
+
+      if (action === "view") {
+        sessionStorage.setItem("viewPostId", id);
+        window.loadView?.("view-post");
+      }
+
+      if (action === "unsave") {
+        unsaveItem(id);
+      }
+    });
+  });
+}
+
 /* ================= ACTIONS ================= */
 function handleAdAction(action, id) {
   if (action === "view") {
@@ -209,7 +287,7 @@ function handleAdAction(action, id) {
 async function renewAd(id) {
   const { db } = await getFirebase();
 
-  const newExpiry = Date.now() + (21 * 24 * 60 * 60 * 1000); // 21 days
+  const newExpiry = Date.now() + (21 * 24 * 60 * 60 * 1000);
 
   await updateDoc(doc(db, "posts", id), {
     expiresAt: newExpiry,
@@ -224,6 +302,14 @@ async function deleteAd(id) {
   const { db } = await getFirebase();
   await deleteDoc(doc(db, "posts", id));
   loadMyAds();
+}
+
+async function unsaveItem(postId) {
+  const { db } = await getFirebase();
+  const uid = window.currentUser.uid;
+
+  await deleteDoc(doc(db, "users", uid, "saved", postId));
+  loadSaved();
 }
 
 /* ================= EDIT ================= */
