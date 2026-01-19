@@ -1,0 +1,16 @@
+.contact-view {
+  padding: 20px;
+}
+
+.contact-view h1 {
+  margin-bottom: 10px;
+}
+
+.contact-view .lead {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.contact-view strong {
+  font-size: 1.1rem;
+}
