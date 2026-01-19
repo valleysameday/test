@@ -1,24 +1,37 @@
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const Stripe = require("stripe");
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async (event) => {
   try {
-    const { amount, description } = JSON.parse(event.body);
+    const { amount, description } = JSON.parse(event.body || "{}");
+
+    if (!amount || amount < 50) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Invalid amount" }),
+      };
+    }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
+      payment_method_types: ["card"],
+
       line_items: [
         {
           price_data: {
             currency: "gbp",
-            product_data: { name: description },
-            unit_amount: amount, // amount in pence
+            unit_amount: amount, // pence
+            product_data: {
+              name: description || "Boost",
+            },
           },
           quantity: 1,
         },
       ],
-      success_url: "https://rctx/success",
-      cancel_url: "https://rctx/cancel",
+
+      success_url: "https://rctx.co.uk/success?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "https://rctx.co.uk/cancel",
     });
 
     return {
@@ -26,6 +39,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({ id: session.id }),
     };
   } catch (err) {
+    console.error("Stripe error:", err);
+
     return {
       statusCode: 500,
       body: JSON.stringify({ error: err.message }),
