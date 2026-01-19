@@ -379,3 +379,9 @@
   justify-content: flex-end;
   margin-top: 15px;
 }
+.posted-time {
+  color: #666;
+  font-size: 14px;
+  margin-top: -5px;
+  margin-bottom: 10px;
+}
