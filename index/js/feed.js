@@ -104,7 +104,11 @@ if (searchInput && !searchInput.dataset.bound) {
 -------------------------------------------------- */
 async function fetchPosts() {
   try {
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    const q = query(
+  collection(db, "posts"),
+  orderBy("sortScore", "desc"),
+  orderBy("createdAt", "desc")
+);
     const snap = await getDocs(q);
 
     allPosts = snap.docs.map((doc) => ({
@@ -231,6 +235,9 @@ function buildPostCard(post, category) {
      BADGE OVERLAY
   ------------------------------ */
   let badgeHtml = "";
+  if (post.isBoosted) {
+  badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
+  }
   if (post.featured) badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
   else if (post.spotlight) badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
   else if (post.urgent) badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
