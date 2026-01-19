@@ -1,0 +1,58 @@
+.privacy-view {
+  max-width: 850px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #1e293b;
+}
+
+.privacy-view h1 {
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  color: var(--rhondda-green);
+  margin-bottom: 2rem;
+  letter-spacing: -0.05em;
+}
+
+.privacy-view .lead {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 500;
+  color: var(--rhondda-green);
+  margin-bottom: 3rem;
+}
+
+.privacy-view h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--rhondda-green);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.privacy-view p, .privacy-view li {
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: var(--valley-slate);
+  margin-bottom: 1.5rem;
+}
+
+.privacy-view ul {
+  padding-left: 1.5rem;
+  list-style-type: square;
+}
+
+.privacy-view a {
+  color: var(--rhondda-green);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.privacy-view .tagline {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--rhondda-green);
+  text-transform: uppercase;
+}
