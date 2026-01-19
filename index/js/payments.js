@@ -1,16 +1,25 @@
 import { featureFlags } from "/index/js/featureFlags.js";
 
+let stripe; // cache instance
+
 export async function startPaymentFlow(amount, description) {
   if (!featureFlags.paymentsEnabled) {
     console.log("Payments disabled — simulating success");
     return true;
   }
 
-  const publishableKey = featureFlags.stripeLiveMode
-    ? window.STRIPE_PUBLISHABLE_KEY
-    : window.STRIPE_PUBLISHABLE_KEY_TEST;
+  // Initialise Stripe ONCE
+  if (!stripe) {
+    const cfg = await fetch("/.netlify/functions/public-config")
+      .then(r => r.json());
 
-  const stripe = Stripe(publishableKey);
+    if (!cfg.stripeLive) {
+      console.error("Stripe publishable key missing");
+      return false;
+    }
+
+    stripe = Stripe(cfg.stripeLive);
+  }
 
   const session = await fetch("/.netlify/functions/create-checkout-session", {
     method: "POST",
