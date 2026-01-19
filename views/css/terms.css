@@ -1,21 +1,87 @@
+/* Base layout - matches about & contact */
 .terms-view {
-  padding: 20px;
+  max-width: 850px;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #1e293b;
+  background: transparent;
 }
 
+/* Impactful Heading */
 .terms-view h1 {
-  margin-bottom: 10px;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  color: var(--rhondda-green);
+  margin-bottom: 2rem;
+  letter-spacing: -0.05em;
+  line-height: 1;
 }
 
+/* Lead text */
 .terms-view .lead {
-  font-size: 1.2rem;
-  margin-bottom: 15px;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 500;
+  color: var(--rhondda-green);
+  line-height: 1.4;
+  margin-bottom: 3rem;
+  max-width: 90%;
 }
 
+/* Subheadings */
+.terms-view h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--rhondda-green);
+  margin: 3rem 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Paragraph styling */
+.terms-view p {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: var(--valley-slate);
+  margin-bottom: 1.5rem;
+  max-width: 65ch;
+}
+
+/* List styling - replacing standard dots with custom markers */
 .terms-view ul {
-  margin: 15px 0;
-  padding-left: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
 }
 
 .terms-view li {
-  margin-bottom: 8px;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--valley-slate);
+  padding: 1rem 0 1rem 2rem;
+  border-bottom: 1px solid var(--accent-soft);
+  position: relative;
+}
+
+/* Custom bullet: a small green square/dash */
+.terms-view li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--rhondda-green);
+  font-weight: bold;
+}
+
+.terms-view li:last-child {
+  border-bottom: none;
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .terms-view {
+    margin: 2rem auto;
+  }
+  .terms-view h3 {
+    font-size: 1.25rem;
+  }
 }
