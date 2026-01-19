@@ -11,34 +11,37 @@ import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/fireba
    ============================================================ */
 
 const BOOST_OPTIONS = {
-  global: {
-    days: 7,
-    price: 399, // £4.00
-    description: "Boost to top of ALL feed for 7 days",
-    priority: 2 // highest
+  small: {
+    days: 1,
+    price: 200,
+    description: "Boost to top of category for 24 hours"
   },
-  category: {
+  medium: {
+    days: 3,
+    price: 350,
+    description: "Boost to top of category for 3 days"
+  },
+  large: {
     days: 7,
-    price: 249, // £2.99
-    description: "Boost to top of CATEGORY for 7 days",
-    priority: 1
+    price: 550,
+    description: "Boost to top of category for 7 days"
   }
 };
 
 /* ============================================================
-   PUBLIC FUNCTION: boostPost(postId, type)
+   PUBLIC FUNCTION: boostPost(postId, size)
    Called from My Ads when user clicks "Boost"
    ============================================================ */
 
-export async function boostPost(postId, type) {
+export async function boostPost(postId, size) {
   if (!featureFlags.boostingEnabled) {
     console.log("Boosting disabled — ignoring request");
     return false;
   }
 
-  const option = BOOST_OPTIONS[type];
+  const option = BOOST_OPTIONS[size];
   if (!option) {
-    console.error("Invalid boost type:", type);
+    console.error("Invalid boost size:", size);
     return false;
   }
 
@@ -65,19 +68,10 @@ async function applyBoostToPost(postId, option) {
   const now = Date.now();
   const boostEnd = now + (option.days * 24 * 60 * 60 * 1000);
 
-  // sortScore determines feed position
-  // Global boosts get a massive priority bump
-  const sortScore =
-    option.priority === 2
-      ? boostEnd + 1_000_000_000_000 // global boost always wins
-      : boostEnd;
-
   const updateData = {
     isBoosted: true,
-    boostType: option.priority === 2 ? "global" : "category",
     boostStart: now,
-    boostEnd,
-    sortScore
+    boostEnd
   };
 
   await updateDoc(doc(db, "posts", postId), updateData);
@@ -88,7 +82,7 @@ async function applyBoostToPost(postId, option) {
 
 /* ============================================================
    OPTIONAL: autoExpireBoost(postId, postData)
-   Call this in your feed loader to auto‑clean expired boosts
+   Automatically removes boost when expired
    ============================================================ */
 
 export async function autoExpireBoost(postId, postData) {
@@ -101,8 +95,8 @@ export async function autoExpireBoost(postId, postData) {
 
   await updateDoc(doc(db, "posts", postId), {
     isBoosted: false,
-    boostType: null,
-    sortScore: postData.createdAt || now
+    boostStart: null,
+    boostEnd: null
   });
 
   console.log("Boost expired for post:", postId);
