@@ -1,0 +1,18 @@
+.about-view {
+  padding: 20px;
+}
+
+.about-view h1 {
+  margin-bottom: 10px;
+}
+
+.about-view .lead {
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.about-view .tagline {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #444;
+}
