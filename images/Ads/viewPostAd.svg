@@ -1,0 +1,85 @@
+<svg
+  viewBox="0 0 1080 1080"
+  xmlns="http://www.w3.org/2000/svg"
+  preserveAspectRatio="xMidYMid meet"
+>
+  <!-- Background -->
+  <rect width="1080" height="1080" fill="#003580"/>
+  <path d="M0 800L1080 600V1080H0V800Z" fill="#004AAD"/>
+
+  <!-- GPS Pin -->
+  <path d="M900 150C850 150 810 190 810 240C810 307.5 900 400 900 400C900 400 990 307.5 990 240C990 190 950 150 900 150Z"
+        fill="#FFD700" fill-opacity="0.2"/>
+  <circle cx="900" cy="240" r="30" fill="#FFD700"/>
+
+  <!-- Headline -->
+  <rect x="50" y="80" width="400" height="60" rx="10" fill="#FFD700"/>
+  <text x="75" y="122" font-family="Arial, sans-serif"
+        font-size="32" font-weight="bold" fill="#003580">
+    LEAFLETS DELIVERED
+  </text>
+
+  <!-- Company Name -->
+  <text x="50" y="240" font-family="Arial, sans-serif"
+        font-size="85" font-weight="900" fill="white">
+    RHONDDA
+  </text>
+  <text x="50" y="330" font-family="Arial, sans-serif"
+        font-size="85" font-weight="900" fill="white">
+    LEAFLET DROPS
+  </text>
+  <text x="50" y="410" font-family="Arial, sans-serif"
+        font-size="60" font-weight="bold" fill="#FFD700">
+    (RLD)
+  </text>
+
+  <!-- Features -->
+  <g transform="translate(50 500)">
+    <rect width="650" height="80" rx="15" fill="white" fill-opacity="0.1"/>
+    <circle cx="40" cy="40" r="15" fill="#FFD700"/>
+    <text x="80" y="52" font-family="Arial, sans-serif"
+          font-size="35" font-weight="bold" fill="white">
+      Covering the whole Rhondda
+    </text>
+
+    <g transform="translate(0 110)">
+      <rect width="650" height="80" rx="15" fill="white" fill-opacity="0.1"/>
+      <circle cx="40" cy="40" r="15" fill="#FFD700"/>
+      <text x="80" y="52" font-family="Arial, sans-serif"
+            font-size="35" font-weight="bold" fill="white">
+        Reliable, GPS tracked delivery
+      </text>
+    </g>
+
+    <g transform="translate(0 220)">
+      <rect width="650" height="80" rx="15" fill="white" fill-opacity="0.1"/>
+      <circle cx="40" cy="40" r="15" fill="#FFD700"/>
+      <text x="80" y="52" font-family="Arial, sans-serif"
+            font-size="35" font-weight="bold" fill="white">
+        Affordable local rates
+      </text>
+    </g>
+  </g>
+
+  <!-- CTA -->
+  <rect x="50" y="850" width="980" height="120" rx="60" fill="#FFD700"/>
+  <text x="540" y="925"
+        font-family="Arial, sans-serif"
+        font-size="45"
+        font-weight="900"
+        fill="#003580"
+        text-anchor="middle">
+    RHONDDALEAFLETDROPS.CO.UK
+  </text>
+
+  <!-- Slogan -->
+  <text x="540" y="1030"
+        font-family="Arial, sans-serif"
+        font-size="28"
+        font-style="italic"
+        fill="white"
+        fill-opacity="0.8"
+        text-anchor="middle">
+    Let's help Rhondda businesses grow together!
+  </text>
+</svg>
