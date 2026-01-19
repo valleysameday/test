@@ -1,18 +1,70 @@
+/* Container styling */
 .about-view {
-  padding: 20px;
+  max-width: 750px;
+  margin: 3rem auto;
+  padding: 2.5rem;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--text-dark);
+  line-height: 1.7;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
+/* Heading - responsive size */
 .about-view h1 {
-  margin-bottom: 10px;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: -1px;
+  font-weight: 800;
+  border-bottom: 4px solid var(--accent);
+  display: inline-block;
 }
 
+/* Lead paragraph - the hook */
 .about-view .lead {
-  font-size: 1.2rem;
-  margin-bottom: 15px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.4;
+  margin-bottom: 2rem;
+  padding-left: 1rem;
+  border-left: 4px solid var(--primary);
 }
 
+/* General paragraphs */
+.about-view p {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* Tagline - The "Valleys" signature */
 .about-view .tagline {
-  margin-top: 20px;
-  font-weight: bold;
-  color: #444;
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background-color: var(--bg-light);
+  border-radius: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--primary);
+  border: 1px solid var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+  .about-view {
+    margin: 1rem;
+    padding: 1.5rem;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  .about-view .lead {
+    font-size: 1.2rem;
+  }
 }
