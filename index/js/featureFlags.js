@@ -1,5 +1,5 @@
 export const featureFlags = {
-  boostingEnabled: false,
-  paymentsEnabled: false,
-  stripeLiveMode: false
+  boostingEnabled: true, // false, 
+  paymentsEnabled: true, //false,
+  stripeLiveMode: true //false
 };
