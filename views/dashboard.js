@@ -18,6 +18,8 @@ import {
 
 import * as Messaging from "/views/messaging.js";
 import { getFollowerCount } from "/index/js/social/follow.js";
+import { boostPost } from "/index/js/boosting.js";
+import { featureFlags } from "/index/js/featureFlags.js";
 
 let currentEditAdId = null;
 
@@ -60,20 +62,48 @@ export async function init() {
     });
   });
 
-  document.getElementById("dashLogout")
+  document
+    .getElementById("dashLogout")
     ?.addEventListener("click", () => window.logoutUser?.());
 
-  document.getElementById("settingsForm")
+  document
+    .getElementById("settingsForm")
     ?.addEventListener("submit", onSaveSettings);
 
-  document.getElementById("settingsResetPassword")
+  document
+    .getElementById("settingsResetPassword")
     ?.addEventListener("click", onResetPassword);
 
-  document.getElementById("editCancel")
+  document
+    .getElementById("editCancel")
     ?.addEventListener("click", closeEditModal);
 
-  document.getElementById("editAdForm")
+  document
+    .getElementById("editAdForm")
     ?.addEventListener("submit", onSaveEditAd);
+
+  // Boost modal buttons
+  const boostGlobalBtn = document.getElementById("boostGlobalBtn");
+  const boostCategoryBtn = document.getElementById("boostCategoryBtn");
+  const boostCancelBtn = document.getElementById("boostCancel");
+
+  boostGlobalBtn?.addEventListener("click", () => {
+    const modal = document.getElementById("boostModal");
+    const postId = modal?.dataset.postId;
+    if (!postId) return;
+    boostPost(postId, "global");
+    closeBoostModal();
+  });
+
+  boostCategoryBtn?.addEventListener("click", () => {
+    const modal = document.getElementById("boostModal");
+    const postId = modal?.dataset.postId;
+    if (!postId) return;
+    boostPost(postId, "category");
+    closeBoostModal();
+  });
+
+  boostCancelBtn?.addEventListener("click", closeBoostModal);
 
   await loadMyAds();
   await Messaging.initMessaging();
@@ -104,13 +134,14 @@ export async function init() {
 
 /* ================= SECTIONS ================= */
 function showSection(id) {
-  document.querySelectorAll(".dash-section")
+  document
+    .querySelectorAll(".dash-section")
     .forEach(sec => sec.classList.add("hidden"));
 
   const target = document.getElementById(id);
   if (target) target.classList.remove("hidden");
 
-  if (id === "saved") loadSaved();   // ⭐ LOAD SAVED ITEMS HERE
+  if (id === "saved") loadSaved(); // ⭐ LOAD SAVED ITEMS HERE
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -158,7 +189,7 @@ async function loadMyAds() {
 
     const isExpired = p.isActive === false || p.status === "expired";
 
-html += `
+    html += `
   <div class="my-ad-item ${isExpired ? "expired" : ""}" data-id="${docSnap.id}">
     <div class="my-ad-top">
       <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
@@ -176,6 +207,11 @@ html += `
       ${isExpired ? `<button data-action="renew">Renew</button>` : ""}
       <button data-action="edit">Edit</button>
       <button data-action="delete">Delete</button>
+      ${
+        featureFlags.boostingEnabled
+          ? `<button data-action="boost">Boost</button>`
+          : ""
+      }
     </div>
   </div>
 `;
@@ -281,13 +317,18 @@ function handleAdAction(action, id) {
   if (action === "edit") return openEditModal(id);
   if (action === "delete" && confirm("Delete this ad? This can’t be undone.")) {
     deleteAd(id);
+    return;
+  }
+  if (action === "boost") {
+    openBoostModal(id);
+    return;
   }
 }
 
 async function renewAd(id) {
   const { db } = await getFirebase();
 
-  const newExpiry = Date.now() + (21 * 24 * 60 * 60 * 1000);
+  const newExpiry = Date.now() + 21 * 24 * 60 * 60 * 1000;
 
   await updateDoc(doc(db, "posts", id), {
     expiresAt: newExpiry,
@@ -310,6 +351,22 @@ async function unsaveItem(postId) {
 
   await deleteDoc(doc(db, "users", uid, "saved", postId));
   loadSaved();
+}
+
+/* ================= BOOST MODAL ================= */
+function openBoostModal(postId) {
+  if (!featureFlags.boostingEnabled) return;
+  const modal = document.getElementById("boostModal");
+  if (!modal) return;
+  modal.dataset.postId = postId;
+  modal.classList.remove("hidden");
+}
+
+function closeBoostModal() {
+  const modal = document.getElementById("boostModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.dataset.postId = "";
 }
 
 /* ================= EDIT ================= */
@@ -353,7 +410,10 @@ async function onSaveEditAd(e) {
 
   const { db } = await getFirebase();
   await updateDoc(doc(db, "posts", currentEditAdId), {
-    title, description, area: area || null, price
+    title,
+    description,
+    area: area || null,
+    price
   });
 
   editFeedback.textContent = "Saved ✅";
