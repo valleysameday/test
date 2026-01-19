@@ -1,25 +1,23 @@
+// dashboard.js
+// My Ads dashboard + Boost modal with clear options
+
 import { getFirebase } from "/index/js/firebase/init.js";
 import {
   collection,
   query,
-  getDoc,
   where,
   getDocs,
   doc,
   updateDoc,
   deleteDoc,
-  orderBy
+  orderBy,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-import {
-  updateEmail,
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-import * as Messaging from "/views/messaging.js";
-import { getFollowerCount } from "/index/js/social/follow.js";
 import { boostPost } from "/index/js/boosting.js";
 import { featureFlags } from "/index/js/featureFlags.js";
+import * as Messaging from "/views/messaging.js";
+import { getFollowerCount } from "/index/js/social/follow.js";
 
 let currentEditAdId = null;
 
@@ -45,7 +43,7 @@ export async function init() {
     profileSince.textContent = d.toLocaleDateString("en-GB");
   }
 
-  /* FOLLOWER COUNT */
+  // Load follower count
   if (window.currentUser?.uid && followersEl) {
     try {
       const count = await getFollowerCount(window.currentUser.uid);
@@ -55,60 +53,48 @@ export async function init() {
     }
   }
 
-  /* Card navigation */
+  // Card navigation
   document.querySelectorAll(".dash-card").forEach(card => {
     card.addEventListener("click", () => {
       showSection(card.dataset.section);
     });
   });
 
-  document
-    .getElementById("dashLogout")
-    ?.addEventListener("click", () => window.logoutUser?.());
+  document.getElementById("dashLogout")?.addEventListener("click", () => window.logoutUser?.());
+  document.getElementById("settingsForm")?.addEventListener("submit", onSaveSettings);
+  document.getElementById("settingsResetPassword")?.addEventListener("click", onResetPassword);
+  document.getElementById("editCancel")?.addEventListener("click", closeEditModal);
+  document.getElementById("editAdForm")?.addEventListener("submit", onSaveEditAd);
 
-  document
-    .getElementById("settingsForm")
-    ?.addEventListener("submit", onSaveSettings);
+  // Boost modal buttons (small/medium/large)
+  const boostModal = document.getElementById("boostModal");
+  if (boostModal) {
+    boostModal.querySelectorAll("button[data-boost-size]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const postId = boostModal.dataset.postId;
+        const size = btn.dataset.boostSize; // small, medium, large
+        if (!postId || !size) return;
 
-  document
-    .getElementById("settingsResetPassword")
-    ?.addEventListener("click", onResetPassword);
+        const success = await boostPost(postId, size);
+        if (success) {
+          alert(`✅ Your post has been boosted for ${btn.dataset.boostDays} day(s)!`);
+        } else {
+          alert("⚠️ Boost failed or cancelled.");
+        }
 
-  document
-    .getElementById("editCancel")
-    ?.addEventListener("click", closeEditModal);
+        closeBoostModal();
+        loadMyAds();
+      });
+    });
 
-  document
-    .getElementById("editAdForm")
-    ?.addEventListener("submit", onSaveEditAd);
-
-  // Boost modal buttons
-  const boostGlobalBtn = document.getElementById("boostGlobalBtn");
-  const boostCategoryBtn = document.getElementById("boostCategoryBtn");
-  const boostCancelBtn = document.getElementById("boostCancel");
-
-  boostGlobalBtn?.addEventListener("click", () => {
-    const modal = document.getElementById("boostModal");
-    const postId = modal?.dataset.postId;
-    if (!postId) return;
-    boostPost(postId, "global");
-    closeBoostModal();
-  });
-
-  boostCategoryBtn?.addEventListener("click", () => {
-    const modal = document.getElementById("boostModal");
-    const postId = modal?.dataset.postId;
-    if (!postId) return;
-    boostPost(postId, "category");
-    closeBoostModal();
-  });
-
-  boostCancelBtn?.addEventListener("click", closeBoostModal);
+    // Cancel
+    boostModal.querySelector(".boost-cancel-btn")?.addEventListener("click", closeBoostModal);
+  }
 
   await loadMyAds();
   await Messaging.initMessaging();
 
-  /* Open conversation from session */
+  // Open conversation if stored in session
   const openConv = sessionStorage.getItem("openConversationId");
   if (openConv) {
     sessionStorage.removeItem("openConversationId");
@@ -118,13 +104,9 @@ export async function init() {
     const data = convSnap.data();
 
     if (data && window.currentUser?.uid) {
-      const otherUserId = data.participants.find(
-        id => id !== window.currentUser.uid
-      );
-
+      const otherUserId = data.participants.find(id => id !== window.currentUser.uid);
       const userSnap = await getDoc(doc(db, "users", otherUserId));
       const otherName = userSnap.data()?.firstName || "User";
-
       Messaging.openConversation(openConv, otherName, otherUserId);
     }
   }
@@ -134,15 +116,11 @@ export async function init() {
 
 /* ================= SECTIONS ================= */
 function showSection(id) {
-  document
-    .querySelectorAll(".dash-section")
-    .forEach(sec => sec.classList.add("hidden"));
-
+  document.querySelectorAll(".dash-section").forEach(sec => sec.classList.add("hidden"));
   const target = document.getElementById(id);
   if (target) target.classList.remove("hidden");
 
-  if (id === "saved") loadSaved(); // ⭐ LOAD SAVED ITEMS HERE
-
+  if (id === "saved") loadSaved();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -155,7 +133,6 @@ async function loadMyAds() {
 
   const { db } = await getFirebase();
   const userId = window.currentUser?.uid;
-
   if (!userId) {
     listEl.textContent = "Not logged in.";
     return;
@@ -168,7 +145,6 @@ async function loadMyAds() {
   );
 
   const snap = await getDocs(q);
-
   if (snap.empty) {
     listEl.textContent = "You haven't posted anything yet.";
     statsEl.textContent = "";
@@ -220,6 +196,7 @@ async function loadMyAds() {
   listEl.innerHTML = html;
   statsEl.textContent = `Total ads: ${snap.size} · Total views: ${totalViews}`;
 
+  // Action buttons
   listEl.querySelectorAll(".my-ad-item").forEach(item => {
     item.addEventListener("click", e => {
       const btn = e.target.closest("button[data-action]");
@@ -232,39 +209,28 @@ async function loadMyAds() {
 /* ================= SAVED ITEMS ================= */
 async function loadSaved() {
   const savedSection = document.getElementById("saved");
-
-  // Inject container if missing
-  savedSection.innerHTML = `
-    <h3>Saved Items</h3>
-    <div id="savedList">Loading…</div>
-  `;
-
+  savedSection.innerHTML = `<h3>Saved Items</h3><div id="savedList">Loading…</div>`;
   const listEl = document.getElementById("savedList");
-
   const { db } = await getFirebase();
   const uid = window.currentUser?.uid;
-
   if (!uid) {
     listEl.textContent = "Not logged in.";
     return;
   }
 
   const savedSnap = await getDocs(collection(db, "users", uid, "saved"));
-
   if (savedSnap.empty) {
     listEl.textContent = "You haven't saved anything yet.";
     return;
   }
 
   let html = "";
-
   for (const saved of savedSnap.docs) {
     const postId = saved.id;
     const postSnap = await getDoc(doc(db, "posts", postId));
     if (!postSnap.exists()) continue;
 
     const p = postSnap.data();
-
     html += `
       <div class="my-ad-item" data-id="${postId}">
         <div class="my-ad-top">
@@ -291,16 +257,13 @@ async function loadSaved() {
       const btn = e.target.closest("button[data-action]");
       if (!btn) return;
 
-      const action = btn.dataset.action;
-      const id = item.dataset.id;
-
-      if (action === "view") {
-        sessionStorage.setItem("viewPostId", id);
+      if (btn.dataset.action === "view") {
+        sessionStorage.setItem("viewPostId", item.dataset.id);
         window.loadView?.("view-post");
       }
 
-      if (action === "unsave") {
-        unsaveItem(id);
+      if (btn.dataset.action === "unsave") {
+        unsaveItem(item.dataset.id);
       }
     });
   });
@@ -327,7 +290,6 @@ function handleAdAction(action, id) {
 
 async function renewAd(id) {
   const { db } = await getFirebase();
-
   const newExpiry = Date.now() + 21 * 24 * 60 * 60 * 1000;
 
   await updateDoc(doc(db, "posts", id), {
@@ -348,7 +310,6 @@ async function deleteAd(id) {
 async function unsaveItem(postId) {
   const { db } = await getFirebase();
   const uid = window.currentUser.uid;
-
   await deleteDoc(doc(db, "users", uid, "saved", postId));
   loadSaved();
 }
@@ -358,6 +319,7 @@ function openBoostModal(postId) {
   if (!featureFlags.boostingEnabled) return;
   const modal = document.getElementById("boostModal");
   if (!modal) return;
+
   modal.dataset.postId = postId;
   modal.classList.remove("hidden");
 }
@@ -459,6 +421,7 @@ async function onResetPassword() {
   settingsFeedback.textContent = "Reset email sent ✅";
 }
 
+/* ================= HELPERS ================= */
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
