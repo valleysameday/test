@@ -111,10 +111,14 @@ async function fetchPosts() {
 );
     const snap = await getDocs(q);
 
-    allPosts = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    allPosts = snap.docs.map((doc) => {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    ...data,
+    sortScore: data.sortScore ?? data.createdAt ?? 0
+  };
+});
 
     console.log(`📦 Loaded ${allPosts.length} posts`);
   } catch (err) {
