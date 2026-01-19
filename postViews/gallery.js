@@ -177,7 +177,7 @@ export function createGallery(images) {
     wrap.onclick = () => {
       if (item.isAd) {
         trackAdClick(item.adId);
-        window.open(item.link, "_blank");
+     //   window.open(item.link, "_blank");
         return;
       }
 
