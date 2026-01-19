@@ -1,70 +1,58 @@
-/* Container styling */
+/* Remove container box styles */
 .about-view {
-  max-width: 750px;
-  margin: 3rem auto;
-  padding: 2.5rem;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: var(--text-dark);
-  line-height: 1.7;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  max-width: 850px;
+  margin: 4rem auto;
+  padding: 0 1.5rem; /* Only padding for mobile gutter */
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: #1e293b;
+  background: transparent; /* Removes the box */
+  box-shadow: none;        /* Removes the shadow */
 }
 
-/* Heading - responsive size */
+/* Bold, impactful heading */
 .about-view h1 {
-  font-size: clamp(2rem, 5vw, 3rem);
-  color: var(--primary);
-  margin-bottom: 1.5rem;
-  letter-spacing: -1px;
-  font-weight: 800;
-  border-bottom: 4px solid var(--accent);
-  display: inline-block;
-}
-
-/* Lead paragraph - the hook */
-.about-view .lead {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--primary);
-  line-height: 1.4;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  color: var(--rhondda-green);
   margin-bottom: 2rem;
-  padding-left: 1rem;
-  border-left: 4px solid var(--primary);
+  letter-spacing: -0.05em;
+  line-height: 1;
 }
 
-/* General paragraphs */
+/* Lead text - no borders, just weight */
+.about-view .lead {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 500;
+  color: var(--rhondda-green);
+  line-height: 1.4;
+  margin-bottom: 3rem;
+  max-width: 90%;
+}
+
+/* Standard paragraphs */
 .about-view p {
-  font-size: 1.15rem;
-  color: var(--text-muted);
-  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: var(--valley-slate);
+  margin-bottom: 2rem;
+  max-width: 65ch; /* Optimized for reading comfort */
 }
 
-/* Tagline - The "Valleys" signature */
+/* Tagline - Minimalist divider style */
 .about-view .tagline {
-  margin-top: 3rem;
-  padding: 1.5rem;
-  background-color: var(--bg-light);
-  border-radius: 12px;
-  text-align: center;
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
   font-weight: 700;
-  font-style: italic;
-  color: var(--primary);
-  border: 1px solid var(--accent);
+  color: var(--rhondda-green);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.1em;
+  font-size: 0.9rem;
 }
 
-/* Mobile Responsiveness */
+/* Mobile adjustments */
 @media (max-width: 600px) {
   .about-view {
-    margin: 1rem;
-    padding: 1.5rem;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  
-  .about-view .lead {
-    font-size: 1.2rem;
+    margin: 2rem auto;
   }
 }
