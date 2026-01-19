@@ -245,9 +245,14 @@ function buildPostCard(post, category) {
   ------------------------------ */
 let badgeHtml = "";
 
-if (post.isBoosted && post.boostEnd > Date.now()) {
+if (post.isBoosted && post.boostEnd.toMillis() > Date.now()) {
   badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
-
+} else if (post.featured) {
+  badgeHtml = `<div class="badge-overlay featured">Featured</div>`;
+} else if (post.spotlight) {
+  badgeHtml = `<div class="badge-overlay spotlight">Spotlight</div>`;
+} else if (post.urgent) {
+  badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
 }
 
 
