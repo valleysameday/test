@@ -111,11 +111,9 @@ function showSection(id) {
   const target = document.getElementById(id);
   if (target) target.classList.remove("hidden");
 
-  if (id === "myAds") loadMyAds();
-  if (id === "saved") loadSaved();
-
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
 /* ================= MY ADS ================= */
 async function loadMyAds() {
   const listEl = document.getElementById("myAdsList");
@@ -194,90 +192,6 @@ html += `
   });
 }
 
-/* ================= SAVED ITEMS ================= */
-async function loadSaved() {
-  const listEl = document.getElementById("savedList");
-  const statsEl = document.getElementById("savedStats");
-
-  listEl.textContent = "Loading…";
-
-  const { db } = await getFirebase();
-  const uid = window.currentUser?.uid;
-
-  if (!uid) {
-    listEl.textContent = "Not logged in.";
-    return;
-  }
-
-  // Get saved post IDs
-  const savedSnap = await getDocs(collection(db, "users", uid, "saved"));
-
-  if (savedSnap.empty) {
-    listEl.textContent = "You haven't saved anything yet.";
-    statsEl.textContent = "";
-    return;
-  }
-
-  let html = "";
-  let count = 0;
-
-  for (const saved of savedSnap.docs) {
-    const postId = saved.id;
-    const postSnap = await getDoc(doc(db, "posts", postId));
-
-    if (!postSnap.exists()) continue;
-
-    const p = postSnap.data();
-    count++;
-
-    const created = p.createdAt?.toDate
-      ? p.createdAt.toDate().toLocaleDateString("en-GB")
-      : "";
-
-    html += `
-      <div class="my-ad-item" data-id="${postId}">
-        <div class="my-ad-top">
-          <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
-          <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
-        </div>
-
-        <div class="my-ad-meta">
-          ${escapeHtml(p.area || "Rhondda")} · ${p.views || 0} views
-          ${created ? " · " + created : ""}
-        </div>
-
-        <div class="my-ad-actions">
-          <button data-action="view">View</button>
-          <button data-action="unsave">Unsave</button>
-        </div>
-      </div>
-    `;
-  }
-
-  listEl.innerHTML = html;
-  statsEl.textContent = `Saved: ${count}`;
-
-  // Attach actions
-  listEl.querySelectorAll(".my-ad-item").forEach(item => {
-    item.addEventListener("click", e => {
-      const btn = e.target.closest("button[data-action]");
-      if (!btn) return;
-
-      const action = btn.dataset.action;
-      const id = item.dataset.id;
-
-      if (action === "view") {
-        sessionStorage.setItem("viewPostId", id);
-        window.loadView?.("view-post");
-      }
-
-      if (action === "unsave") {
-        unsaveItem(id);
-      }
-    });
-  });
-}
-
 /* ================= ACTIONS ================= */
 function handleAdAction(action, id) {
   if (action === "view") {
@@ -311,13 +225,7 @@ async function deleteAd(id) {
   await deleteDoc(doc(db, "posts", id));
   loadMyAds();
 }
-async function unsaveItem(postId) {
-  const { db } = await getFirebase();
-  const uid = window.currentUser.uid;
 
-  await deleteDoc(doc(db, "users", uid, "saved", postId));
-  loadSaved();
-}
 /* ================= EDIT ================= */
 async function openEditModal(id) {
   currentEditAdId = id;
