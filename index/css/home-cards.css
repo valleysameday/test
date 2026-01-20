@@ -155,16 +155,13 @@
     }
 }
 .badge-overlay.boosted {
+  background: #ff9800;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 4px;
   position: absolute;
   top: 8px;
   left: 8px;
-  background: #ff9800;
-  color: #fff;
-  font-size: 0.7rem;       /* slightly smaller text */
-  font-weight: 600;
-  padding: 2px 6px;        /* less padding → shorter badge */
-  border-radius: 6px;       /* rounded corners */
   z-index: 5;
-  white-space: nowrap;      /* prevents wrapping to next line */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2); /* subtle shadow for pop */
 }
