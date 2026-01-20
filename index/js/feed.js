@@ -169,6 +169,10 @@ function renderPosts(category) {
       priceText.includes(searchTerm)
     );
   });
+  console.log(
+  "🟠 Active boosted post IDs:",
+  activeBoosts.map(p => p.id)
+);
 
   const boosted = filtered.filter(
     (p) => p.isBoosted === true && getMillis(p.boostEnd) > now
