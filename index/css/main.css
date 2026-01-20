@@ -377,3 +377,9 @@ header .logo {
   border: none;
   color: white;
 }
+.end-of-feed {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  font-size: 0.9rem;
+}
