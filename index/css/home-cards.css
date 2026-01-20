@@ -155,11 +155,11 @@
     }
 }
 .badge-overlay.boosted {
-  background: #0C0C91;
+  background: #ff9800;
   color: #fff;
-  padding: 4px 4px;
+  padding: 4px 8px;
   font-size: 0.75rem;
-  border-radius: 2px;
+  border-radius: 4px;
   position: absolute;
   top: 8px;
   left: 8px;
