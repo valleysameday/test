@@ -463,3 +463,13 @@
 .my-ad-item.expired {
   opacity: 0.6;
 }
+.ad-badge.boosted-badge {
+  background: #ff9800;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
