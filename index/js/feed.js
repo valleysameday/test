@@ -178,8 +178,8 @@ function renderPosts(category) {
     (p) => !p.isBoosted || getMillis(p.boostEnd) <= now
   );
 
-  boosted.sort((a, b) => b.createdAt - a.createdAt);
-  normal.sort((a, b) => b.createdAt - a.createdAt);
+  boosted.sort((a,b) => getMillis(b.createdAt) - getMillis(a.createdAt));
+normal.sort((a,b) => getMillis(b.createdAt) - getMillis(a.createdAt));
 
   const finalList = [...boosted, ...normal];
 
