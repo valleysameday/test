@@ -169,21 +169,23 @@ function renderPosts(category) {
       priceText.includes(searchTerm)
     );
   });
-  console.log(
-  "🟠 Active boosted post IDs:",
-  activeBoosts.map(p => p.id)
-);
 
   const boosted = filtered.filter(
     (p) => p.isBoosted === true && getMillis(p.boostEnd) > now
+  );
+
+  // ✅ LOG ACTIVE BOOSTED ADS
+  console.log(
+    `🟠 Active boosted posts (${boosted.length}):`,
+    boosted.map((p) => ({ id: p.id, title: p.title, boostEnd: p.boostEnd }))
   );
 
   const normal = filtered.filter(
     (p) => !p.isBoosted || getMillis(p.boostEnd) <= now
   );
 
-  boosted.sort((a,b) => getMillis(b.createdAt) - getMillis(a.createdAt));
-normal.sort((a,b) => getMillis(b.createdAt) - getMillis(a.createdAt));
+  boosted.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
+  normal.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
 
   const finalList = [...boosted, ...normal];
 
@@ -202,7 +204,6 @@ normal.sort((a,b) => getMillis(b.createdAt) - getMillis(a.createdAt));
 
   postsContainer.appendChild(fragment);
 }
-
 /* --------------------------------------------------
    BUILD SINGLE CARD
 -------------------------------------------------- */
