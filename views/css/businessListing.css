@@ -62,62 +62,64 @@
   color: #000;
   transform: translateX(5px);
 }
+
+
 /* ==========================
-   LIST MY BUSINESS FORM
+   LIST MY BUSINESS PAGE
 ========================== */
-.list-business-form {
+.list-business-page {
   max-width: 700px;
   margin: 2rem auto;
-  background: #fff;
   padding: 2rem;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   font-family: Arial, sans-serif;
 }
 
-.list-business-form h2 {
-  margin-bottom: 1rem;
+.list-business-page header h1 {
   font-size: 1.8rem;
-  color: #333;
-}
-
-.list-business-form p {
-  margin-bottom: 1rem;
-  color: #555;
-}
-
-.list-business-form label {
-  display: block;
   margin-bottom: 0.5rem;
-  font-weight: 600;
   color: #222;
 }
 
-.list-business-form input,
-.list-business-form textarea,
-.list-business-form select {
+.list-business-page header p {
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+#listBusinessForm label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+#listBusinessForm input,
+#listBusinessForm select,
+#listBusinessForm textarea {
   width: 100%;
   padding: 0.65rem 0.75rem;
-  margin-bottom: 1.25rem;
+  margin-top: 0.25rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s ease;
 }
 
-.list-business-form input:focus,
-.list-business-form textarea:focus,
-.list-business-form select:focus {
+#listBusinessForm input:focus,
+#listBusinessForm select:focus,
+#listBusinessForm textarea:focus {
   outline: none;
-  border-color: #ff9900; /* highlight on focus */
+  border-color: #ff9900;
 }
 
-.list-business-form textarea {
+#listBusinessForm textarea {
   min-height: 120px;
   resize: vertical;
 }
 
-.list-business-form button.submit-btn {
+#listBusinessForm button[type="submit"] {
   background-color: #ff9900;
   color: #000;
   font-weight: bold;
@@ -127,21 +129,19 @@
   cursor: pointer;
   font-size: 1.1rem;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  margin-top: 0.5rem;
 }
 
-.list-business-form button.submit-btn:hover {
+#listBusinessForm button[type="submit"]:hover {
   background-color: #ffb84d;
   transform: translateY(-2px);
 }
 
-.list-business-form .form-section {
-  margin-bottom: 1.5rem;
-}
-
-.list-business-form .form-note {
+/* Notes / smaller text */
+#listBusinessForm .form-note {
   font-size: 0.85rem;
   color: #888;
-  margin-top: -1rem;
+  margin-top: -0.5rem;
   margin-bottom: 1rem;
 }
 
@@ -149,12 +149,12 @@
    RESPONSIVE
 ========================== */
 @media (max-width: 768px) {
-  .list-business-form {
+  .list-business-page {
     padding: 1.5rem;
     margin: 1rem;
   }
 
-  .list-business-form h2 {
+  .list-business-page header h1 {
     font-size: 1.5rem;
   }
 }
