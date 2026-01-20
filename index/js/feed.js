@@ -195,6 +195,13 @@ function renderPosts(category) {
   });
 
   postsContainer.appendChild(fragment);
+  // END OF FEED MESSAGE
+const end = document.createElement("div");
+end.className = "end-of-feed";
+end.innerHTML = `
+  <p>— You’ve reached the end —</p>
+`;
+postsContainer.appendChild(end);
 }
 
 /* --------------------------------------------------
