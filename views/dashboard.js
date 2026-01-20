@@ -209,7 +209,7 @@ async function loadMyAds() {
       handleAdAction(btn.dataset.action, item.dataset.id);
     });
   });
-}
+
 
 /* ================= SAVED ITEMS ================= */
 async function loadSaved() {
