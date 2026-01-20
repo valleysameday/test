@@ -5,11 +5,7 @@ import {
   collection,
   query,
   orderBy,
-  getDocs,
-  doc,
-  getDoc,
-  setDoc,
-  deleteDoc
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 /* --------------------------------------------------
@@ -23,17 +19,8 @@ let allPosts = [];
 -------------------------------------------------- */
 function getMillis(ts) {
   if (!ts) return 0;
-
-  // Firestore Timestamp
-  if (typeof ts.toMillis === "function") {
-    return ts.toMillis();
-  }
-
-  // Already milliseconds
-  if (typeof ts === "number") {
-    return ts;
-  }
-
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts === "number") return ts;
   return 0;
 }
 
@@ -80,6 +67,9 @@ export async function initFeed() {
   const savedCategory = sessionStorage.getItem("homeCategory") || "all";
   renderPosts(savedCategory);
 
+  // ===============================
+  // CATEGORY BUTTONS
+  // ===============================
   if (categoriesEl && !categoriesEl.dataset.bound) {
     categoriesEl.addEventListener("click", (e) => {
       const btn = e.target.closest(".category-btn");
@@ -93,6 +83,14 @@ export async function initFeed() {
 
       const cat = btn.dataset.category || "all";
       sessionStorage.setItem("homeCategory", cat);
+
+      // ✅ INTERCEPT SERVICES CATEGORY
+      if (cat === "services") {
+        sessionStorage.removeItem("homeSearch"); // optional: clear home search
+        window.loadView("view-services");        // load the business directory SPA
+        return;
+      }
+
       renderPosts(cat);
     });
 
@@ -174,12 +172,6 @@ function renderPosts(category) {
     (p) => p.isBoosted === true && getMillis(p.boostEnd) > now
   );
 
-  // ✅ LOG ACTIVE BOOSTED ADS
-  console.log(
-    `🟠 Active boosted posts (${boosted.length}):`,
-    boosted.map((p) => ({ id: p.id, title: p.title, boostEnd: p.boostEnd }))
-  );
-
   const normal = filtered.filter(
     (p) => !p.isBoosted || getMillis(p.boostEnd) <= now
   );
@@ -204,6 +196,7 @@ function renderPosts(category) {
 
   postsContainer.appendChild(fragment);
 }
+
 /* --------------------------------------------------
    BUILD SINGLE CARD
 -------------------------------------------------- */
@@ -218,11 +211,7 @@ function buildPostCard(post, category) {
 
   const area = post.area || "Rhondda";
 
-  /* ------------------------------
-     PRICE LOGIC
-  ------------------------------ */
   let price = "";
-
   if (post.category === "property") {
     const sale = Number(post.propertySalePrice || 0);
     const rent = Number(post.propertyRentAmount || 0);
@@ -241,11 +230,7 @@ function buildPostCard(post, category) {
     price = post.price === 0 ? "FREE" : post.price ? `£${post.price}` : "";
   }
 
-  /* ------------------------------
-     BADGES
-  ------------------------------ */
   let badgeHtml = "";
-
   if (post.isBoosted && getMillis(post.boostEnd) > Date.now()) {
     badgeHtml = `<div class="badge-overlay boosted">Boosted</div>`;
   } else if (post.featured) {
@@ -256,9 +241,6 @@ function buildPostCard(post, category) {
     badgeHtml = `<div class="badge-overlay urgent">Urgent</div>`;
   }
 
-  /* ------------------------------
-     CARD HTML
-  ------------------------------ */
   card.innerHTML = `
     <div class="post-image">
       <img src="${img}" loading="lazy"
