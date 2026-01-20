@@ -1,6 +1,6 @@
 export const featureFlags = {
-  boostingEnabled: false, // false, 
+  boostingEnabled: true, // false, 
   paymentsEnabled: true, //false,
-  stripeLiveMode: false //false
+  stripeLiveMode: true //false
 };
 window.STRIPE_PUBLISHABLE_KEY_LIVE = "pk_live_xxxxxxxxxxxxx";
