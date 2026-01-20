@@ -1,0 +1,64 @@
+/* ==========================
+   FULLSCREEN MENU
+========================== */
+.fullscreen-menu {
+  display: none; /* hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.95);
+  z-index: 9999;
+  overflow-y: auto;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  padding: 2rem;
+}
+
+.fullscreen-menu .menu-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.fullscreen-menu .close-menu {
+  align-self: flex-end;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.fullscreen-menu .menu-item {
+  display: block;
+  font-size: 1.4rem;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.fullscreen-menu .menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+/* ==========================
+   LIST MY BUSINESS BUTTON
+========================== */
+#menu-list-business {
+  background-color: #ff9900; /* accent color for highlighting */
+  color: #000;
+  font-weight: bold;
+}
+
+#menu-list-business:hover {
+  background-color: #ffb84d;
+  color: #000;
+  transform: translateX(5px);
+}
