@@ -158,6 +158,20 @@ window.loadView("logout");
   const menuDashboard = document.getElementById("menu-dashboard");
   const menuLogout = document.getElementById("menu-logout");
    const menuPost = document.getElementById("menu-post");
+   const menuListBusiness = document.getElementById("menu-list-business");
+
+menuListBusiness?.addEventListener("click", () => {
+  fullscreenMenu.style.display = "none";
+
+  if (!window.currentUser) {
+    window.loginRedirect = "list-business";
+    openLoginModal();
+    return;
+  }
+
+  // Load the SPA view for listing a business
+  window.loadView("list-business");
+});
    // Close menu whenever any menu item is clicked
 fullscreenMenu.querySelectorAll(".menu-item").forEach(item => {
   item.addEventListener("click", () => {
