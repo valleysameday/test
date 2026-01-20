@@ -2,16 +2,38 @@
 // view-service.js
 // ===============================
 
-import { 
-  fsGetServiceById, 
-  fsReportService 
-} from "/index/js/firebase/settings.js";
+import { getFirebase } from "/index/js/firebase/init.js";
 
 export async function initViewService() {
   console.log("📘 Service profile loaded");
 
   const serviceId = sessionStorage.getItem("serviceId");
   if (!serviceId) return console.error("No service ID found");
+
+  // Firestore helper functions
+  let db;
+  async function fsGetServiceById(id) {
+    if (!db) {
+      const fb = await getFirebase();
+      db = fb.db;
+    }
+    const docRef = doc(db, "services", id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return null;
+    return { id: docSnap.id, ...docSnap.data() };
+  }
+
+  async function fsReportService(id, reason) {
+    if (!db) {
+      const fb = await getFirebase();
+      db = fb.db;
+    }
+    await setDoc(doc(collection(db, "serviceReports")), {
+      serviceId: id,
+      reason,
+      reportedAt: new Date()
+    });
+  }
 
   const svc = await fsGetServiceById(serviceId);
   if (!svc) return console.error("Service not found");
