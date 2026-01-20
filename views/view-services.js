@@ -2,12 +2,14 @@
 // view-services.js
 // ===============================
 
+import { getFirebase } from "/index/js/firebase/init.js";
 import { loadView } from "/index/js/main.js";
-import { 
-  fsGetAllServices, 
-  fsSearchServices, 
-  fsFilterServices 
-} from "/index/js/firebase/settings.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export async function initViewServices() {
   console.log("📘 Services directory loaded");
@@ -15,6 +17,37 @@ export async function initViewServices() {
   const listEl = document.getElementById("servicesList");
   const searchInput = document.getElementById("servicesSearchInput");
   const filterChips = document.querySelectorAll(".filter-chip");
+
+  // Firestore helper functions
+  let db;
+  async function fsGetAllServices() {
+    if (!db) {
+      const fb = await getFirebase();
+      db = fb.db;
+    }
+    const snap = await getDocs(collection(db, "services"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async function fsSearchServices(term) {
+    const all = await fsGetAllServices();
+    term = term.toLowerCase();
+    return all.filter(svc =>
+      svc.businessName?.toLowerCase().includes(term) ||
+      svc.category?.toLowerCase().includes(term) ||
+      svc.area?.toLowerCase().includes(term)
+    );
+  }
+
+  async function fsFilterServices(category) {
+    if (!db) {
+      const fb = await getFirebase();
+      db = fb.db;
+    }
+    const q = query(collection(db, "services"), where("category", "==", category));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
 
   // Load all services on first load
   let allServices = await fsGetAllServices();
