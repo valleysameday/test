@@ -10,25 +10,40 @@ exports.handler = async () => {
   const db = admin.firestore();
   const now = Date.now();
 
-  const expiredSnap = await db
+  // Get all active posts
+  const activeSnap = await db
     .collection("posts")
-    .where("expiresAt", "<", now)
     .where("isActive", "==", true)
     .get();
 
   const batch = db.batch();
+  let expiredCount = 0;
 
-  expiredSnap.forEach(doc => {
-    batch.update(doc.ref, {
-      isActive: false,
-      status: "expired"
-    });
+  activeSnap.forEach(doc => {
+    const data = doc.data();
+    let expiresAt = data.expiresAt;
+    const isBoosted = data.isBoosted;
+    const boostEnd = data.boostEnd?.toMillis ? data.boostEnd.toMillis() : data.boostEnd;
+
+    // If boosted and boostEnd is after current expiresAt, extend expiresAt
+    if (isBoosted && boostEnd && boostEnd > expiresAt) {
+      expiresAt = boostEnd;
+    }
+
+    // Expire only if current time > expiresAt
+    if (expiresAt && now > expiresAt) {
+      batch.update(doc.ref, {
+        isActive: false,
+        status: "expired"
+      });
+      expiredCount++;
+    }
   });
 
-  await batch.commit();
+  if (expiredCount > 0) await batch.commit();
 
   return {
     statusCode: 200,
-    body: `Expired ${expiredSnap.size} ads`
+    body: `Expired ${expiredCount} ads`
   };
 };
