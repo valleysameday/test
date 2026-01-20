@@ -170,38 +170,34 @@ async function loadMyAds() {
     const isBoostedActive = p.isBoosted && p.boostEnd && p.boostEnd > now;
 
     html += `
-  <div class="my-ad-item ${isExpired ? "expired" : ""}" data-id="${docSnap.id}">
-    <div class="my-ad-top">
-      <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
-      <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
-      ${isExpired ? `<span class="ad-badge expired-badge">Expired</span>` : ""}
-      ${isBoostedActive ? `<span class="ad-badge boosted-badge">Boosted</span>` : ""}
-    </div>
+      <div class="my-ad-item ${isExpired ? "expired" : ""}" data-id="${docSnap.id}">
+        <div class="my-ad-top">
+          <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
+          <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
+          ${isExpired ? `<span class="ad-badge expired-badge">Expired</span>` : ""}
+          ${isBoostedActive ? `<span class="ad-badge boosted-badge">Boosted</span>` : ""}
+        </div>
 
-    <div class="my-ad-meta">
-      ${escapeHtml(p.area || "Rhondda")} · ${views} view${views === 1 ? "" : "s"}
-      ${created ? " · " + created : ""}
-    </div>
+        <div class="my-ad-meta">
+          ${escapeHtml(p.area || "Rhondda")} · ${views} view${views === 1 ? "" : "s"}
+          ${created ? " · " + created : ""}
+        </div>
 
-    <div class="my-ad-actions">
-      <button data-action="view">View</button>
-      ${isExpired ? `<button data-action="renew">Renew</button>` : ""}
-      <button data-action="edit">Edit</button>
-      <button data-action="delete">Delete</button>
-      ${
-        featureFlags.boostingEnabled
-          ? `<button data-action="boost">Boost</button>`
-          : ""
-      }
-    </div>
-  </div>
-`;
+        <div class="my-ad-actions">
+          <button data-action="view">View</button>
+          ${isExpired ? `<button data-action="renew">Renew</button>` : ""}
+          <button data-action="edit">Edit</button>
+          <button data-action="delete">Delete</button>
+          ${featureFlags.boostingEnabled ? `<button data-action="boost">Boost</button>` : ""}
+        </div>
+      </div>
+    `;
   });
 
   listEl.innerHTML = html;
   statsEl.textContent = `Total ads: ${snap.size} · Total views: ${totalViews}`;
-}
-  // Action buttons
+
+  // Attach button actions (inside function)
   listEl.querySelectorAll(".my-ad-item").forEach(item => {
     item.addEventListener("click", e => {
       const btn = e.target.closest("button[data-action]");
@@ -209,7 +205,7 @@ async function loadMyAds() {
       handleAdAction(btn.dataset.action, item.dataset.id);
     });
   });
-
+}
 
 /* ================= SAVED ITEMS ================= */
 async function loadSaved() {
