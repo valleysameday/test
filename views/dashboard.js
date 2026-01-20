@@ -153,6 +153,7 @@ async function loadMyAds() {
 
   let totalViews = 0;
   let html = "";
+  const now = Date.now();
 
   snap.forEach(docSnap => {
     const p = docSnap.data();
@@ -165,12 +166,16 @@ async function loadMyAds() {
 
     const isExpired = p.isActive === false || p.status === "expired";
 
+    // Check if currently boosted
+    const isBoostedActive = p.isBoosted && p.boostEnd && p.boostEnd > now;
+
     html += `
   <div class="my-ad-item ${isExpired ? "expired" : ""}" data-id="${docSnap.id}">
     <div class="my-ad-top">
       <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
       <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
       ${isExpired ? `<span class="ad-badge expired-badge">Expired</span>` : ""}
+      ${isBoostedActive ? `<span class="ad-badge boosted-badge">Boosted</span>` : ""}
     </div>
 
     <div class="my-ad-meta">
@@ -195,7 +200,7 @@ async function loadMyAds() {
 
   listEl.innerHTML = html;
   statsEl.textContent = `Total ads: ${snap.size} · Total views: ${totalViews}`;
-
+}
   // Action buttons
   listEl.querySelectorAll(".my-ad-item").forEach(item => {
     item.addEventListener("click", e => {
