@@ -17,6 +17,7 @@ import {
 import { boostPost } from "/index/js/boosting.js";
 import { featureFlags } from "/index/js/featureFlags.js";
 import * as Messaging from "/views/messaging.js";
+import { initBusiness } from "/index/js/dashboard/business.js";
 import { getFollowerCount } from "/index/js/social/follow.js";
 
 let currentEditAdId = null;
@@ -107,11 +108,16 @@ export async function init() {
 
 /* ================= SECTIONS ================= */
 function showSection(id) {
-  document.querySelectorAll(".dash-section").forEach(sec => sec.classList.add("hidden"));
+  document.querySelectorAll(".dash-section").forEach(sec =>
+    sec.classList.add("hidden")
+  );
+
   const target = document.getElementById(id);
   if (target) target.classList.remove("hidden");
 
   if (id === "saved") loadSaved();
+  if (id === "business") initBusiness(); // 👈 ADD THIS
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
