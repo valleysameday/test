@@ -94,13 +94,39 @@ if (post.createdAt) {
   right.appendChild(postedTime);
 }
 
-  // Price
-  if (post.price !== undefined) {
-    const price = document.createElement("h2");
-    price.className = "post-price";
-    price.textContent = post.price === 0 ? "FREE" : `£${post.price}`;
-    right.appendChild(price);
+// Price
+{
+  const priceEl = document.createElement("h2");
+  priceEl.className = "post-price";
+
+  let priceText = "";
+
+  if (post.category === "property") {
+    const sale = Number(post.propertySalePrice || 0);
+    const rent = Number(post.propertyRentAmount || 0);
+    const freq = (post.propertyRentFrequency || "").toLowerCase();
+
+    if (rent > 0) {
+      priceText = ["pw", "weekly"].includes(freq)
+        ? `£${rent} pw`
+        : `£${rent} pcm`;
+    } else if (sale > 0) {
+      priceText = `£${sale.toLocaleString()}`;
+    } else {
+      priceText = "£—";
+    }
+  } else {
+    priceText =
+      post.price === 0
+        ? "FREE"
+        : post.price
+        ? `£${post.price}`
+        : "";
   }
+
+  priceEl.textContent = priceText;
+  right.appendChild(priceEl);
+}
 
   // Description
   if (post.description) {
