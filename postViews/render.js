@@ -181,14 +181,30 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
   const wrapper = document.createElement("div");
 
   wrapper.innerHTML = `
-    <div id="sellerHeaderClickable" class="post-seller-header">
-      <img class="seller-header-avatar" src="${seller?.avatarUrl || "/index/images/webholder.svg"}">
-      <div class="seller-header-info">
-        <p class="posted-by"><strong>${seller?.firstName || "Local Seller"}</strong></p>
-        <p class="posted-on">RCT-X</p>
-      </div>
+  <div id="sellerHeaderClickable" class="post-seller-header">
+    <img
+      class="seller-header-avatar"
+      src="${seller?.avatarUrl || "/index/images/webholder.svg"}"
+      alt="Seller avatar"
+    >
+    <div class="seller-header-info">
+      <p class="posted-by">
+        <strong>${seller?.firstName || "Local Seller"}</strong>
+      </p>
+      <p class="posted-on">RCT-X</p>
+      ${
+        seller?.createdAt
+          ? `<p class="posted-since">
+              Posting since: ${new Date(seller.createdAt).toLocaleDateString(
+                "en-GB",
+                { year: "numeric", month: "long" }
+              )}
+            </p>`
+          : ""
+      }
     </div>
-  `;
+  </div>
+`;
 
   const header = wrapper.querySelector("#sellerHeaderClickable");
 
