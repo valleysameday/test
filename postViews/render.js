@@ -3,6 +3,7 @@ console.log("📄 render.js loaded");
 
 import { createGallery } from "/postViews/gallery.js";
 import { showToast } from "/postViews/toast.js";
+import { attachFollowBtn } from "/index/js/social/follow.js";
 
 // =========================================================
 // MAIN RENDER FUNCTION
