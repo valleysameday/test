@@ -177,7 +177,7 @@ export async function renderPost({
 // =========================================================
 // SELLER HEADER
 // =========================================================
-async function buildSellerHeader({ seller, post, onFollowBlocked }) {
+function buildSellerHeader({ seller, post, onFollowBlocked }) {
   const wrapper = document.createElement("div");
 
   wrapper.innerHTML = `
@@ -214,37 +214,37 @@ async function buildSellerHeader({ seller, post, onFollowBlocked }) {
     window.loadView("seller-profile");
   };
 
-  // Only show follow button if not your own post
-  if (window.currentUser?.uid && window.currentUser.uid !== post.userId) {
+  // Don't show follow button on your own post
+  if (!window.currentUser || window.currentUser.uid !== post.userId) {
     const followBtn = document.createElement("button");
     followBtn.className = "follow-btn";
-    followBtn.textContent = "Follow"; // default until we check
+    followBtn.textContent = "Follow"; // default text
 
     wrapper.querySelector(".seller-header-info").appendChild(followBtn);
 
-    // Check initial follow state
-    try {
-      const following = await window.isFollowing?.(window.currentUser.uid, post.userId);
-      followBtn.textContent = following ? "Following" : "Follow";
-    } catch (err) {
-      console.error("Error checking follow state:", err);
+    // Update text for logged-in users
+    if (window.currentUser?.uid) {
+      window.isFollowing?.(window.currentUser.uid, post.userId)
+        .then(following => {
+          followBtn.textContent = following ? "Following" : "Follow";
+        })
+        .catch(err => console.error("Error checking follow state:", err));
     }
 
     // Attach toggle
-    attachFollowBtn(followBtn, window.currentUser.uid, post.userId, ({ following, error }) => {
+    attachFollowBtn(followBtn, window.currentUser?.uid, post.userId, ({ following, error }) => {
       if (error) {
         if (error === "not-logged-in") onFollowBlocked();
         console.error("Follow error:", error);
         return;
       }
       followBtn.textContent = following ? "Following" : "Follow";
-      showToast(following ? "You are now following this seller" : "Unfollowed seller");
+      showToast(following ? "✴️ You are now following this seller" : "✅️ Successful, you've unfollowed this seller");
     });
   }
 
   return wrapper;
 }
-
 // =========================================================
 // CONTACT BOX
 // =========================================================
