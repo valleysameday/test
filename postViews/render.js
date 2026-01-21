@@ -119,33 +119,72 @@ export async function renderPost({
     right.appendChild(desc);
   }
 
-// -------------------------------------------------------
-// POST ACTIONS (Favourite + Report)
-// -------------------------------------------------------
-const actionsWrapper = document.createElement("div");
-actionsWrapper.className = "post-actions";
+  // -------------------------------------------------------
+  // POST ACTIONS (Favourite + Report)
+  // -------------------------------------------------------
+  const actionsWrapper = document.createElement("div");
+  actionsWrapper.className = "post-actions";
 
-// Favourite button
-const favBtn = document.createElement("button");
-favBtn.className = "fav-btn";
-favBtn.textContent = post.isFavorited ? "★ Saved" : "☆ Save";
-actionsWrapper.appendChild(favBtn);
+  // Favourite button
+  const favBtn = document.createElement("button");
+  favBtn.className = "fav-btn";
+  favBtn.textContent = post.isFavorited ? "★ Saved" : "☆ Save";
+  actionsWrapper.appendChild(favBtn);
 
-// Report dropdown
-const reportWrapper = document.createElement("div");
-reportWrapper.className = "report-wrapper";
+  // Report dropdown
+  const reportWrapper = document.createElement("div");
+  reportWrapper.className = "report-wrapper";
 
-reportWrapper.innerHTML = `
-  <button class="report-btn">Report ▼</button>
-  <ul class="report-menu" style="display:none;">
-    <li data-reason="spam">Spam or scam</li>
-    <li data-reason="offensive">Offensive content</li>
-    <li data-reason="duplicate">Duplicate listing</li>
-  </ul>
-`;
-actionsWrapper.appendChild(reportWrapper);
+  reportWrapper.innerHTML = `
+    <button class="report-btn">Report ▼</button>
+    <ul class="report-menu" style="display:none;">
+      <li data-reason="spam">Spam or scam</li>
+      <li data-reason="offensive">Offensive content</li>
+      <li data-reason="duplicate">Duplicate listing</li>
+    </ul>
+  `;
+  actionsWrapper.appendChild(reportWrapper);
 
-right.appendChild(actionsWrapper);
+  right.appendChild(actionsWrapper);
+
+  // ---------------- Favourite toggle ----------------
+  favBtn.onclick = () => {
+    if (!window.currentUser) {
+      showToast("Please log in to save posts", "error");
+      window.loginRedirect = "stay";
+      setTimeout(() => window.openLoginModal?.(), 600);
+      return;
+    }
+
+    post.isFavorited = !post.isFavorited;
+    favBtn.textContent = post.isFavorited ? "★ Saved" : "☆ Save";
+    showToast(post.isFavorited ? "Added to your favourites" : "Removed from favourites");
+    // TODO: Save favourite to Firestore here
+  };
+
+  // ---------------- Report dropdown toggle ----------------
+  const reportBtn = reportWrapper.querySelector(".report-btn");
+  const reportMenu = reportWrapper.querySelector(".report-menu");
+
+  reportBtn.onclick = e => {
+    e.stopPropagation();
+    reportMenu.style.display = reportMenu.style.display === "none" ? "block" : "none";
+  };
+
+  // Hide menu if clicked outside
+  document.addEventListener("click", () => {
+    reportMenu.style.display = "none";
+  });
+
+  // Report menu selection
+  reportMenu.querySelectorAll("li").forEach(item => {
+    item.onclick = e => {
+      const reason = e.target.dataset.reason;
+      showToast(`Reported for: ${reason}`);
+      reportMenu.style.display = "none";
+      // TODO: Send report to Firestore / backend
+    };
+  });
 
   // -------------------------------------------------------
   // CONTACT BOX
@@ -253,26 +292,30 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
     // Update text for logged-in users
     if (window.currentUser?.uid) {
       isFollowing(window.currentUser.uid, post.userId)
-  .then(following => {
-    followBtn.textContent = following ? "Following" : "Follow";
-  })
-  .catch(err => console.error("Error checking follow state:", err));
+        .then(following => {
+          followBtn.textContent = following ? "Following" : "Follow";
+        })
+        .catch(err => console.error("Error checking follow state:", err));
 
-    // Attach toggle
-    attachFollowBtn(followBtn, window.currentUser?.uid, post.userId, ({ following, error }) => {
-      if (error) {
-        if (error === "not-logged-in") onFollowBlocked();
-        console.error("Follow error:", error);
-        return;
-      }
-      followBtn.textContent = following ? "Following" : "Follow";
-      showToast(following ? "✴️ You are now following this seller" : "✅️ Successful, you've unfollowed this seller");
-    });
+      // Attach toggle
+      attachFollowBtn(followBtn, window.currentUser?.uid, post.userId, ({ following, error }) => {
+        if (error) {
+          if (error === "not-logged-in") onFollowBlocked();
+          console.error("Follow error:", error);
+          return;
+        }
+        followBtn.textContent = following ? "Following" : "Follow";
+        showToast(following
+          ? "✴️ You are now following this seller"
+          : "✅️ Successful, you've unfollowed this seller"
+        );
+      });
     }
   }
 
   return wrapper;
 }
+
 // =========================================================
 // CONTACT BOX
 // =========================================================
@@ -343,50 +386,6 @@ function buildContactBox({ post, seller, images, onSendMessage, onContactClick }
 
   return box;
 }
-// -------------------------------------------------------
-// Favourite toggle
-// -------------------------------------------------------
-favBtn.onclick = () => {
-  if (!window.currentUser) {
-    showToast("Please log in to save posts", "error");
-    window.loginRedirect = "stay";
-    setTimeout(() => window.openLoginModal?.(), 600);
-    return;
-  }
-
-  // Toggle local state (replace with your DB update)
-  post.isFavorited = !post.isFavorited;
-  favBtn.textContent = post.isFavorited ? "★ Saved" : "☆ Save";
-
-  showToast(post.isFavorited ? "Added to your favourites" : "Removed from favourites");
-  // TODO: Save favourite to Firestore here
-};
-
-// -------------------------------------------------------
-// Report dropdown toggle
-// -------------------------------------------------------
-const reportBtn = reportWrapper.querySelector(".report-btn");
-const reportMenu = reportWrapper.querySelector(".report-menu");
-
-reportBtn.onclick = e => {
-  e.stopPropagation();
-  reportMenu.style.display = reportMenu.style.display === "none" ? "block" : "none";
-};
-
-// Hide menu if clicked outside
-document.addEventListener("click", () => {
-  reportMenu.style.display = "none";
-});
-
-// Report menu selection
-reportMenu.querySelectorAll("li").forEach(item => {
-  item.onclick = e => {
-    const reason = e.target.dataset.reason;
-    showToast(`Reported for: ${reason}`);
-    reportMenu.style.display = "none";
-    // TODO: Send report to Firestore / backend
-  };
-});
 
 // =========================================================
 // SHARE HANDLER (GLOBAL)
