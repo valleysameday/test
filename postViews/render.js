@@ -145,6 +145,23 @@ if (post.createdAt) {
       onSendMessage,
       onContactClick
     })
+    const shareBlock = document.createElement("div");
+shareBlock.className = "share-block";
+shareBlock.innerHTML = `
+  <h4>Share this ad</h4>
+  <div class="share-icons">
+    <button class="share-btn" data-platform="whatsapp" title="Share on WhatsApp">
+      <img src="/index/icons/whatsapp.svg" alt="WhatsApp">
+    </button>
+    <button class="share-btn" data-platform="messenger" title="Share on Messenger">
+      <img src="/index/icons/messenger.svg" alt="Messenger">
+    </button>
+    <button class="share-btn" data-platform="email" title="Share via Email">
+      <img src="/index/icons/email.svg" alt="Email">
+    </button>
+  </div>
+`;
+right.appendChild(shareBlock);
   );
 
   // -------------------------------------------------------
@@ -305,7 +322,30 @@ function buildContactBox({ post, seller, images, onSendMessage, onContactClick }
       contactBtn.disabled = true;
     };
   }
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".share-btn");
+  if (!btn) return;
 
+  const platform = btn.dataset.platform;
+  const url = location.href;
+  const title =
+    document.querySelector("h1")?.textContent || "Check this out on RCT-X";
+
+  if (platform === "whatsapp") {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(title + " " + url)}`
+    );
+  } else if (platform === "messenger") {
+    // No app ID needed — uses the universal Messenger share link
+    window.open(
+      `https://www.facebook.com/share.php?u=${encodeURIComponent(url)}`
+    );
+  } else if (platform === "email") {
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      title
+    )}&body=${encodeURIComponent(url)}`;
+  }
+});
   // ---------------------------------------------------------
   // WHATSAPP BUTTON
   // ---------------------------------------------------------
