@@ -110,7 +110,10 @@ export async function renderPost({
   }
 
   right.appendChild(priceEl);
-
+const extraDetails = buildExtraDetails(post);
+if (extraDetails) {
+  right.appendChild(extraDetails);
+}
   // Description
   if (post.description) {
     const desc = document.createElement("p");
@@ -118,11 +121,6 @@ export async function renderPost({
     desc.textContent = post.description;
     right.appendChild(desc);
   }
-
-  const extraDetails = buildExtraDetails(post);
-if (extraDetails) {
-  right.appendChild(extraDetails);
-}
 
   // -------------------------------------------------------
   // POST ACTIONS (Favourite + Report)
