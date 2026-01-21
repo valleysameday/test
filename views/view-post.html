@@ -2,5 +2,64 @@
 
 <section id="viewPostPage" class="view-post-page">
   <div id="viewPostContent" class="view-post-content">
+
+    <!-- LEFT: Image gallery -->
+    <div id="postGallery" class="post-gallery">
+      <!-- JS can populate <img> tags or carousel slides -->
+    </div>
+
+    <!-- RIGHT: Post details -->
+    <div id="postDetails" class="post-details">
+      <div id="sellerHeader" class="seller-header">
+        <img id="sellerAvatar" src="/index/images/webholder.svg" alt="Seller Avatar">
+        <div class="seller-info">
+          <p id="sellerName"><strong>Local Seller</strong></p>
+          <p id="sellerSince">Posting since: —</p>
+          <button id="followBtn" class="follow-btn">Follow</button>
+        </div>
+      </div>
+
+      <h1 id="postTitle">Post Title</h1>
+      <p id="postedTime">Posted —</p>
+      <h2 id="postPrice">£—</h2>
+      <p id="postDescription">Description goes here</p>
+
+      <!-- Actions -->
+      <div class="post-actions">
+        <button id="favBtn" class="fav-btn">☆ Save</button>
+        <div class="report-wrapper">
+          <button id="reportBtn" class="report-btn">Report ▼</button>
+          <ul id="reportMenu" class="report-menu" style="display:none;">
+            <li data-reason="spam">Spam or scam</li>
+            <li data-reason="offensive">Offensive content</li>
+            <li data-reason="duplicate">Duplicate listing</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Contact box -->
+      <div id="contactBox" class="contact-box">
+        <h3>Contact Seller</h3>
+        <textarea id="messageInput">Hi, is this still available?</textarea>
+        <div class="contact-actions">
+          <button id="msgSellerBtn" class="primary-btn">Send Message</button>
+          <button id="contactSellerBtn" class="secondary-btn">Contact</button>
+          <a id="whatsappBtn" class="secondary-btn whatsapp-btn" target="_blank">WhatsApp</a>
+        </div>
+      </div>
+
+      <!-- Share -->
+      <div class="share-box">
+        <h4>Share this ad</h4>
+        <div class="share-icons">
+          <button class="share-btn" data-platform="whatsapp">WhatsApp</button>
+          <button class="share-btn" data-platform="messenger">Messenger</button>
+          <button class="share-btn" data-platform="email">Email</button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <button id="backBtn" class="secondary-btn">← Back</button>
+    </div>
   </div>
 </section>
