@@ -224,34 +224,70 @@ fullscreenMenu.style.display = "none";
 window.loadView("logout");
   });
 
-  /* ==========================
-     LOGIN STATE HANDLING
-  ========================== */
-  function updateHeaderAuthState() {
-    const loggedIn = !!window.currentUser;
+/* ==========================
+   LOGIN STATE HANDLING
+========================== */
+function updateHeaderAuthState() {
+  const loggedIn = !!window.currentUser;
 
-    // Header buttons
-    loginBtn.style.display = loggedIn ? "none" : "flex";
-    logoutBtn.style.display = loggedIn ? "flex" : "none";
+  // Header buttons
+  loginBtn.style.display = loggedIn ? "none" : "flex";
+  logoutBtn.style.display = loggedIn ? "flex" : "none";
 
-    // Menu items
-    if (loggedIn) {
-      menuLogin.style.display = "none";
-      menuLogout.style.display = "block";
-      menuDashboard.style.display = "block";
-    } else {
-      menuLogin.style.display = "block";
-      menuLogout.style.display = "none";
-      menuDashboard.style.display = "none";
+  // Menu items
+  if (loggedIn) {
+    menuLogin.style.display = "none";
+    menuLogout.style.display = "block";
+    menuDashboard.style.display = "block";
+  } else {
+    menuLogin.style.display = "block";
+    menuLogout.style.display = "none";
+    menuDashboard.style.display = "none";
+  }
+
+  // Update unread message dots whenever auth changes
+  updateMenuUnreadDots();
+}
+
+if (window.onAuthStateChanged) {
+  window.onAuthStateChanged(user => {
+    window.currentUser = user || null;
+    updateHeaderAuthState();
+  });
+}
+
+/* ==========================
+   UNREAD MESSAGE DOTS (MENU)
+========================== */
+async function updateMenuUnreadDots() {
+  if (!window.Messaging?.getUnreadCount) return;
+
+  try {
+    const unread = await window.Messaging.getUnreadCount();
+
+    // Messages link dot
+    const menuMessagesDot = document.getElementById("menuMessagesDot");
+    if (menuMessagesDot) {
+      menuMessagesDot.classList.toggle("hidden", unread === 0);
     }
-  }
 
-  if (window.onAuthStateChanged) {
-    window.onAuthStateChanged(user => {
-      window.currentUser = user || null;
-      updateHeaderAuthState();
-    });
+    // Dashboard link dot
+    const menuDashboardDot = document.getElementById("menuDashboardDot");
+    if (menuDashboardDot) {
+      menuDashboardDot.classList.toggle("hidden", unread === 0);
+    }
+  } catch (err) {
+    console.error("Failed to update menu unread dots:", err);
   }
+}
+
+/* ==========================
+   LISTEN FOR MESSAGE UPDATES
+========================== */
+window.addEventListener("messagesUpdated", updateMenuUnreadDots);
+
+// Run once on init
+updateMenuUnreadDots();
 
   /* ==========================
      CLOSE MODALS ON BACKDROP
