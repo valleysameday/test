@@ -149,7 +149,20 @@
     <h2>Create account</h2>
 
     <input type="text" id="signupFirstName" placeholder="First name" autocomplete="given-name">
+<input
+  type="text"
+  id="signupPostcodeArea"
+  placeholder="Postcode area (e.g. CF42)"
+  maxlength="4"
+  style="text-transform: uppercase"
+/>
 
+<p class="postcode-help">
+  We only ask for the <strong>first part</strong> of your postcode to make sure
+  you're local to the Rhondda & nearby areas.
+  <br>
+  <strong>This is not saved</strong> and is only used to check eligibility.
+</p>
     <input type="email" id="signupEmail" placeholder="Email" autocomplete="email">
     <input type="password" id="signupPassword" placeholder="Password" autocomplete="new-password">
 
