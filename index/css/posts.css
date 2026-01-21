@@ -385,74 +385,58 @@
   margin-top: -5px;
   margin-bottom: 10px;
 }
-/* Container: Modern Bento-style card */
-.share-box {
-  margin-top: 24px;
-  padding: 10px 16px;
-  background: #ffffff; /* Clean white background */
-  border-radius: 14px;
-  border: 1px solid #eaeaea;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  display: inline-flex; /* Box only grows as wide as the content */
-  align-items: center;
+
+
+.share-box{
+  margin-top:20px;
+  padding:12px 0;
+  border-top:1px solid #e6e6e6;
 }
 
-/* Header: Groups text and icons tightly */
-.share-header {
-  display: flex;
-  align-items: center;
-  gap: 12px; /* Professional spacing between text and icons */
+.share-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
 }
 
-.share-header h4 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a1a1a;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+.share-header h4{
+  margin:0;
+  font-size:15px;
+  font-weight:600;
+  color:#222;
 }
 
-/* Icon Group */
-.share-icons {
-  display: flex;
-  gap: 8px; /* Tighter grouping for a cleaner look */
+.share-icons{
+  display:flex;
+  gap:14px;
 }
 
-.share-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
+.share-btn{
+  background:none;
+  border:none;
+  padding:0;
+  cursor:pointer;
 }
 
-/* Icons: Modern 2026 "Squircle" look */
-.share-btn img {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px; /* Modern rounded corners instead of full circles */
-  background: #f5f5f5;
-  padding: 6px; /* Space for the icon inside the background */
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid transparent;
+.share-btn img{
+  width:28px;
+  height:28px;
+  display:block;
+  transition:transform .15s ease,opacity .15s ease;
 }
 
-/* Hover Effect: Subtle lift and color pop */
-.share-btn:hover img {
-  transform: translateY(-3px); /* Subtle lift instead of scaling */
-  background: #ffffff;
-  border-color: #ddd;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.share-btn:hover img{
+  transform:translateY(-1px);
+  opacity:.85;
 }
-
-/* Optional: Subtle grayscale to color on hover */
-.share-btn img {
-  filter: grayscale(100%);
-  opacity: 0.8;
+.share-btn{
+  padding:6px;
 }
-
-.share-btn:hover img {
-  filter: grayscale(0%);
-  opacity: 1;
+.share-box{
+  padding-top:16px;
+}
+@media (hover:hover){
+  .share-btn:hover img{
+    opacity:.7;
+  }
 }
