@@ -3,7 +3,7 @@ console.log("✅ view-post.js loaded");
 // Firebase init
 import { getFirebase } from "/index/js/firebase/init.js";
 
-// Firestore helpers
+// Firestore helpers (moved out of this file)
 import {
   getPostById,
   getUserById,
@@ -17,7 +17,7 @@ import {
 import { renderPost } from "/postViews/render.js";
 import { showToast } from "/postViews/toast.js";
 import { showMessageConfirmModal } from "/postViews/modals.js";
-
+import { attachFollowBtn, isFollowing, getFollowerCount } from "/index/js/social/follow.js";
 let db = null;
 
 // ---------------------------------------------------------
@@ -28,9 +28,8 @@ export async function init() {
   db = fb.db;
 
   await waitForAuth();
-
   // Add browser history entry so mobile back works
-  history.pushState({ view: "post" }, "", location.href);
+history.pushState({ view: "post" }, "", location.href);
 
   let postId = null;
 
@@ -71,9 +70,9 @@ function waitForAuth(timeout = 1500) {
 }
 
 window.addEventListener("popstate", () => {
+  // Return to previous SPA view
   window.loadView?.("home");
 });
-
 // ---------------------------------------------------------
 // LOAD POST
 // ---------------------------------------------------------
@@ -81,10 +80,10 @@ async function loadPost(postId) {
   const container = document.getElementById("viewPostContent");
   if (!container) return;
 
-  // Show loading first
-  container.innerHTML = "<p class='loading'>Please wait…</p>";
+  container.innerHTML = "<p class='loading'>Loading post…</p>";
 
   const post = await getPostById(db, postId);
+
   if (!post) {
     container.textContent = "Post not found.";
     return;
@@ -99,13 +98,12 @@ async function loadPost(postId) {
     seller = await getUserById(db, post.userId);
   }
 
-  // ✅ Clear loading message before rendering
-  container.innerHTML = "";
-
-  // Render post
+  // Render UI
   renderPost({
+    container,
     post,
     seller,
+    db,
     onSendMessage: handleSendMessage,
     onContactClick: handleContactClick
   });
