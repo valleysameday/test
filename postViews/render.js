@@ -150,20 +150,33 @@ if (extraDetails) {
 
   right.appendChild(actionsWrapper);
 
-  // ---------------- Favourite toggle ----------------
-  favBtn.onclick = () => {
-    if (!window.currentUser) {
-      showToast("Please log in to save posts", "error");
-      window.loginRedirect = "stay";
-      setTimeout(() => window.openLoginModal?.(), 600);
-      return;
-    }
+// ---------------- Favourite toggle ----------------
+favBtn.onclick = async () => {
+  if (!window.currentUser) {
+    showToast("Please log in to save posts", "error");
+    window.loginRedirect = "stay";
+    setTimeout(() => window.openLoginModal?.(), 600);
+    return;
+  }
 
-    post.isFavorited = !post.isFavorited;
-    favBtn.textContent = post.isFavorited ? "★ Saved" : "☆ Save";
-    showToast(post.isFavorited ? "Added to your favourites" : "Removed from favourites");
-    // TODO: Save favourite to Firestore here
-  };
+  const { db } = await getFirebase();
+  const uid = window.currentUser.uid;
+  const postId = post.id;
+
+  // Toggle UI state
+  post.isFavorited = !post.isFavorited;
+  favBtn.textContent = post.isFavorited ? "★ Saved" : "☆ Save";
+
+  if (post.isFavorited) {
+    await setDoc(doc(db, "users", uid, "saved", postId), {
+      savedAt: Date.now()
+    });
+    showToast("Added to your favourites");
+  } else {
+    await deleteDoc(doc(db, "users", uid, "saved", postId));
+    showToast("Removed from favourites");
+  }
+};
 
   // ---------------- Report dropdown toggle ----------------
   const reportBtn = reportWrapper.querySelector(".report-btn");
