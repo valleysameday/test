@@ -385,19 +385,25 @@
   margin-top: -5px;
   margin-bottom: 10px;
 }
-.share-block {
-  margin-top: 20px;
-  padding: 12px 0;
+.share-box {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+.share-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid #eee;
 }
 
-.share-block h4 {
+.share-header h4 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
+  color: #333;
 }
 
 .share-icons {
@@ -413,7 +419,14 @@
 }
 
 .share-btn img {
-  width: 32px;
-  height: 32px;
-  display: block;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.share-btn:hover img {
+  transform: scale(1.1);
 }
