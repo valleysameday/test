@@ -257,7 +257,7 @@ function buildPostCard(post, category) {
 
     <div class="post-body">
       <span class="post-price">${price}</span>
-      <h3>${escapeHtml(post.title || "Untitled post")}</h3>
+    <h3 class="post-title">${escapeHtml(post.title || "Untitled post")}</h3>
       <span>📍 ${escapeHtml(area)}</span>
     </div>
   `;
