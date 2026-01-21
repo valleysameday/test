@@ -1,3 +1,8 @@
+#viewPostContent {
+  border: 2px solid red;
+  min-height: 400px;
+}
+
 /* --- VIEW POST PAGE LAYOUT --- */
 .view-post-layout {
     display: grid;
