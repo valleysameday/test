@@ -83,7 +83,7 @@ async function signupUser() {
 
   if (!ALLOWED_AREAS.includes(postcodeArea)) {
     $("signupFeedback").textContent =
-      "Sorry — we're currently only available in the Rhondda and nearby areas.";
+      "Sorry — we're  only a local site available within ~10 miles of the Rhondda.";
     return;
   }
 
