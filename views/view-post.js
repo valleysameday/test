@@ -17,7 +17,7 @@ import {
 import { renderPost } from "/postViews/render.js";
 import { showToast } from "/postViews/toast.js";
 import { showMessageConfirmModal } from "/postViews/modals.js";
-
+import { attachFollowBtn, isFollowing, getFollowerCount } from "/index/js/follow.js";
 let db = null;
 
 // ---------------------------------------------------------
