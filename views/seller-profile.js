@@ -1,11 +1,16 @@
+// /index/js/seller-profile.js
+console.log("📄 seller-profile.js loaded");
+
 import { getFirebase } from "/index/js/firebase/init.js";
 import { 
   doc, getDoc, collection, query, where, orderBy, getDocs, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
 import { 
   ref, uploadBytes, getDownloadURL 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+import { attachFollowBtn, isFollowing } from "/index/js/social/follow.js";
+import { showToast } from "/postViews/toast.js";
 
 /* ============================================================
    IMAGE COMPRESSION HELPER
@@ -33,11 +38,10 @@ function compressImage(file, maxSize = 600) {
 }
 
 /* ============================================================
-   AUTO‑LOAD CSS (only once)
+   AUTO‑LOAD CSS
 ============================================================ */
 (function loadSellerProfileCSS() {
   if (document.getElementById("sellerProfileCSS")) return;
-
   const link = document.createElement("link");
   link.id = "sellerProfileCSS";
   link.rel = "stylesheet";
@@ -50,7 +54,6 @@ function compressImage(file, maxSize = 600) {
 ============================================================ */
 async function initSellerProfile() {
   const { db } = await getFirebase();
-
   const sellerId = window.selectedSellerId;
   if (!sellerId) {
     console.error("❌ No sellerId provided to seller-profile view");
@@ -69,61 +72,63 @@ async function initSellerProfile() {
   const seller = snap.data();
 
   document.getElementById("sellerBackBtn").onclick = () => {
-    console.log("⬅️ Seller Profile Back clicked");
     window.loadView("view-post");
   };
 
-  renderSellerProfile(seller, sellerId);
-  loadSellerAds(sellerId, db);
+  await renderSellerProfile(seller, sellerId);
+  await loadSellerAds(sellerId, db);
 }
 
-function renderSellerProfile(seller, sellerId) {
+/* ============================================================
+   RENDER PROFILE
+============================================================ */
+async function renderSellerProfile(seller, sellerId) {
   const isOwner = window.currentUser?.uid === sellerId;
 
-  const nameEl = document.getElementById("sellerName");
-  const reliabilityEl = document.getElementById("sellerReliability");
-  const avatarEl = document.getElementById("sellerAvatar");
-  const bioEl = document.getElementById("sellerBio");
-  const contactBtn = document.getElementById("contactSellerBtn");
+  // Name + reliability
+  document.getElementById("sellerName").textContent =
+    seller.name || "Unknown Seller";
+  document.getElementById("sellerReliability").textContent =
+    seller.reliability || "";
 
-  nameEl.textContent = seller.name || "Unknown Seller";
-  reliabilityEl.textContent = seller.reliability || "";
+  // Avatar
+  const avatarEl = document.getElementById("sellerAvatar");
   avatarEl.style.backgroundImage =
     `url('${seller.avatarUrl || "/index/images/webholder.svg"}')`;
+
+  // Bio
+  const bioEl = document.getElementById("sellerBio");
   bioEl.innerHTML = `<p>${seller.bio || "No bio provided."}</p>`;
 
-  // -----------------------------
-  // FOLLOW BUTTON
-  // -----------------------------
-  if (!isOwner) {
-    // Create button if not already present
-    let followBtn = document.getElementById("profileFollowBtn");
-    if (!followBtn) {
-      followBtn = document.createElement("button");
-      followBtn.id = "profileFollowBtn";
-      followBtn.className = "follow-btn";
-      followBtn.textContent = "Follow"; // default
-      nameEl.parentNode.insertBefore(followBtn, nameEl.nextSibling); // insert after name
-    }
+  /* ============================================================
+     FOLLOW BUTTON
+  ============================================================ */
+  const followWrapper = document.createElement("div");
+  followWrapper.className = "seller-follow-wrapper";
 
-    // Update follow state for logged-in users
-    if (window.currentUser?.uid) {
-      window.isFollowing?.(window.currentUser.uid, sellerId)
-        .then(following => {
-          followBtn.textContent = following ? "Following" : "Follow";
-        })
-        .catch(err => console.error("Error checking follow state:", err));
+  if (!isOwner && window.currentUser?.uid) {
+    const followBtn = document.createElement("button");
+    followBtn.className = "follow-btn";
+    followBtn.textContent = "Follow"; // default
+
+    followWrapper.appendChild(followBtn);
+
+    // Check current follow state
+    try {
+      const following = await isFollowing(window.currentUser.uid, sellerId);
+      followBtn.textContent = following ? "Following" : "Follow";
+    } catch (err) {
+      console.error("Error checking follow state:", err);
     }
 
     // Attach toggle
-    attachFollowBtn(followBtn, window.currentUser?.uid, sellerId, ({ following, error }) => {
+    attachFollowBtn(followBtn, window.currentUser.uid, sellerId, ({ following, error }) => {
       if (error) {
         if (error === "not-logged-in") {
-          showToast("Please log in to follow sellers", "error");
+          showToast("You must be logged in to follow sellers", "error");
           window.loginRedirect = "stay";
           setTimeout(() => window.openLoginModal?.(), 600);
-        }
-        console.error("Follow error:", error);
+        } else console.error("Follow error:", error);
         return;
       }
       followBtn.textContent = following ? "Following" : "Follow";
@@ -131,11 +136,14 @@ function renderSellerProfile(seller, sellerId) {
     });
   }
 
-  // -----------------------------
-  // OWNER-ONLY AVATAR UPLOAD
-  // -----------------------------
+  document.querySelector(".seller-header")?.appendChild(followWrapper);
+
+  /* ============================================================
+     OWNER-ONLY AVATAR UPLOAD
+  ============================================================ */
   if (isOwner) {
     avatarEl.classList.add("avatar-editable");
+
     avatarEl.addEventListener("click", () => {
       document.getElementById("avatarUploadInput").click();
     });
@@ -167,9 +175,9 @@ function renderSellerProfile(seller, sellerId) {
     });
   }
 
-  // -----------------------------
-  // OWNER-ONLY BIO EDIT
-  // -----------------------------
+  /* ============================================================
+     OWNER-ONLY BIO EDIT BUTTON
+  ============================================================ */
   if (isOwner) {
     const editBtn = document.createElement("button");
     editBtn.textContent = "Edit Bio";
@@ -182,7 +190,6 @@ function renderSellerProfile(seller, sellerId) {
         <textarea id="bioEditArea" class="bio-textarea">${currentBio}</textarea>
         <button id="saveBioBtn" class="primary-btn">Save</button>
       `;
-
       const saveBtn = document.getElementById("saveBioBtn");
       const textarea = document.getElementById("bioEditArea");
 
@@ -202,10 +209,8 @@ function renderSellerProfile(seller, sellerId) {
     };
   }
 
-  // -----------------------------
-  // CONTACT SELLER BUTTON
-  // -----------------------------
-  contactBtn.onclick = () => {
+  /* Contact Seller */
+  document.getElementById("contactSellerBtn").onclick = () => {
     window.selectedChatUserId = sellerId;
     window.loadView("chat");
   };
@@ -251,7 +256,7 @@ async function loadSellerAds(sellerId, db) {
     img.src = imgSrc;
     img.alt = post.title || "Ad image";
     img.loading = "lazy";
-    img.onerror = () => img.src = PLACEHOLDER;
+    img.onerror = () => (img.src = PLACEHOLDER);
 
     const postImageDiv = document.createElement("div");
     postImageDiv.className = "post-image";
