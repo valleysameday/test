@@ -59,6 +59,11 @@ async function signupUser() {
   const firstName = $("signupFirstName")?.value.trim();
   const email = $("signupEmail")?.value.trim();
   const password = $("signupPassword")?.value;
+  const ALLOWED_AREAS = [
+  "CF14", "CF15", "CF32", "CF34", "CF35", "CF37", "CF38", "CF39", 
+  "CF40", "CF41", "CF42", "CF43", "CF44", "CF45", "CF46", "CF47", 
+  "CF48", "CF71", "CF72", "CF82", "CF83", "SA11"
+];
 
   if (!firstName || !email || !password) {
     $("signupFeedback").textContent = "Please complete all fields";
@@ -99,6 +104,22 @@ async function logoutUser() {
   window.currentUser = null;
   window.currentUserDoc = null;
   window.openScreen?.("login");
+}
+
+const postcodeArea = $("signupPostcodeArea")?.value
+  .toUpperCase()
+  .replace(/\s+/g, "");
+
+if (!postcodeArea) {
+  $("signupFeedback").textContent =
+    "Please enter the first part of your postcode (e.g. CF42)";
+  return;
+}
+
+if (!ALLOWED_AREAS.includes(postcodeArea)) {
+  $("signupFeedback").textContent =
+    "Sorry — we're currently only available in the Rhondda and within ~10 miles.";
+  return;
 }
 
 /* ---------------- INIT ---------------- */
