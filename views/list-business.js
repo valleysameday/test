@@ -76,7 +76,7 @@ export async function init() {
       alert("✅ Your business has been submitted! It will appear in the directory once approved.");
 
       console.log("🔄 Redirecting to services view...");
-      window.loadView("services");
+      window.loadView("home");
 
     } catch (err) {
       console.error("💥 Failed to save business:", err);
