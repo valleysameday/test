@@ -7,7 +7,7 @@ import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/fi
 
 console.log("🔥 view-list-business.js FILE LOADED");
 
-export async function initViewListBusiness() {
+export async function init() {
   console.log("🚀 initViewListBusiness() CALLED");
 
   const form = document.getElementById("listBusinessForm");
