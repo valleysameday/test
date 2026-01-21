@@ -1,8 +1,13 @@
 // ===============================
 // view-service.js
 // ===============================
-
 import { getFirebase } from "/index/js/firebase/init.js";
+import {
+  doc,
+  getDoc,
+  collection,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export async function init() {
   console.log("📘 Service profile loaded");
