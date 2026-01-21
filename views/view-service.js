@@ -4,7 +4,7 @@
 
 import { getFirebase } from "/index/js/firebase/init.js";
 
-export async function initViewService() {
+export async function init() {
   console.log("📘 Service profile loaded");
 
   const serviceId = sessionStorage.getItem("serviceId");
