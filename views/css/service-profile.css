@@ -1,0 +1,119 @@
+/* ================================
+   SERVICE PROFILE PAGE
+================================ */
+
+.service-profile {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Header */
+.service-profile__header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.service-profile__header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.service-profile__header p {
+  font-size: 16px;
+  color: #777;
+}
+
+/* Gallery */
+.service-profile__gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.service-profile__gallery img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #f2f2f2;
+}
+
+/* Info Section */
+.service-profile__info {
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  margin-bottom: 25px;
+}
+
+.service-profile__info h2 {
+  font-size: 20px;
+  margin-top: 18px;
+  margin-bottom: 8px;
+}
+
+.service-profile__info p {
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.service-profile__info a {
+  color: #0077ff;
+  text-decoration: none;
+}
+
+.service-profile__info a:hover {
+  text-decoration: underline;
+}
+
+/* Contact Button */
+.service-profile__contact,
+.service-profile__report {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#messageBusinessBtn,
+#reportServiceBtn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* Message button */
+#messageBusinessBtn {
+  background: #0077ff;
+  color: #fff;
+}
+
+#messageBusinessBtn:hover {
+  background: #0063d6;
+}
+
+/* Report button */
+#reportServiceBtn {
+  background: #ffe5e5;
+  color: #c40000;
+}
+
+#reportServiceBtn:hover {
+  background: #ffd4d4;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
