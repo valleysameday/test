@@ -81,7 +81,8 @@ async function loadPost(postId) {
   const container = document.getElementById("viewPostContent");
   if (!container) return;
 
-  container.innerHTML = "<p class='loading'>Loading post…</p>";
+  // Show loading first
+  container.innerHTML = "<p class='loading'>Please wait…</p>";
 
   const post = await getPostById(db, postId);
   if (!post) {
@@ -98,7 +99,10 @@ async function loadPost(postId) {
     seller = await getUserById(db, post.userId);
   }
 
-  // Render UI (no container needed — renderPost now uses static HTML IDs)
+  // ✅ Clear loading message before rendering
+  container.innerHTML = "";
+
+  // Render post
   renderPost({
     post,
     seller,
