@@ -135,22 +135,24 @@ export function renderPost({
   // SHARE BLOCK
   // -------------------------------------------------------
   const shareBlock = document.createElement("div");
-  shareBlock.className = "share-block";
-  shareBlock.innerHTML = `
+shareBlock.className = "share-box";
+shareBlock.innerHTML = `
+  <div class="share-header">
     <h4>Share this ad</h4>
     <div class="share-icons">
       <button class="share-btn" data-platform="whatsapp">
-        <img src="/index/icons/whatsapp.svg">
+        <img src="/index/icons/whatsapp.svg" alt="WhatsApp">
       </button>
       <button class="share-btn" data-platform="messenger">
-        <img src="/index/icons/messenger.svg">
+        <img src="/index/icons/messenger.svg" alt="Messenger">
       </button>
       <button class="share-btn" data-platform="email">
-        <img src="/index/icons/email.svg">
+        <img src="/index/icons/email.svg" alt="Email">
       </button>
     </div>
-  `;
-  right.appendChild(shareBlock);
+  </div>
+`;
+right.appendChild(shareBlock);
 
   // -------------------------------------------------------
   // FOOTER
