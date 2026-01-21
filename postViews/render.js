@@ -119,6 +119,11 @@ export async function renderPost({
     right.appendChild(desc);
   }
 
+  const extraDetails = buildExtraDetails(r);
+if (extraDetails) {
+  p.appendChild(extraDetails);
+}
+
   // -------------------------------------------------------
   // POST ACTIONS (Favourite + Report)
   // -------------------------------------------------------
@@ -197,6 +202,67 @@ export async function renderPost({
     onContactClick
   });
   right.appendChild(contactBox);
+
+  function buildExtraDetails(post) {
+  const box = document.createElement("div");
+  box.className = "post-extra-details";
+
+  // ---------------- FOR SALE / FREE ----------------
+  if (post.category === "forsale" || post.category === "free") {
+    if (post.condition) {
+      box.innerHTML += `<p><strong>Condition:</strong> ${post.condition}</p>`;
+    }
+  }
+
+  // ---------------- PROPERTY ----------------
+  if (post.category === "property") {
+    if (post.propertyBedrooms)
+      box.innerHTML += `<p><strong>Bedrooms:</strong> ${post.propertyBedrooms}</p>`;
+
+    if (post.propertyBathrooms)
+      box.innerHTML += `<p><strong>Bathrooms:</strong> ${post.propertyBathrooms}</p>`;
+
+    if (post.propertyEPC)
+      box.innerHTML += `<p><strong>EPC Rating:</strong> ${post.propertyEPC}</p>`;
+
+    if (post.propertyListingType)
+      box.innerHTML += `<p><strong>Listing type:</strong> ${post.propertyListingType}</p>`;
+  }
+
+  // ---------------- JOBS ----------------
+  if (post.category === "jobs") {
+    if (post.jobCompany)
+      box.innerHTML += `<p><strong>Company:</strong> ${post.jobCompany}</p>`;
+
+    if (post.jobType)
+      box.innerHTML += `<p><strong>Job type:</strong> ${post.jobType}</p>`;
+
+    if (post.jobSalary) {
+      const freq = post.jobSalaryFrequency ? ` ${post.jobSalaryFrequency}` : "";
+      box.innerHTML += `<p><strong>Salary:</strong> £${post.jobSalary}${freq}</p>`;
+    }
+  }
+
+  // ---------------- EVENTS ----------------
+  if (post.category === "events") {
+    if (post.eventDate)
+      box.innerHTML += `<p><strong>Date:</strong> ${post.eventDate}</p>`;
+
+    if (post.eventTime)
+      box.innerHTML += `<p><strong>Time:</strong> ${post.eventTime}</p>`;
+
+    if (post.eventLocation)
+      box.innerHTML += `<p><strong>Location:</strong> ${post.eventLocation}</p>`;
+  }
+
+  // ---------------- COMMUNITY ----------------
+  if (post.category === "community") {
+    if (post.communityTopic)
+      box.innerHTML += `<p><strong>Topic:</strong> ${post.communityTopic}</p>`;
+  }
+
+  return box.innerHTML ? box : null;
+  }
 
   // -------------------------------------------------------
   // SHARE BLOCK
