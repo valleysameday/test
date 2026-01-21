@@ -7,12 +7,6 @@ body.modal-open main {
     opacity: 0.35;
     pointer-events: none;
 }
-.postcode-help {
-  font-size: 0.75rem;
-  color: #64748b;
-  line-height: 1.4;
-  margin-top: 6px;
-}
 
 .modal {
     position: fixed;
@@ -216,41 +210,74 @@ body.modal-open main {
 .hidden {
   display: none;
 }
+
+
+/* ================= POSTCODE INFO ================= */
+
+.postcode-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.not-saved {
+  font-weight: 600;
+  color: #16a34a;
+}
+
+/* Tooltip */
 .tooltip-wrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
 }
 
-.tooltip-icon {
-  font-size: 14px;
+.info-icon {
   cursor: pointer;
-  opacity: 0.7;
+  font-size: 0.9rem;
+  color: #2563eb;
+  user-select: none;
 }
 
-.tooltip-wrapper:hover .tooltip-text {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.tooltip-text {
+.tooltip {
   position: absolute;
-  left: 0;
-  top: 120%;
-  width: 240px;
-  background: #fff;
-  color: #333;
-  padding: 10px 12px;
+  bottom: 140%;
+  right: 0;
+  width: 220px;
+  padding: 8px 10px;
+
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.75rem;
+  line-height: 1.4;
+
   border-radius: 8px;
-  border: 1px solid #ddd;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-size: 0.85rem;
-  line-height: 1.3;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+
   opacity: 0;
-  visibility: hidden;
-  transform: translateY(-6px);
-  transition: all 0.25s ease;
-  z-index: 20;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 50;
+}
+
+/* Arrow */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  right: 10px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #111827 transparent transparent transparent;
+}
+
+/* Show on hover + tap */
+.tooltip-wrapper:hover .tooltip,
+.tooltip-wrapper:focus-within .tooltip {
+  opacity: 1;
+  transform: translateY(0);
 }
