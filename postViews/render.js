@@ -214,14 +214,25 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
     window.loadView("seller-profile");
   };
 
+  // Only show follow button if not current user's post
   if (window.currentUser?.uid !== post.userId) {
     const followBtn = document.createElement("button");
     followBtn.className = "follow-btn";
     followBtn.textContent = "Follow";
-    followBtn.onclick = () =>
-      window.currentUser
-        ? window.toggleFollow?.(window.currentUser.uid, post.userId)
-        : onFollowBlocked();
+
+    // Attach follow/unfollow behavior using helper
+    attachFollowBtn(followBtn, window.currentUser?.uid, post.userId, result => {
+      if (result.error) {
+        showToast("Error: " + result.error, "error");
+        return;
+      }
+      followBtn.textContent = result.following ? "Following" : "Follow";
+      showToast(
+        result.following
+          ? "You are now following this seller"
+          : "You unfollowed this seller"
+      );
+    });
 
     wrapper.querySelector(".seller-header-info").appendChild(followBtn);
   }
