@@ -119,9 +119,9 @@ export async function renderPost({
     right.appendChild(desc);
   }
 
-  const extraDetails = buildExtraDetails(r);
+  const extraDetails = buildExtraDetails(post);
 if (extraDetails) {
-  p.appendChild(extraDetails);
+  right.appendChild(extraDetails);
 }
 
   // -------------------------------------------------------
