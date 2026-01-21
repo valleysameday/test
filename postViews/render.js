@@ -8,7 +8,7 @@ import { attachFollowBtn } from "/index/js/social/follow.js";
 // =========================================================
 // MAIN RENDER FUNCTION
 // =========================================================
-export function renderPost({
+export async function renderPost({
   container,
   post,
   seller,
@@ -62,18 +62,17 @@ export function renderPost({
   const right = document.createElement("div");
   right.className = "view-post-right";
 
-  // Seller header
-  right.appendChild(
-    buildSellerHeader({
-      seller,
-      post,
-      onFollowBlocked: () => {
-        showToast("You must be logged in to follow sellers", "error");
-        window.loginRedirect = "stay";
-        setTimeout(() => window.openLoginModal?.(), 600);
-      }
-    })
-  );
+  // Seller header (await async function)
+  const sellerHeader = await buildSellerHeader({
+    seller,
+    post,
+    onFollowBlocked: () => {
+      showToast("You must be logged in to follow sellers", "error");
+      window.loginRedirect = "stay";
+      setTimeout(() => window.openLoginModal?.(), 600);
+    }
+  });
+  right.appendChild(sellerHeader);
 
   // Title
   const title = document.createElement("h1");
@@ -136,24 +135,24 @@ export function renderPost({
   // SHARE BLOCK
   // -------------------------------------------------------
   const shareBlock = document.createElement("div");
-shareBlock.className = "share-box";
-shareBlock.innerHTML = `
-  <div class="share-header">
-    <h4>Share this ad</h4>
-    <div class="share-icons">
-      <button class="share-btn" data-platform="whatsapp">
-        <img src="/index/icons/whatsapp.svg" alt="WhatsApp">
-      </button>
-      <button class="share-btn" data-platform="messenger">
-        <img src="/index/icons/messenger.svg" alt="Messenger">
-      </button>
-      <button class="share-btn" data-platform="email">
-        <img src="/index/icons/email.svg" alt="Email">
-      </button>
+  shareBlock.className = "share-box";
+  shareBlock.innerHTML = `
+    <div class="share-header">
+      <h4>Share this ad</h4>
+      <div class="share-icons">
+        <button class="share-btn" data-platform="whatsapp">
+          <img src="/index/icons/whatsapp.svg" alt="WhatsApp">
+        </button>
+        <button class="share-btn" data-platform="messenger">
+          <img src="/index/icons/messenger.svg" alt="Messenger">
+        </button>
+        <button class="share-btn" data-platform="email">
+          <img src="/index/icons/email.svg" alt="Email">
+        </button>
+      </div>
     </div>
-  </div>
-`;
-right.appendChild(shareBlock);
+  `;
+  right.appendChild(shareBlock);
 
   // -------------------------------------------------------
   // FOOTER
@@ -215,16 +214,15 @@ async function buildSellerHeader({ seller, post, onFollowBlocked }) {
     window.loadView("seller-profile");
   };
 
-  // Don't show follow button if it's your own post
+  // Only show follow button if not your own post
   if (window.currentUser?.uid && window.currentUser.uid !== post.userId) {
     const followBtn = document.createElement("button");
     followBtn.className = "follow-btn";
     followBtn.textContent = "Follow"; // default until we check
 
-    // Append button first
     wrapper.querySelector(".seller-header-info").appendChild(followBtn);
 
-    // Check if already following and update text
+    // Check initial follow state
     try {
       const following = await window.isFollowing?.(window.currentUser.uid, post.userId);
       followBtn.textContent = following ? "Following" : "Follow";
