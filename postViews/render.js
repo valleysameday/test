@@ -240,6 +240,7 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
       followBtn.textContent = following ? "Following" : "Follow";
       showToast(following ? "✴️ You are now following this seller" : "✅️ Successful, you've unfollowed this seller");
     });
+    }
   }
 
   return wrapper;
