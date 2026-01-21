@@ -309,3 +309,24 @@
   margin-top: -5px;
   margin-bottom: 10px;
 }
+.share-block {
+  margin-top: 20px;
+}
+
+.share-icons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.share-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.share-btn img {
+  width: 32px;
+  height: 32px;
+}
