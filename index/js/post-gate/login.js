@@ -77,7 +77,7 @@ async function signupUser() {
 
   if (!postcodeArea) {
     $("signupFeedback").textContent =
-      "Please enter the first part of your postcode (e.g. CF42)";
+      "Please enter the first part of your postcode (e.g. CF39)";
     return;
   }
 
