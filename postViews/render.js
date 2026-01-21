@@ -1,6 +1,7 @@
 // /postViews/render.js
 console.log("📄 render.js loaded");
-
+import { getFirebase } from "/index/js/firebase/init.js";
+import { doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { createGallery } from "/postViews/gallery.js";
 import { showToast } from "/postViews/toast.js";
 import { attachFollowBtn, isFollowing } from "/index/js/social/follow.js";
