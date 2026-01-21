@@ -7,6 +7,12 @@ body.modal-open main {
     opacity: 0.35;
     pointer-events: none;
 }
+.postcode-help {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+  margin-top: 6px;
+}
 
 .modal {
     position: fixed;
