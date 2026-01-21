@@ -3,7 +3,7 @@ console.log("📄 render.js loaded");
 
 import { createGallery } from "/postViews/gallery.js";
 import { showToast } from "/postViews/toast.js";
-import { attachFollowBtn } from "/index/js/social/follow.js";
+import { attachFollowBtn, isFollowing } from "/index/js/social/follow.js";
 
 // =========================================================
 // MAIN RENDER FUNCTION
@@ -224,12 +224,11 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
 
     // Update text for logged-in users
     if (window.currentUser?.uid) {
-      window.isFollowing?.(window.currentUser.uid, post.userId)
-        .then(following => {
-          followBtn.textContent = following ? "Following" : "Follow";
-        })
-        .catch(err => console.error("Error checking follow state:", err));
-    }
+      isFollowing(window.currentUser.uid, post.userId)
+  .then(following => {
+    followBtn.textContent = following ? "Following" : "Follow";
+  })
+  .catch(err => console.error("Error checking follow state:", err));
 
     // Attach toggle
     attachFollowBtn(followBtn, window.currentUser?.uid, post.userId, ({ following, error }) => {
