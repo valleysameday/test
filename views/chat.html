@@ -1,0 +1,23 @@
+<div class="chat-page">
+  <header class="chat-header">
+    <button class="chat-back" onclick="window.loadView('messages')">←</button>
+    <div class="chat-header-info">
+      <div id="chatUserName">User</div>
+      <div id="chatItemTitle" class="chat-item-title">Item title</div>
+    </div>
+  </header>
+
+  <section class="chat-messages" id="chatMessages">
+    <p class="empty-state">Loading conversation…</p>
+  </section>
+
+  <section class="chat-ai-tools">
+    <button id="chatSummariseBtn">Summarise</button>
+    <button id="chatSuggestReplyBtn">Suggest reply</button>
+  </section>
+
+  <footer class="chat-input-bar">
+    <textarea id="chatInput" rows="1" placeholder="Type a message…"></textarea>
+    <button id="chatSendBtn">Send</button>
+  </footer>
+</div>
