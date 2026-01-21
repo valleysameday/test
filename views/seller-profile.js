@@ -77,31 +77,65 @@ async function initSellerProfile() {
   loadSellerAds(sellerId, db);
 }
 
-/* ============================================================
-   RENDER PROFILE
-============================================================ */
 function renderSellerProfile(seller, sellerId) {
   const isOwner = window.currentUser?.uid === sellerId;
 
-  document.getElementById("sellerName").textContent =
-    seller.name || "Unknown Seller";
-
-  document.getElementById("sellerReliability").textContent =
-    seller.reliability || "";
-
+  const nameEl = document.getElementById("sellerName");
+  const reliabilityEl = document.getElementById("sellerReliability");
   const avatarEl = document.getElementById("sellerAvatar");
+  const bioEl = document.getElementById("sellerBio");
+  const contactBtn = document.getElementById("contactSellerBtn");
+
+  nameEl.textContent = seller.name || "Unknown Seller";
+  reliabilityEl.textContent = seller.reliability || "";
   avatarEl.style.backgroundImage =
     `url('${seller.avatarUrl || "/index/images/webholder.svg"}')`;
+  bioEl.innerHTML = `<p>${seller.bio || "No bio provided."}</p>`;
 
-  document.getElementById("sellerBio").innerHTML =
-    `<p>${seller.bio || "No bio provided."}</p>`;
+  // -----------------------------
+  // FOLLOW BUTTON
+  // -----------------------------
+  if (!isOwner) {
+    // Create button if not already present
+    let followBtn = document.getElementById("profileFollowBtn");
+    if (!followBtn) {
+      followBtn = document.createElement("button");
+      followBtn.id = "profileFollowBtn";
+      followBtn.className = "follow-btn";
+      followBtn.textContent = "Follow"; // default
+      nameEl.parentNode.insertBefore(followBtn, nameEl.nextSibling); // insert after name
+    }
 
-  /* ============================================================
-     OWNER‑ONLY AVATAR UPLOAD
-  ============================================================ */
+    // Update follow state for logged-in users
+    if (window.currentUser?.uid) {
+      window.isFollowing?.(window.currentUser.uid, sellerId)
+        .then(following => {
+          followBtn.textContent = following ? "Following" : "Follow";
+        })
+        .catch(err => console.error("Error checking follow state:", err));
+    }
+
+    // Attach toggle
+    attachFollowBtn(followBtn, window.currentUser?.uid, sellerId, ({ following, error }) => {
+      if (error) {
+        if (error === "not-logged-in") {
+          showToast("Please log in to follow sellers", "error");
+          window.loginRedirect = "stay";
+          setTimeout(() => window.openLoginModal?.(), 600);
+        }
+        console.error("Follow error:", error);
+        return;
+      }
+      followBtn.textContent = following ? "Following" : "Follow";
+      showToast(following ? "You are now following this seller" : "Unfollowed seller");
+    });
+  }
+
+  // -----------------------------
+  // OWNER-ONLY AVATAR UPLOAD
+  // -----------------------------
   if (isOwner) {
     avatarEl.classList.add("avatar-editable");
-
     avatarEl.addEventListener("click", () => {
       document.getElementById("avatarUploadInput").click();
     });
@@ -110,7 +144,6 @@ function renderSellerProfile(seller, sellerId) {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Spinner
       const spinner = document.createElement("div");
       spinner.className = "upload-spinner";
       spinner.textContent = "Uploading…";
@@ -118,26 +151,13 @@ function renderSellerProfile(seller, sellerId) {
 
       try {
         const { storage, db } = await getFirebase();
-
-        // Compress image
         const compressed = await compressImage(file);
-
-        // Upload
         const fileRef = ref(storage, `avatars/${sellerId}.jpg`);
         await uploadBytes(fileRef, compressed);
-
-        // Get URL
         const url = await getDownloadURL(fileRef);
-
-        // Save to Firestore
-        await updateDoc(doc(db, "users", sellerId), {
-          avatarUrl: url
-        });
-
-        // Update UI
+        await updateDoc(doc(db, "users", sellerId), { avatarUrl: url });
         avatarEl.style.backgroundImage = `url('${url}')`;
         showToast("Avatar updated successfully");
-
       } catch (err) {
         console.error("Avatar upload failed:", err);
         showToast("Upload failed. Try again", "error");
@@ -147,54 +167,45 @@ function renderSellerProfile(seller, sellerId) {
     });
   }
 
-/* ============================================================
-   OWNER‑ONLY BIO EDIT BUTTON
-============================================================ */
-if (isOwner) {
-  const bioEl = document.getElementById("sellerBio");
-  const editBtn = document.createElement("button");
-  editBtn.textContent = "Edit Bio";
-  editBtn.className = "edit-btn";
-  bioEl.appendChild(editBtn);
+  // -----------------------------
+  // OWNER-ONLY BIO EDIT
+  // -----------------------------
+  if (isOwner) {
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit Bio";
+    editBtn.className = "edit-btn";
+    bioEl.appendChild(editBtn);
 
-  editBtn.onclick = async () => {
-    const currentBio = seller.bio || "";
+    editBtn.onclick = async () => {
+      const currentBio = seller.bio || "";
+      bioEl.innerHTML = `
+        <textarea id="bioEditArea" class="bio-textarea">${currentBio}</textarea>
+        <button id="saveBioBtn" class="primary-btn">Save</button>
+      `;
 
-    // Turn bio into editable textarea
-    bioEl.innerHTML = `
-      <textarea id="bioEditArea" class="bio-textarea">${currentBio}</textarea>
-      <button id="saveBioBtn" class="primary-btn">Save</button>
-    `;
+      const saveBtn = document.getElementById("saveBioBtn");
+      const textarea = document.getElementById("bioEditArea");
 
-    const saveBtn = document.getElementById("saveBioBtn");
-    const textarea = document.getElementById("bioEditArea");
-
-    saveBtn.onclick = async () => {
-      const newBio = textarea.value.trim();
-
-      try {
-        const { db } = await getFirebase();
-
-        await updateDoc(doc(db, "users", sellerId), {
-          bio: newBio
-        });
-
-        // Update UI
-        bioEl.innerHTML = `<p>${newBio || "No bio provided."}</p>`;
-        bioEl.appendChild(editBtn);
-
-        showToast("Bio updated successfully");
-
-      } catch (err) {
-        console.error("Bio update failed:", err);
-        showToast("Failed to update bio", "error");
-      }
+      saveBtn.onclick = async () => {
+        const newBio = textarea.value.trim();
+        try {
+          const { db } = await getFirebase();
+          await updateDoc(doc(db, "users", sellerId), { bio: newBio });
+          bioEl.innerHTML = `<p>${newBio || "No bio provided."}</p>`;
+          bioEl.appendChild(editBtn);
+          showToast("Bio updated successfully");
+        } catch (err) {
+          console.error("Bio update failed:", err);
+          showToast("Failed to update bio", "error");
+        }
+      };
     };
-  };
-}
+  }
 
-  /* Contact Seller */
-  document.getElementById("contactSellerBtn").onclick = () => {
+  // -----------------------------
+  // CONTACT SELLER BUTTON
+  // -----------------------------
+  contactBtn.onclick = () => {
     window.selectedChatUserId = sellerId;
     window.loadView("chat");
   };
