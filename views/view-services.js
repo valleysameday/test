@@ -11,7 +11,7 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-export async function initViewServices() {
+export async function init() {
   console.log("📘 Services directory loaded");
 
   const listEl = document.getElementById("servicesList");
