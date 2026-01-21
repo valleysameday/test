@@ -178,7 +178,7 @@ right.appendChild(shareBlock);
 // =========================================================
 // SELLER HEADER
 // =========================================================
-function buildSellerHeader({ seller, post, onFollowBlocked }) {
+async function buildSellerHeader({ seller, post, onFollowBlocked }) {
   const wrapper = document.createElement("div");
 
   wrapper.innerHTML = `
@@ -215,27 +215,33 @@ function buildSellerHeader({ seller, post, onFollowBlocked }) {
     window.loadView("seller-profile");
   };
 
-  // Only show follow button if not current user's post
-  if (window.currentUser?.uid !== post.userId) {
+  // Don't show follow button if it's your own post
+  if (window.currentUser?.uid && window.currentUser.uid !== post.userId) {
     const followBtn = document.createElement("button");
     followBtn.className = "follow-btn";
-    followBtn.textContent = "Follow";
+    followBtn.textContent = "Follow"; // default until we check
 
-    // Attach follow/unfollow behavior using helper
-    attachFollowBtn(followBtn, window.currentUser?.uid, post.userId, result => {
-      if (result.error) {
-        showToast("Error: " + result.error, "error");
+    // Append button first
+    wrapper.querySelector(".seller-header-info").appendChild(followBtn);
+
+    // Check if already following and update text
+    try {
+      const following = await window.isFollowing?.(window.currentUser.uid, post.userId);
+      followBtn.textContent = following ? "Following" : "Follow";
+    } catch (err) {
+      console.error("Error checking follow state:", err);
+    }
+
+    // Attach toggle
+    attachFollowBtn(followBtn, window.currentUser.uid, post.userId, ({ following, error }) => {
+      if (error) {
+        if (error === "not-logged-in") onFollowBlocked();
+        console.error("Follow error:", error);
         return;
       }
-      followBtn.textContent = result.following ? "Following" : "Follow";
-      showToast(
-        result.following
-          ? "You are now following this seller"
-          : "You unfollowed this seller"
-      );
+      followBtn.textContent = following ? "Following" : "Follow";
+      showToast(following ? "You are now following this seller" : "Unfollowed seller");
     });
-
-    wrapper.querySelector(".seller-header-info").appendChild(followBtn);
   }
 
   return wrapper;
