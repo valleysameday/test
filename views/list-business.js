@@ -3,7 +3,7 @@
 // ===============================
 
 import { getFirebase } from "/index/js/firebase/init.js";
-import { loadView } from "/index/js/main.js";
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export async function initViewListBusiness() {
   console.log("📝 List a business page loaded");
@@ -17,12 +17,14 @@ export async function initViewListBusiness() {
       const fb = await getFirebase();
       db = fb.db;
     }
-    const col = collection(db, "services");
-    const docRef = await addDoc(col, {
+
+    const colRef = collection(db, "services");
+    const docRef = await addDoc(colRef, {
       ...data,
       createdAt: new Date(),
-      isActive: false // mark inactive for admin approval
+      isActive: false
     });
+
     return docRef.id;
   }
 
@@ -35,7 +37,7 @@ export async function initViewListBusiness() {
     const website = form.website.value.trim();
     const area = form.area.value.trim();
     const description = form.description.value.trim();
-    const logo = form.logo.value.trim(); // URL input for now
+    const logo = form.logo.value.trim();
 
     if (!businessName || !category) {
       alert("Please provide at least a business name and category");
@@ -47,8 +49,7 @@ export async function initViewListBusiness() {
     try {
       const id = await saveBusiness(newBusiness);
       alert("✅ Your business has been submitted! It will appear in the directory once approved.");
-      // Optionally redirect to services directory
-      loadView("services");
+      window.loadView("services");
     } catch (err) {
       console.error("Failed to save business:", err);
       alert("⚠️ Something went wrong, please try again later.");
