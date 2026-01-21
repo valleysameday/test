@@ -1,62 +1,120 @@
-/* ======================================================
-   VIEW POST LAYOUT
-====================================================== */
+/* ============================================================
+   VIEW POST PAGE – FULL STYLESHEET
+   ============================================================ */
+
+/* ---------------- ROOT ASSUMPTIONS ---------------- */
+:root {
+  --brand-primary: #2563eb;
+  --brand-dark: #0f172a;
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  --surface: #ffffff;
+  --surface-glass: rgba(255,255,255,0.7);
+
+  --border-soft: #e5e7eb;
+
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
 
 .view-post-layout {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  padding: 12px;
+  max-width: 1100px;
+  margin: 0 auto 100px;
 }
 
-@media (max-width: 900px) {
+/* Desktop */
+@media (min-width: 900px) {
   .view-post-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 40px;
+    padding-top: 40px;
+  }
+
+  .view-post-right {
+    position: sticky;
+    top: 20px;
   }
 }
 
-/* ======================================================
-   LEFT: IMAGE GALLERY
-====================================================== */
+/* ============================================================
+   GALLERY
+   ============================================================ */
 
-.post-gallery,
-.gallery-wrapper {
-  background: #f7f7f7;
+.gallery {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: #f1f5f9;
+  box-shadow: var(--shadow-md);
+}
+
+.gallery-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.gallery-slide img:hover {
+  transform: scale(1.03);
+}
+
+.gallery-thumbs {
+  display: flex;
+  gap: 10px;
+  padding: 10px 4px;
+  overflow-x: auto;
+}
+
+.thumb-btn {
+  width: 70px;
+  height: 70px;
   border-radius: 12px;
   overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-.post-gallery img,
-.gallery-wrapper img {
-  width: 100%;
-  object-fit: cover;
-  border-radius: 12px;
+.thumb-btn.active {
+  border-color: var(--brand-primary);
+  transform: scale(1.05);
 }
 
-/* ======================================================
-   RIGHT PANEL
-====================================================== */
+/* ============================================================
+   RIGHT COLUMN
+   ============================================================ */
 
 .view-post-right {
   display: flex;
   flex-direction: column;
-  gap: 14px;
 }
 
-/* ======================================================
+/* ============================================================
    SELLER HEADER
-====================================================== */
+   ============================================================ */
 
 .post-seller-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #fafafa;
-  border-radius: 12px;
-  cursor: pointer;
+  gap: 14px;
+  padding: 16px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  border: 1px solid var(--border-soft);
+  margin-bottom: 18px;
 }
 
 .seller-header-avatar {
@@ -64,177 +122,243 @@
   height: 54px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid #ddd;
+  border: 2px solid var(--brand-primary);
 }
 
-.seller-header-info p {
-  margin: 0;
-  font-size: 14px;
-  color: #444;
+.seller-header-info {
+  flex: 1;
 }
 
+.posted-by {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.posted-on {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.posted-since {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Follow button */
 .follow-btn {
-  margin-left: auto;
-  padding: 6px 12px;
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid #ddd;
-  background: white;
+  font-size: 0.75rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .follow-btn:hover {
-  background: #f1f1f1;
+  background: #1e40af;
 }
 
-/* ======================================================
-   TITLE / PRICE
-====================================================== */
+/* ============================================================
+   TITLE + META
+   ============================================================ */
 
 .view-post-right h1 {
-  font-size: 26px;
-  font-weight: 600;
-  margin: 6px 0;
-}
-
-.post-price {
-  font-size: 22px;
-  color: #1a7f37;
-  font-weight: 700;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--brand-dark);
+  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
 .posted-time {
-  font-size: 13px;
-  color: #777;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
 }
 
-/* ======================================================
+/* ============================================================
+   PRICE
+   ============================================================ */
+
+.post-price {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--brand-primary);
+  margin-bottom: 16px;
+  letter-spacing: -0.4px;
+}
+
+/* ============================================================
    DESCRIPTION
-====================================================== */
+   ============================================================ */
 
 .view-post-desc {
-  font-size: 15px;
+  font-size: 1rem;
   line-height: 1.6;
-  color: #333;
-  background: #fafafa;
-  padding: 14px;
-  border-radius: 10px;
+  color: #334155;
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border-soft);
 }
 
-/* ======================================================
-   EXTRA DETAILS
-====================================================== */
+/* ============================================================
+   EXTRA DETAILS (CATEGORY FIELDS)
+   ============================================================ */
 
 .post-extra-details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
-  background: #f9f9f9;
-  padding: 14px;
-  border-radius: 10px;
-  font-size: 14px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .post-extra-details p {
-  margin: 0;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
 }
 
-/* ======================================================
-   ACTIONS (SAVE / REPORT)
-====================================================== */
+.post-extra-details strong {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* ============================================================
+   POST ACTIONS (SAVE / REPORT)
+   ============================================================ */
 
 .post-actions {
   display: flex;
   gap: 10px;
+  margin-bottom: 16px;
 }
 
-.fav-btn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  background: white;
+.fav-btn,
+.report-btn {
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.fav-btn:hover {
-  background: #f4f4f4;
+.fav-btn:hover,
+.report-btn:hover {
+  background: #f8fafc;
 }
 
-/* ======================================================
+.report-wrapper {
+  position: relative;
+}
+
+.report-menu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  width: 180px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+
+.report-menu li {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.report-menu li:hover {
+  background: #f1f5f9;
+}
+
+/* ============================================================
    CONTACT BOX
-====================================================== */
+   ============================================================ */
 
 .contact-box {
-  margin-top: 12px;
+  background: #f8fafc;
+  border-radius: 18px;
   padding: 16px;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--border-soft);
+  margin-top: 20px;
+  box-shadow: var(--shadow-md);
 }
 
 .contact-box h3 {
-  margin: 0 0 10px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 .contact-box textarea {
   width: 100%;
   min-height: 90px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border-soft);
   resize: vertical;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
 }
 
-.contact-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+.contact-box textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
 }
 
+/* Buttons */
 .primary-btn {
-  background: #0066ff;
-  color: white;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #fff;
   border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .primary-btn:hover {
-  background: #0052cc;
+  opacity: 0.95;
 }
 
 .secondary-btn {
-  background: #f3f3f3;
-  border: 1px solid #ddd;
-  padding: 10px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.secondary-btn:hover {
-  background: #e9e9e9;
-}
-
-.whatsapp-btn {
+  display: block;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 12px;
   background: #25d366;
-  color: white;
+  color: #fff;
+  text-align: center;
   text-decoration: none;
+  font-weight: 600;
 }
 
-.whatsapp-btn:hover {
-  background: #1ebe5d;
-}
-
-/* ======================================================
+/* ============================================================
    SHARE BOX
-====================================================== */
+   ============================================================ */
 
 .share-box {
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 12px;
-  background: #fafafa;
+  margin-top: 24px;
+  padding: 14px 16px;
+  background: #f9f9f9;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
 }
 
 .share-header {
@@ -245,27 +369,26 @@
 
 .share-icons {
   display: flex;
-  gap: 8px;
-}
-
-.share-btn {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  width: 42px;
-  height: 42px;
-  cursor: pointer;
+  gap: 10px;
 }
 
 .share-btn img {
-  width: 22px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.15s ease;
 }
 
-/* ======================================================
+.share-btn:hover img {
+  transform: scale(1.1);
+}
+
+/* ============================================================
    FOOTER
-====================================================== */
+   ============================================================ */
 
 .view-post-footer {
-  margin-top: 20px;
-  text-align: left;
+  margin-top: 30px;
+  text-align: center;
 }
