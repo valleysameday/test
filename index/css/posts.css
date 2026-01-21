@@ -387,56 +387,50 @@
 }
 
 
-.share-box{
-  margin-top:20px;
-  padding:12px 0;
-  border-top:1px solid #e6e6e6;
+.share-box {
+  margin-top: 24px;
+  padding: 12px 16px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  border: 1px solid #ddd;
 }
 
-.share-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+.share-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px; /* this controls spacing between text and icons */
 }
 
-.share-header h4{
-  margin:0;
-  font-size:15px;
-  font-weight:600;
-  color:#222;
+.share-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
 }
 
-.share-icons{
-  display:flex;
-  gap:14px;
+.share-icons {
+  display: flex;
+  gap: 10px;
 }
 
-.share-btn{
-  background:none;
-  border:none;
-  padding:0;
-  cursor:pointer;
+.share-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
-.share-btn img{
-  width:28px;
-  height:28px;
-  display:block;
-  transition:transform .15s ease,opacity .15s ease;
+.share-btn img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
 }
 
-.share-btn:hover img{
-  transform:translateY(-1px);
-  opacity:.85;
-}
-.share-btn{
-  padding:6px;
-}
-.share-box{
-  padding-top:16px;
-}
-@media (hover:hover){
-  .share-btn:hover img{
-    opacity:.7;
-  }
+.share-btn:hover img {
+  transform: scale(1.1);
 }
