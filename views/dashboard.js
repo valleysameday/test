@@ -102,6 +102,13 @@ export async function init() {
     }
   }
 
+  document.getElementById("dashViewProfile")?.addEventListener("click", () => {
+  if (!window.currentUser?.uid) return;
+
+  window.selectedSellerId = window.currentUser.uid;
+  window.loadView("seller-profile");
+});
+
   showSection("myAds");
 }
 
