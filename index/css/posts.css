@@ -1,487 +1,271 @@
-/* --- VIEW POST PAGE LAYOUT --- */
+/* ======================================================
+   VIEW POST LAYOUT
+====================================================== */
+
 .view-post-layout {
-    display: grid;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+@media (max-width: 900px) {
+  .view-post-layout {
     grid-template-columns: 1fr;
-    gap: 24px;
-    padding: 12px;
-    max-width: 1100px;
-    margin: 0 auto 100px; /* Space for bottom action bar */
+  }
 }
 
-/* --- GALLERY SECTION (LEFT) --- */
-.view-post-left {
-    background: var(--surface);
-    border-radius: 24px;
-    padding: 8px;
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--border-soft);
+/* ======================================================
+   LEFT: IMAGE GALLERY
+====================================================== */
+
+.post-gallery,
+.gallery-wrapper {
+  background: #f7f7f7;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.gallery {
-    position: relative;
-    border-radius: 18px;
-    overflow: hidden;
-    aspect-ratio: 4 / 3;
-    background: #f1f5f9;
+.post-gallery img,
+.gallery-wrapper img {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
-.gallery-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+/* ======================================================
+   RIGHT PANEL
+====================================================== */
+
+.view-post-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.gallery-thumbs {
-    display: flex;
-    gap: 10px;
-    padding: 12px 4px;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
+/* ======================================================
+   SELLER HEADER
+====================================================== */
 
-.thumb-btn {
-    width: 70px;
-    height: 70px;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 2px solid transparent;
-    transition: 0.2s;
-    flex-shrink: 0;
-}
-
-.thumb-btn.active {
-    border-color: var(--brand-primary);
-    transform: scale(1.05);
-}
-
-/* --- SELLER HEADER (NEW 2025 LOOK) --- */
 .post-seller-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 16px;
-    background: var(--surface-glass);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 12px;
+  cursor: pointer;
 }
 
 .seller-header-avatar {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--brand-primary);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
 }
 
-.seller-header-info .posted-by {
-    font-size: 0.95rem;
-    color: var(--text-main);
-}
-
-.seller-header-info .posted-on {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.view-listings-btn {
-    background: none;
-    border: none;
-    color: var(--brand-primary);
-    font-size: 0.8rem;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 0;
-    margin-top: 4px;
-    text-decoration: underline;
-}
-
-/* --- CONTENT SECTION (RIGHT) --- */
-.view-post-right {
-    display: flex;
-    flex-direction: column;
-}
-
-.view-post-right h1 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--brand-dark);
-    margin-bottom: 8px;
-    line-height: 1.2;
-}
-
-.post-price {
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--brand-primary);
-    margin-bottom: 15px;
-}
-
-.view-post-desc {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #334155;
-    background: #fff;
-    padding: 16px;
-    border-radius: 16px;
-    margin-bottom: 20px;
-}
-
-.view-post-meta {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    background: #f8fafc;
-    padding: 16px;
-    border-radius: 16px;
-    margin-bottom: 24px;
-}
-
-.view-post-meta p {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-.view-post-meta strong {
-    color: var(--brand-dark);
-    display: block;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* --- BADGES --- */
-.badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-right: 5px;
-}
-
-/* --- DESKTOP ADAPTATION --- */
-@media (min-width: 900px) {
-    .view-post-layout {
-        grid-template-columns: 1.2fr 1fr;
-        gap: 40px;
-        padding-top: 40px;
-    }
-    
-    .view-post-right {
-        position: sticky;
-        top: 20px;
-    }
-
-    .view-post-right h1 { font-size: 2.2rem; }
-}
-
-
-/* ================= MESSAGE SELLER BUTTON ================= */
-.primary-btn {
-  width: 100%;
-  margin: 14px 0;
-  padding: 14px 18px;
-
-  background: linear-gradient(135deg, #2563eb, #1e40af);
-  color: #fff;
-
-  border: none;
-  border-radius: 10px;
-
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-}
-
-.primary-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
-}
-
-.primary-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-}
-
-.primary-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-
-/* ================= CONTACT ACTIONS ================= */
-.view-post-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.engage-btn,
-.secondary-btn {
-  flex: 1;
-  text-align: center;
-
-  padding: 12px;
-  border-radius: 10px;
-
-  font-weight: 600;
-  text-decoration: none;
-
-  transition: background 0.15s ease, opacity 0.15s ease;
-}
-
-.engage-btn {
-  background: #16a34a;
-  color: #fff;
-}
-
-.secondary-btn {
-  background: #25d366;
-  color: #fff;
-}
-
-.engage-btn.locked,
-.secondary-btn.locked {
-  background: #e5e7eb;
-  color: #6b7280;
-  pointer-events: none;
-}
-.view-post-badges {
-  margin: 12px 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.post-badge {
-  background: #f3f3f3;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-.posted-since {
-  margin-top: 6px;
-  font-size: 0.8rem;
-  color: #6b7280;
-  font-weight: 400;
-  line-height: 1.2;
-  opacity: 0.9;
+.seller-header-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #444;
 }
 
 .follow-btn {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  margin-top: 4px;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: white;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 .follow-btn:hover {
-  background-color: #1e40af;
+  background: #f1f1f1;
 }
 
+/* ======================================================
+   TITLE / PRICE
+====================================================== */
 
-
-
-.message-input {
-  width: 100%;
-  min-height: 90px;
-  resize: vertical;
-
-  padding: 14px 16px;
-  border-radius: 14px;
-
-  font-size: 1rem;
-  line-height: 1.5;
-
-  border: 1.5px solid var(--border-soft);
-  background: #fff;
-  color: var(--text-main);
-
-  outline: none;
-  transition: border 0.15s ease, box-shadow 0.15s ease;
+.view-post-right h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 6px 0;
 }
 
-.message-input:focus {
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.post-price {
+  font-size: 22px;
+  color: #1a7f37;
+  font-weight: 700;
 }
-/* ============================================================
-   CONTACT SELLER BOX
-   ============================================================ */
-.contact-box {
-  background: #f8fafc;
-  border: 1px solid var(--border-soft);
-  border-radius: 18px;
-  padding: 16px;
-  margin-top: 20px;
 
+.posted-time {
+  font-size: 13px;
+  color: #777;
+}
+
+/* ======================================================
+   DESCRIPTION
+====================================================== */
+
+.view-post-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  background: #fafafa;
+  padding: 14px;
+  border-radius: 10px;
+}
+
+/* ======================================================
+   EXTRA DETAILS
+====================================================== */
+
+.post-extra-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  background: #f9f9f9;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.post-extra-details p {
+  margin: 0;
+}
+
+/* ======================================================
+   ACTIONS (SAVE / REPORT)
+====================================================== */
+
+.post-actions {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+.fav-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+.fav-btn:hover {
+  background: #f4f4f4;
+}
+
+/* ======================================================
+   CONTACT BOX
+====================================================== */
+
+.contact-box {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
 }
 
 .contact-box h3 {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--brand-dark);
-  margin-bottom: 4px;
+  margin: 0 0 10px;
 }
 
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 14px;
-  max-width: 420px;
-  width: 90%;
-}
-
-.modal-advice {
-  font-size: 0.9rem;
-  background: #f8f8f8;
+.contact-box textarea {
+  width: 100%;
+  min-height: 90px;
+  resize: vertical;
   padding: 10px;
   border-radius: 8px;
-  margin: 10px 0;
+  border: 1px solid #ddd;
 }
 
-.modal-content textarea {
-  width: 100%;
-  min-height: 80px;
-  margin-top: 6px;
-}
-
-.modal-actions {
+.contact-actions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
-  margin-top: 15px;
-}
-.posted-time {
-  color: #666;
-  font-size: 14px;
-  margin-top: -5px;
-  margin-bottom: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
 }
 
+.primary-btn {
+  background: #0066ff;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  background: #0052cc;
+}
+
+.secondary-btn {
+  background: #f3f3f3;
+  border: 1px solid #ddd;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.secondary-btn:hover {
+  background: #e9e9e9;
+}
+
+.whatsapp-btn {
+  background: #25d366;
+  color: white;
+  text-decoration: none;
+}
+
+.whatsapp-btn:hover {
+  background: #1ebe5d;
+}
+
+/* ======================================================
+   SHARE BOX
+====================================================== */
 
 .share-box {
-  margin-top: 24px;
-  padding: 12px 16px;
-  background: #f9f9f9;
+  margin-top: 16px;
+  padding: 14px;
   border-radius: 12px;
-  border: 1px solid #ddd;
+  background: #fafafa;
 }
 
 .share-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 16px; /* this controls spacing between text and icons */
-}
-
-.share-header h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
+  align-items: center;
 }
 
 .share-icons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .share-btn {
-  background: none;
-  border: none;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
   cursor: pointer;
-  padding: 0;
 }
 
 .share-btn img {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease;
+  width: 22px;
 }
 
-.share-btn:hover img {
-  transform: scale(1.1);
-}
+/* ======================================================
+   FOOTER
+====================================================== */
 
-
-.post-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  align-items: center;
-}
-
-.fav-btn {
-  background: none;
-  border: 1px solid #ccc;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.report-wrapper {
-  position: relative;
-}
-
-.report-btn {
-  background: none;
-  border: 1px solid #ccc;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.report-menu {
-  position: absolute;
-  top: 110%;
-  right: 0;
-  list-style: none;
-  padding: 0.3rem 0;
-  margin: 0;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 180px;
-  z-index: 10;
-}
-
-.report-menu li {
-  padding: 0.4rem 0.6rem;
-  cursor: pointer;
-}
-
-.report-menu li:hover {
-  background-color: #f2f2f2;
+.view-post-footer {
+  margin-top: 20px;
+  text-align: left;
 }
