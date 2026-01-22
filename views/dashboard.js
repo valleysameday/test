@@ -20,7 +20,7 @@ import {
 
 import { boostPost } from "/index/js/boosting.js";
 import { featureFlags } from "/index/js/featureFlags.js";
-import * as Messaging from "/index/js/messaging.js";
+import * as Messaging from "/views/messaging.js";
 import { getFollowerCount } from "/index/js/social/follow.js";
 
 let currentEditAdId = null;
