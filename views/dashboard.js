@@ -1,5 +1,4 @@
 // /views/dashboard.js
-
 import { getFirebase } from "/index/js/firebase/init.js";
 import {
   collection,
@@ -13,11 +12,6 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-import {
-  updateEmail,
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
 import { boostPost } from "/index/js/boosting.js";
 import { featureFlags } from "/index/js/featureFlags.js";
 import * as Messaging from "/views/messaging.js";
@@ -27,68 +21,63 @@ let currentEditAdId = null;
 
 /* ================= INIT ================= */
 export async function init() {
-  const user = window.currentUser;
-  const userDoc = window.currentUserDoc;
 
   /* PROFILE INFO */
-  const dashUserName = document.getElementById("dashUserName");
+  const nameEl = document.getElementById("dashUserName");
   const profileName = document.getElementById("profileName");
   const profileEmail = document.getElementById("profileEmail");
   const profileSince = document.getElementById("profileSince");
   const followersEl = document.getElementById("profileFollowers");
 
-  if (userDoc?.firstName) {
-    if (dashUserName) dashUserName.textContent = userDoc.firstName;
-    if (profileName) profileName.textContent = userDoc.firstName;
+  if (window.currentUserDoc?.firstName) {
+    nameEl.textContent = window.currentUserDoc.firstName;
+    profileName.textContent = window.currentUserDoc.firstName;
   }
 
-  if (user?.email && profileEmail) {
-    profileEmail.textContent = user.email;
+  if (window.currentUser?.email) {
+    profileEmail.textContent = window.currentUser.email;
   }
 
-  if (user?.metadata?.creationTime && profileSince) {
-    profileSince.textContent = new Date(
-      user.metadata.creationTime
-    ).toLocaleDateString("en-GB");
+  if (window.currentUser?.metadata?.creationTime) {
+    const d = new Date(window.currentUser.metadata.creationTime);
+    profileSince.textContent = d.toLocaleDateString("en-GB");
   }
 
-  if (user?.uid && followersEl) {
+  if (window.currentUser?.uid && followersEl) {
     try {
-      followersEl.textContent = await getFollowerCount(user.uid);
+      const count = await getFollowerCount(window.currentUser.uid);
+      followersEl.textContent = count;
     } catch {
       followersEl.textContent = "0";
     }
   }
 
-  /* DASHBOARD CARD NAV */
+  /* DASHBOARD CARD CLICK HANDLERS */
   document.querySelectorAll(".dash-card").forEach(card => {
     const section = card.dataset.section;
     if (section) {
-      card.onclick = () => showSection(section);
+      card.addEventListener("click", () => showSection(section));
     }
   });
 
+  /* MESSAGES CARD → OPEN INBOX VIEW */
   document.getElementById("dashMessagesCard")?.addEventListener("click", () => {
     window.loadView("messages");
   });
 
+  /* PROFILE BUTTON */
   document.getElementById("dashViewProfile")?.addEventListener("click", () => {
-    if (!user?.uid) return;
-    window.selectedSellerId = user.uid;
+    if (!window.currentUser?.uid) return;
+    window.selectedSellerId = window.currentUser.uid;
     window.loadView("seller-profile");
-  });
-
-  document.getElementById("dashLogout")?.addEventListener("click", () => {
-    window.logoutUser?.();
   });
 
   /* SETTINGS */
   document.getElementById("settingsForm")?.addEventListener("submit", onSaveSettings);
-  document
-    .getElementById("settingsResetPassword")
-    ?.addEventListener("click", onResetPassword);
+  document.getElementById("settingsResetPassword")?.addEventListener("click", onResetPassword);
+  document.getElementById("dashLogout")?.addEventListener("click", () => window.logoutUser?.());
 
-  /* EDIT MODAL */
+  /* EDIT AD MODAL */
   document.getElementById("editCancel")?.addEventListener("click", closeEditModal);
   document.getElementById("editAdForm")?.addEventListener("submit", onSaveEditAd);
 
@@ -96,40 +85,36 @@ export async function init() {
   const boostModal = document.getElementById("boostModal");
   if (boostModal) {
     boostModal.querySelectorAll("button[data-boost-size]").forEach(btn => {
-      btn.onclick = async () => {
+      btn.addEventListener("click", async () => {
         const postId = boostModal.dataset.postId;
         const size = btn.dataset.boostSize;
         if (!postId || !size) return;
 
         const success = await boostPost(postId, size);
-        alert(
-          success
-            ? `Your post has been boosted for ${btn.dataset.boostDays} day(s)!`
-            : "Boost failed or cancelled."
+        alert(success
+          ? `Your post has been boosted for ${btn.dataset.boostDays} day(s)!`
+          : "Boost failed or cancelled."
         );
 
         closeBoostModal();
-        loadMyAds();
-      };
+        await loadMyAds();
+      });
     });
 
-    boostModal
-      .querySelector(".boost-cancel-btn")
-      ?.addEventListener("click", closeBoostModal);
+    boostModal.querySelector(".boost-cancel-btn")?.addEventListener("click", closeBoostModal);
   }
 
-  /* MESSAGING */
-  await Messaging.initMessaging();
-  updateMessagesDot(await Messaging.getUnreadCount());
+  /* LOAD INITIAL DATA */
+  await loadMyAds();
+  await loadBusinessListingStatus();
 
+  /* UNREAD MESSAGE DOT */
+  updateMessagesDot(await Messaging.getUnreadCount());
   window.addEventListener("messagesUpdated", async () => {
     updateMessagesDot(await Messaging.getUnreadCount());
   });
 
-  /* LOAD DATA */
-  await loadMyAds();
-  await loadBusinessListingStatus();
-
+  /* DEFAULT SECTION */
   showSection("myAds");
 }
 
@@ -156,19 +141,20 @@ async function loadBusinessListingStatus() {
 
   card.classList.remove("hidden");
 
-  statusEl.textContent =
-    svc.status === "pending"
-      ? "Pending approval"
-      : svc.status === "needs-update"
-      ? "Needs update"
-      : svc.isActive
-      ? "Live"
-      : "Inactive";
+  if (svc.status === "pending") {
+    statusEl.textContent = "Pending approval";
+  } else if (svc.status === "needs-update") {
+    statusEl.textContent = "Needs update";
+  } else if (svc.isActive) {
+    statusEl.textContent = "Live";
+  } else {
+    statusEl.textContent = "Inactive";
+  }
 
-  card.onclick = () => {
+  card.addEventListener("click", () => {
     sessionStorage.setItem("serviceId", svcId);
     window.loadView("view-service");
-  };
+  });
 }
 
 /* ================= UNREAD DOT ================= */
@@ -180,10 +166,9 @@ function updateMessagesDot(unread) {
 
 /* ================= SECTIONS ================= */
 function showSection(id) {
-  document.querySelectorAll(".dash-section").forEach(sec => {
-    sec.classList.add("hidden");
-  });
-  document.getElementById(id)?.classList.remove("hidden");
+  document.querySelectorAll(".dash-section").forEach(sec => sec.classList.add("hidden"));
+  const target = document.getElementById(id);
+  if (target) target.classList.remove("hidden");
 
   if (id === "saved") loadSaved();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -193,20 +178,21 @@ function showSection(id) {
 async function loadMyAds() {
   const listEl = document.getElementById("myAdsList");
   const statsEl = document.getElementById("myAdsStats");
+
   if (!listEl || !statsEl) return;
 
   listEl.textContent = "Loading…";
 
   const { db } = await getFirebase();
-  const uid = window.currentUser?.uid;
-  if (!uid) {
+  const userId = window.currentUser?.uid;
+  if (!userId) {
     listEl.textContent = "Not logged in.";
     return;
   }
 
   const q = query(
     collection(db, "posts"),
-    where("userId", "==", uid),
+    where("userId", "==", userId),
     orderBy("createdAt", "desc")
   );
 
@@ -231,19 +217,24 @@ async function loadMyAds() {
       : "";
 
     const isExpired = !p.isActive || p.status === "expired";
-    const boostEndMs = p.boostEnd?.toMillis?.() ?? p.boostEnd;
-    const isBoosted = p.isBoosted && boostEndMs && boostEndMs > now;
+
+    const boostEndMs = p.boostEnd?.toMillis ? p.boostEnd.toMillis() : p.boostEnd;
+    const isBoostedActive = p.isBoosted && boostEndMs && boostEndMs > now;
 
     html += `
       <div class="my-ad-item ${isExpired ? "expired" : ""}" data-id="${docSnap.id}">
         <div class="my-ad-top">
           <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
+          <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
           ${isExpired ? `<span class="ad-badge expired-badge">Expired</span>` : ""}
-          ${isBoosted ? `<span class="ad-badge boosted-badge">Boosted</span>` : ""}
+          ${isBoostedActive ? `<span class="ad-badge boosted-badge">Boosted</span>` : ""}
         </div>
+
         <div class="my-ad-meta">
-          ${escapeHtml(p.area || "Rhondda")} · ${views} views ${created ? "· " + created : ""}
+          ${escapeHtml(p.area || "Rhondda")} · ${views} view${views === 1 ? "" : "s"}
+          ${created ? " · " + created : ""}
         </div>
+
         <div class="my-ad-actions">
           <button data-action="view">View</button>
           ${isExpired ? `<button data-action="renew">Renew</button>` : ""}
@@ -259,15 +250,15 @@ async function loadMyAds() {
   statsEl.textContent = `Total ads: ${snap.size} · Total views: ${totalViews}`;
 
   listEl.querySelectorAll(".my-ad-item").forEach(item => {
-    item.onclick = e => {
+    item.addEventListener("click", e => {
       const btn = e.target.closest("button[data-action]");
       if (!btn) return;
       handleAdAction(btn.dataset.action, item.dataset.id);
-    };
+    });
   });
 }
 
-/* ================= SAVED ================= */
+/* ================= SAVED ITEMS ================= */
 async function loadSaved() {
   const listEl = document.getElementById("savedList");
   if (!listEl) return;
@@ -276,23 +267,35 @@ async function loadSaved() {
 
   const { db } = await getFirebase();
   const uid = window.currentUser?.uid;
-  if (!uid) return;
+  if (!uid) {
+    listEl.textContent = "Not logged in.";
+    return;
+  }
 
-  const snap = await getDocs(collection(db, "users", uid, "saved"));
-  if (snap.empty) {
+  const savedSnap = await getDocs(collection(db, "users", uid, "saved"));
+  if (savedSnap.empty) {
     listEl.textContent = "You haven't saved anything yet.";
     return;
   }
 
   let html = "";
-  for (const s of snap.docs) {
-    const postSnap = await getDoc(doc(db, "posts", s.id));
+  for (const saved of savedSnap.docs) {
+    const postId = saved.id;
+    const postSnap = await getDoc(doc(db, "posts", postId));
     if (!postSnap.exists()) continue;
     const p = postSnap.data();
 
     html += `
-      <div class="my-ad-item" data-id="${s.id}">
-        <div class="my-ad-title">${escapeHtml(p.title)}</div>
+      <div class="my-ad-item" data-id="${postId}">
+        <div class="my-ad-top">
+          <span class="my-ad-title">${escapeHtml(p.title || "Untitled")}</span>
+          <span class="my-ad-meta">${escapeHtml(p.category || "")}</span>
+        </div>
+
+        <div class="my-ad-meta">
+          ${escapeHtml(p.area || "Rhondda")} · ${p.views || 0} views
+        </div>
+
         <div class="my-ad-actions">
           <button data-action="view">View</button>
           <button data-action="unsave">Unsave</button>
@@ -304,16 +307,17 @@ async function loadSaved() {
   listEl.innerHTML = html;
 
   listEl.querySelectorAll(".my-ad-item").forEach(item => {
-    item.onclick = e => {
-      const btn = e.target.closest("button");
+    item.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-action]");
       if (!btn) return;
 
       if (btn.dataset.action === "view") {
         sessionStorage.setItem("viewPostId", item.dataset.id);
         window.loadView("view-post");
       }
+
       if (btn.dataset.action === "unsave") unsaveItem(item.dataset.id);
-    };
+    });
   });
 }
 
@@ -322,21 +326,19 @@ function handleAdAction(action, id) {
   if (action === "view") {
     sessionStorage.setItem("viewPostId", id);
     window.loadView("view-post");
+    return;
   }
-  if (action === "renew") renewAd(id);
-  if (action === "edit") openEditModal(id);
-  if (action === "delete" && confirm("Delete this ad?")) deleteAd(id);
-  if (action === "boost") openBoostModal(id);
+  if (action === "renew") return renewAd(id);
+  if (action === "edit") return openEditModal(id);
+  if (action === "delete" && confirm("Delete this ad? This can’t be undone.")) return deleteAd(id);
+  if (action === "boost") return openBoostModal(id);
 }
 
 /* ================= CRUD ================= */
 async function renewAd(id) {
   const { db } = await getFirebase();
-  await updateDoc(doc(db, "posts", id), {
-    isActive: true,
-    status: "active",
-    expiresAt: Date.now() + 21 * 86400000
-  });
+  const newExpiry = Date.now() + 21 * 24 * 60 * 60 * 1000;
+  await updateDoc(doc(db, "posts", id), { expiresAt: newExpiry, isActive: true, status: "active" });
   loadMyAds();
 }
 
@@ -346,18 +348,19 @@ async function deleteAd(id) {
   loadMyAds();
 }
 
-async function unsaveItem(id) {
+async function unsaveItem(postId) {
   const { db } = await getFirebase();
-  await deleteDoc(doc(db, "users", window.currentUser.uid, "saved", id));
+  const uid = window.currentUser.uid;
+  await deleteDoc(doc(db, "users", uid, "saved", postId));
   loadSaved();
 }
 
-/* ================= BOOST ================= */
-function openBoostModal(id) {
+/* ================= BOOST MODAL ================= */
+function openBoostModal(postId) {
   if (!featureFlags.boostingEnabled) return;
   const modal = document.getElementById("boostModal");
   if (!modal) return;
-  modal.dataset.postId = id;
+  modal.dataset.postId = postId;
   modal.classList.remove("hidden");
 }
 
@@ -369,13 +372,6 @@ function closeBoostModal() {
 }
 
 /* ================= EDIT ================= */
-const editTitle = document.getElementById("editTitle");
-const editDescription = document.getElementById("editDescription");
-const editPrice = document.getElementById("editPrice");
-const editArea = document.getElementById("editArea");
-const editFeedback = document.getElementById("editFeedback");
-const editAdModal = document.getElementById("editAdModal");
-
 async function openEditModal(id) {
   currentEditAdId = id;
   const { db } = await getFirebase();
@@ -400,12 +396,23 @@ async function onSaveEditAd(e) {
   e.preventDefault();
   if (!currentEditAdId) return;
 
+  const title = editTitle.value.trim();
+  const description = editDescription.value.trim();
+  const area = editArea.value.trim();
+  const priceRaw = editPrice.value;
+  const price = priceRaw ? Number(priceRaw) : null;
+
+  if (!title || !description) {
+    editFeedback.textContent = "Title and description required.";
+    return;
+  }
+
   const { db } = await getFirebase();
   await updateDoc(doc(db, "posts", currentEditAdId), {
-    title: editTitle.value.trim(),
-    description: editDescription.value.trim(),
-    price: editPrice.value ? Number(editPrice.value) : null,
-    area: editArea.value.trim() || null
+    title,
+    description,
+    area: area || null,
+    price
   });
 
   editFeedback.textContent = "Saved ✓";
@@ -416,24 +423,30 @@ async function onSaveEditAd(e) {
 }
 
 /* ================= SETTINGS ================= */
-const settingsName = document.getElementById("settingsName");
-const settingsEmail = document.getElementById("settingsEmail");
-const settingsFeedback = document.getElementById("settingsFeedback");
-
 async function onSaveSettings(e) {
   e.preventDefault();
+  const name = settingsName.value.trim();
+  const email = settingsEmail.value.trim();
+  if (!name || !email) {
+    settingsFeedback.textContent = "Name and email required.";
+    return;
+  }
+
   const { db, auth } = await getFirebase();
   const user = auth.currentUser;
   if (!user) return;
 
-  if (settingsEmail.value !== user.email) {
-    await updateEmail(user, settingsEmail.value);
+  if (email !== user.email) {
+    await updateEmail(user, email);
   }
 
   await updateDoc(doc(db, "users", user.uid), {
-    firstName: settingsName.value.trim(),
-    email: settingsEmail.value.trim()
+    firstName: name,
+    email
   });
+
+  window.currentUserDoc.firstName = name;
+  window.currentUserDoc.email = email;
 
   settingsFeedback.textContent = "Updated ✓";
 }
@@ -441,6 +454,7 @@ async function onSaveSettings(e) {
 async function onResetPassword() {
   const { auth } = await getFirebase();
   if (!auth.currentUser?.email) return;
+
   await sendPasswordResetEmail(auth, auth.currentUser.email);
   settingsFeedback.textContent = "Reset email sent ✓";
 }
@@ -452,4 +466,4 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-                             }
+                  }
