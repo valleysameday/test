@@ -3,7 +3,7 @@ import { getFirebase } from "/index/js/firebase/init.js";
 import {
   subscribeToConversations,
   getUnreadCount
-} from "/index/js/messaging.js";
+} from "/views/messaging.js";
 
 export async function init() {
   console.log("📨 Messages inbox loaded");
