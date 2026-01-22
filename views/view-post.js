@@ -3,14 +3,14 @@ console.log("✅ view-post.js loaded");
 // Firebase init
 import { getFirebase } from "/index/js/firebase/init.js";
 
-// Firestore helpers (moved out of this file)
+// Firestore helpers
 import {
   getPostById,
   getUserById,
   incrementPostViews,
   incrementContactClicks,
-  sendMessageToSeller,
-  findOrCreateConversation
+  findOrCreateConversation,
+  sendMessageToSeller
 } from "/postViews/firestore.js";
 
 // UI + DOM modules
@@ -18,6 +18,7 @@ import { renderPost } from "/postViews/render.js";
 import { showToast } from "/postViews/toast.js";
 import { showMessageConfirmModal } from "/postViews/modals.js";
 import { attachFollowBtn, isFollowing, getFollowerCount } from "/index/js/social/follow.js";
+
 let db = null;
 
 // ---------------------------------------------------------
@@ -28,8 +29,9 @@ export async function init() {
   db = fb.db;
 
   await waitForAuth();
+
   // Add browser history entry so mobile back works
-history.pushState({ view: "post" }, "", location.href);
+  history.pushState({ view: "post" }, "", location.href);
 
   let postId = null;
 
@@ -73,6 +75,7 @@ window.addEventListener("popstate", () => {
   // Return to previous SPA view
   window.loadView?.("home");
 });
+
 // ---------------------------------------------------------
 // LOAD POST
 // ---------------------------------------------------------
@@ -112,7 +115,7 @@ async function loadPost(postId) {
 // ---------------------------------------------------------
 // MESSAGE HANDLER
 // ---------------------------------------------------------
-async function handleSendMessage({ post, sellerId, messageText, imageUrl }) {
+async function handleSendMessage({ post, sellerId, messageText }) {
   const user = window.currentUser;
 
   if (!user) {
@@ -135,18 +138,25 @@ async function handleSendMessage({ post, sellerId, messageText, imageUrl }) {
   showMessageConfirmModal({
     message: messageText,
     async onConfirm(finalMessage) {
-      const convoId = await findOrCreateConversation(db, {
-        buyerId: user.uid,
-        sellerId,
-        post
-      });
+      try {
+        // 1️⃣ Get or create conversation
+        const convoId = await findOrCreateConversation(db, {
+          buyerId: user.uid,
+          sellerId,
+          post
+        });
 
-      await sendMessageToSeller(db, convoId, {
-        senderId: user.uid,
-        text: finalMessage
-      });
+        // 2️⃣ Send the message to messages subcollection AND update conversation doc
+        await sendMessageToSeller(db, convoId, {
+          senderId: user.uid,
+          text: finalMessage
+        });
 
-      showToast("Message sent to seller");
+        showToast("Message sent to seller");
+      } catch (err) {
+        console.error("Failed to send message:", err);
+        showToast("Failed to send message", "error");
+      }
     }
   });
 }
