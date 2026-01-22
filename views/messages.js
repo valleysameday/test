@@ -1,5 +1,12 @@
 // /views/messages.js
 import { getFirebase } from "/index/js/firebase/init.js";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 export async function init() {
   console.log("📨 Messages inbox loaded");
@@ -11,14 +18,16 @@ export async function init() {
   if (!uid) return;
 
   // -----------------------------
-  // Subscribe to user's conversations
+  // Modular Firestore query
   // -----------------------------
-  const q = db
-    .collection("conversations")
-    .where("participants", "array-contains", uid)
-    .orderBy("updatedAt", "desc");
+  const convRef = collection(db, "conversations");
+  const q = query(
+    convRef,
+    where("participants", "array-contains", uid),
+    orderBy("updatedAt", "desc")
+  );
 
-  q.onSnapshot(snap => {
+  onSnapshot(q, snap => {
     const convs = snap.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .filter(conv => !conv.deletedFor?.[uid]); // hide deleted conversations
