@@ -5,7 +5,7 @@ import {
   markConversationRead,
   summariseConversation,
   suggestReply
-} from "/index/js/messaging.js";
+} from "/views/messaging.js";
 
 import { getFirebase } from "/index/js/firebase/init.js";
 
