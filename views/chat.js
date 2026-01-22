@@ -33,22 +33,35 @@ export async function init() {
   const conv = convSnap.data();
   const uid = window.currentUser?.uid;
 
-  // Header info
+  // --------------------------
+  // Header: Other user name
+  // --------------------------
+  const otherUserId = conv.participants.find(p => p !== uid);
   const chatUserNameEl = document.getElementById("chatUserName");
-  if (chatUserNameEl)
-    chatUserNameEl.textContent = conv.participants.find(p => p !== uid) || "User";
+  if (chatUserNameEl) {
+    if (otherUserId) {
+      const otherUserSnap = await getDoc(doc(db, "users", otherUserId));
+      const otherUser = otherUserSnap.exists() ? otherUserSnap.data() : null;
+      chatUserNameEl.textContent = otherUser?.displayName || "User";
+    } else {
+      chatUserNameEl.textContent = "User";
+    }
+  }
 
   const chatItemTitleEl = document.getElementById("chatItemTitle");
-  if (chatItemTitleEl)
-    chatItemTitleEl.textContent = conv.itemId || "Item";
+  if (chatItemTitleEl) chatItemTitleEl.textContent = conv.itemTitle || "Item";
 
-  // Subscribe to messages in real-time
+  // --------------------------
+  // Subscribe to messages
+  // --------------------------
   subscribeToMessages(conversationId, msgs => {
     renderMessages(msgs, uid);
     markConversationRead(conversationId);
   });
 
+  // --------------------------
   // Send button
+  // --------------------------
   const chatSendBtn = document.getElementById("chatSendBtn");
   if (chatSendBtn)
     chatSendBtn.addEventListener("click", () => sendCurrentMessage(conversationId));
@@ -63,7 +76,9 @@ export async function init() {
       }
     });
 
-  // AI buttons
+  // --------------------------
+  // AI helpers
+  // --------------------------
   const summariseBtn = document.getElementById("chatSummariseBtn");
   if (summariseBtn)
     summariseBtn.addEventListener("click", async () => {
@@ -81,17 +96,20 @@ export async function init() {
     });
 }
 
+// --------------------------
 // Fetch messages once (for AI helpers)
+// --------------------------
 async function fetchMessages(conversationId) {
   const { db } = await getFirebase();
   const messagesCol = collection(db, "conversations", conversationId, "messages");
   const q = query(messagesCol, orderBy("timestamp", "asc"));
   const snap = await getDocs(q);
-
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// Render chat messages
+// --------------------------
+// Render messages
+// --------------------------
 function renderMessages(msgs, uid) {
   const container = document.getElementById("chatMessages");
   if (!container) return;
@@ -116,7 +134,9 @@ function renderMessages(msgs, uid) {
   container.scrollTop = container.scrollHeight;
 }
 
-// Send the message currently typed
+// --------------------------
+// Send current message
+// --------------------------
 async function sendCurrentMessage(conversationId) {
   const input = document.getElementById("chatInput");
   if (!input) return;
@@ -124,11 +144,23 @@ async function sendCurrentMessage(conversationId) {
   const text = input.value.trim();
   if (!text) return;
 
-  await sendMessage(conversationId, text);
-  input.value = "";
+  // Disable input while sending
+  input.disabled = true;
+  try {
+    await sendMessage(conversationId, text);
+    input.value = "";
+  } catch (err) {
+    console.error("Error sending message:", err);
+    alert("Failed to send message");
+  } finally {
+    input.disabled = false;
+    input.focus();
+  }
 }
 
-// Escape HTML to prevent injection
+// --------------------------
+// Escape HTML
+// --------------------------
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, "&amp;")
