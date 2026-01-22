@@ -1,240 +1,180 @@
+// /index/js/messaging.js
 import { getFirebase } from "/index/js/firebase/init.js";
 import {
   collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
   query,
   where,
   orderBy,
-  getDocs,
-  getDoc,
-  doc,
   updateDoc,
-  addDoc,
   onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-/* ==========================
-   STATE
-========================== */
-let unsubscribeMessages = null;
-let currentConversationId = null;
-let currentOtherUserId = null;
-let currentOtherUserName = "User";
+let conversationsUnsub = null;
+let messagesUnsub = null;
 
-/* ==========================
-   INIT MESSAGING
-========================== */
-export async function initMessaging() {
-  setupUIListeners();
-  await loadConversations();
-  await checkUnreadMessages();
-}
-
-/* ==========================
-   UI LISTENERS
-========================== */
-function setupUIListeners() {
-  const backBtn = document.getElementById("convBack");
-  const sendBtn = document.getElementById("convSend");
-  const input = document.getElementById("convInput");
-
-  if (backBtn) backBtn.addEventListener("click", closeConversation);
-  if (sendBtn) sendBtn.addEventListener("click", sendMessage);
-  if (input) input.addEventListener("keypress", e => {
-    if (e.key === "Enter") sendMessage();
-  });
-}
-
-/* ==========================
-   LOAD CONVERSATIONS
-========================== */
-export async function loadConversations() {
-  const listEl = document.getElementById("messagesList");
-  if (!listEl) return;
-
-  listEl.textContent = "Loading…";
-
+export async function getOrCreateConversation(itemId, itemType, otherUserId) {
   const { db } = await getFirebase();
-  const uid = window.currentUser.uid;
+  const uid = window.currentUser?.uid;
+  if (!uid) throw new Error("Not logged in");
 
+  const convRef = collection(db, "conversations");
   const q = query(
-    collection(db, "conversations"),
-    where("participants", "array-contains", uid),
-    orderBy("updatedAt", "desc")
+    convRef,
+    where("itemId", "==", itemId),
+    where("itemType", "==", itemType),
+    where("participants", "array-contains", uid)
   );
 
   const snap = await getDocs(q);
-  let html = "";
+  let existing = null;
 
-  for (const docSnap of snap.docs) {
+  snap.forEach(docSnap => {
     const data = docSnap.data();
-    const otherUserId = data.participants.find(id => id !== uid);
-
-    // Load their name
-    let otherName = "User";
-    try {
-      const userDoc = await getDoc(doc(db, "users", otherUserId));
-      otherName = userDoc.data()?.firstName || "User";
-    } catch {}
-
-    const unread = data.unread?.[uid];
-
-    html += `
-      <div class="conversation-item ${unread ? "unread" : ""}"
-           data-id="${docSnap.id}"
-           data-other="${otherUserId}"
-           data-name="${escapeHtml(otherName)}">
-        <strong>${escapeHtml(otherName)}</strong>
-        <div class="conversation-post-title">${escapeHtml(data.postTitle || "Item")}</div>
-        ${unread ? '<span class="unread-dot"></span>' : ""}
-        <div class="conversation-last-message">${escapeHtml(data.lastMessage || "")}</div>
-      </div>
-    `;
-  }
-
-  listEl.innerHTML = html;
-
-  listEl.querySelectorAll(".conversation-item").forEach(item => {
-    item.addEventListener("click", () => {
-      openConversation(
-        item.dataset.id,
-        item.dataset.name,
-        item.dataset.other
-      );
-    });
+    if (data.participants.includes(otherUserId)) {
+      existing = { id: docSnap.id, ...data };
+    }
   });
+
+  if (existing) return existing.id;
+
+  const newConv = await addDoc(convRef, {
+    participants: [uid, otherUserId],
+    itemId,
+    itemType,
+    lastMessage: "",
+    lastTimestamp: serverTimestamp(),
+    unread: {
+      [uid]: 0,
+      [otherUserId]: 0
+    }
+  });
+
+  return newConv.id;
 }
 
-/* ==========================
-   OPEN CONVERSATION
-========================== */
-export async function openConversation(id, name, otherUserId) {
-  currentConversationId = id;
-  currentOtherUserId = otherUserId;
-  currentOtherUserName = name;
-
-  showSection("conversationView");
-  document.getElementById("convName").textContent = name;
-
+export async function sendMessage(conversationId, text) {
   const { db } = await getFirebase();
-  const uid = window.currentUser.uid;
-  const convRef = doc(db, "conversations", id);
+  const uid = window.currentUser?.uid;
+  if (!uid) throw new Error("Not logged in");
+  if (!text.trim()) return;
+
+  const msgRef = collection(db, "conversations", conversationId, "messages");
+  await addDoc(msgRef, {
+    sender: uid,
+    text: text.trim(),
+    timestamp: serverTimestamp(),
+    readBy: [uid]
+  });
+
+  const convRef = doc(db, "conversations", conversationId);
   const convSnap = await getDoc(convRef);
-  const data = convSnap.data();
+  if (!convSnap.exists()) return;
+  const conv = convSnap.data();
 
-  // Ensure unread map exists
-  if (!data.unread) {
-    await updateDoc(convRef, {
-      unread: { [uid]: false, [otherUserId]: true }
-    });
-  } else {
-    await updateDoc(convRef, { [`unread.${uid}`]: false });
-  }
-
-  await loadConversations();
-  await checkUnreadMessages();
-  listenForMessages(id);
-}
-
-/* ==========================
-   CLOSE CONVERSATION
-========================== */
-function closeConversation() {
-  if (unsubscribeMessages) unsubscribeMessages();
-  currentConversationId = null;
-  currentOtherUserId = null;
-
-  showSection("messages");
-}
-
-/* ==========================
-   REAL-TIME MESSAGE LISTENER
-========================== */
-async function listenForMessages(conversationId) {
-  const { db } = await getFirebase();
-  if (unsubscribeMessages) unsubscribeMessages();
-
-  const messagesRef = collection(db, "conversations", conversationId, "messages");
-  const q = query(messagesRef, orderBy("createdAt", "asc"));
-
-  unsubscribeMessages = onSnapshot(q, snap => {
-    const container = document.getElementById("convMessages");
-    if (!container) return;
-
-    container.innerHTML = "";
-    snap.forEach(docSnap => {
-      const m = docSnap.data();
-      const mine = m.senderId === window.currentUser.uid;
-
-      container.innerHTML += `
-        <div class="msg ${mine ? "me" : "them"}">
-          ${escapeHtml(m.text)}
-        </div>
-      `;
-    });
-
-    container.scrollTop = container.scrollHeight;
+  const otherUserId = conv.participants.find(p => p !== uid);
+  await updateDoc(convRef, {
+    lastMessage: text.trim(),
+    lastTimestamp: serverTimestamp(),
+    [`unread.${otherUserId}`]: (conv.unread?.[otherUserId] || 0) + 1
   });
 }
 
-/* ==========================
-   SEND MESSAGE
-========================== */
-async function sendMessage() {
-  const input = document.getElementById("convInput");
-  const text = input.value.trim();
-  if (!text || !currentConversationId) return;
-
+export async function markConversationRead(conversationId) {
   const { db } = await getFirebase();
-  const uid = window.currentUser.uid;
+  const uid = window.currentUser?.uid;
+  if (!uid) return;
 
-  const msgRef = collection(db, "conversations", currentConversationId, "messages");
+  const convRef = doc(db, "conversations", conversationId);
+  const convSnap = await getDoc(convRef);
+  if (!convSnap.exists()) return;
+  const conv = convSnap.data();
 
-  // Create message
-  await addDoc(msgRef, { senderId: uid, text, createdAt: serverTimestamp() });
-
-  // Update conversation metadata
-  await updateDoc(doc(db, "conversations", currentConversationId), {
-    lastMessage: text,
-    updatedAt: serverTimestamp(),
-    [`unread.${uid}`]: false,
-    [`unread.${currentOtherUserId}`]: true
+  await updateDoc(convRef, {
+    [`unread.${uid}`]: 0
   });
-
-  input.value = "";
 }
 
-/* ==========================
-   UNREAD BADGE ON DASHBOARD
-========================== */
-export async function checkUnreadMessages() {
-  const dot = document.getElementById("messagesNotifDot");
-  if (!dot) return;
-
+export async function getUnreadCount() {
   const { db } = await getFirebase();
-  const uid = window.currentUser.uid;
+  const uid = window.currentUser?.uid;
+  if (!uid) return 0;
 
-  const q = query(collection(db, "conversations"), where("participants", "array-contains", uid));
+  const convRef = collection(db, "conversations");
+  const q = query(convRef, where("participants", "array-contains", uid));
   const snap = await getDocs(q);
 
-  const unread = snap.docs.some(docSnap => docSnap.data().unread?.[uid]);
-  dot.classList.toggle("hidden", !unread);
+  let total = 0;
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    total += data.unread?.[uid] || 0;
+  });
+
+  return total;
 }
 
-/* ==========================
-   UTIL
-========================== */
-function showSection(id) {
-  document.querySelectorAll(".dash-section").forEach(sec => sec.classList.add("hidden"));
-  const target = document.getElementById(id);
-  if (target) target.classList.remove("hidden");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+export async function subscribeToConversations(callback) {
+  const { db } = await getFirebase();
+  const uid = window.currentUser?.uid;
+  if (!uid) return;
+
+  if (conversationsUnsub) conversationsUnsub();
+
+  const convRef = collection(db, "conversations");
+  const q = query(
+    convRef,
+    where("participants", "array-contains", uid),
+    orderBy("lastTimestamp", "desc")
+  );
+
+  conversationsUnsub = onSnapshot(q, async snap => {
+    const convs = [];
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      convs.push({ id: docSnap.id, ...data });
+    }
+    callback(convs);
+    window.dispatchEvent(new CustomEvent("messagesUpdated"));
+  });
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+export async function subscribeToMessages(conversationId, callback) {
+  const { db } = await getFirebase();
+  if (messagesUnsub) messagesUnsub();
+
+  const msgRef = collection(db, "conversations", conversationId, "messages");
+  const q = query(msgRef, orderBy("timestamp", "asc"));
+
+  messagesUnsub = onSnapshot(q, snap => {
+    const msgs = [];
+    snap.forEach(docSnap => {
+      msgs.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    callback(msgs);
+  });
 }
+
+export function unsubscribeAllMessaging() {
+  if (conversationsUnsub) conversationsUnsub();
+  if (messagesUnsub) messagesUnsub();
+  conversationsUnsub = null;
+  messagesUnsub = null;
+}
+
+/* ========== AI HELPERS (placeholder hooks) ========== */
+
+export async function summariseConversation(messages) {
+  const text = messages.map(m => `${m.sender}: ${m.text}`).join("\n");
+  // Hook for future AI call
+  return `Summary coming soon.\n\n(You'd send this text to an AI model:\n${text.slice(0, 500)}...)`;
+}
+
+export async function suggestReply(messages) {
+  const last = messages[messages.length - 1];
+  if (!last) return "No conversation yet.";
+  return `Suggested reply coming soon.\n\n(Last message was: "${last.text}")`;
+                                  }
