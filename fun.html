@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<title>RCT-X GeoDrop — Guess the Place</title>
+<title>RCT-X GeoDrop — Rhondda Edition</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
@@ -34,30 +34,6 @@ header p {
   color:#94a3b8;
 }
 
-#modeToggle {
-  margin-top:8px;
-  display:flex;
-  gap:6px;
-  font-size:12px;
-  align-items:center;
-}
-
-#modeToggle button {
-  flex:1;
-  padding:6px 8px;
-  border-radius:999px;
-  border:1px solid #1e293b;
-  background:#020617;
-  color:#e5e7eb;
-  cursor:pointer;
-  font-size:12px;
-}
-
-#modeToggle button.active {
-  background:#2563eb;
-  border-color:#2563eb;
-}
-
 main {
   flex:1;
   display:flex;
@@ -70,7 +46,7 @@ main {
   position:relative;
   border-radius:14px;
   overflow:hidden;
-  background:#020617;
+  background:#0f172a;
   border:1px solid #1e293b;
   min-height:220px;
 }
@@ -175,12 +151,8 @@ button.secondary {
 <body>
 
 <header>
-  <h1>🎯 RCT-X GeoDrop</h1>
-  <p>Guess where you’ve been dropped — world or Rhondda.</p>
-  <div id="modeToggle">
-    <button id="worldBtn" class="active">🌍 World</button>
-    <button id="rhonddaBtn">🏔️ Rhondda</button>
-  </div>
+  <h1>🎯 RCT-X GeoDrop — Rhondda</h1>
+  <p>Guess where in the Rhondda you’ve been dropped.</p>
 </header>
 
 <main>
@@ -191,7 +163,7 @@ button.secondary {
 
   <div id="controls">
     <div id="guessRow">
-      <input id="guessInput" placeholder="Type your guess (e.g. Italy, Treorchy)">
+      <input id="guessInput" placeholder="Type your guess (e.g. Penpych, Treorchy)">
       <button class="primary" id="dropBtn">🎲 Drop Me</button>
     </div>
     <div style="display:flex; gap:8px;">
@@ -207,65 +179,64 @@ button.secondary {
 </main>
 
 <script>
-const worldLocations = [
-  {
-    name: "Tokyo, Japan",
-    answer: "japan",
-    img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    name: "New York City, USA",
-    answer: "usa",
-    img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    name: "Sydney, Australia",
-    answer: "australia",
-    img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    name: "Paris, France",
-    answer: "france",
-    img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80"
-  },
-  {
-    name: "Cairo, Egypt",
-    answer: "egypt",
-    img: "https://images.unsplash.com/photo-1588361861040-ac9b1018f6d1?auto=format&fit=crop&w=1200&q=80"
-  }
-];
-
 const rhonddaLocations = [
   {
-    name: "Treorchy High Street, Rhondda",
-    answer: "treorchy",
-    img: "https://images.unsplash.com/photo-1521292270410-a8c53642e9d0?auto=format&fit=crop&w=1200&q=80"
+    name: "Penpych, Blaencwm",
+    answer: "penpych",
+    img: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Penpych%2C_Blaencwm.jpg"
   },
   {
-    name: "Penpych, Rhondda",
-    answer: "penpych",
-    img: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
+    name: "Rhondda Heritage Park, Trehafod",
+    answer: "heritage park",
+    img: "https://upload.wikimedia.org/wikipedia/commons/3/3e/Rhondda_Heritage_Park.jpg"
+  },
+  {
+    name: "Treorchy High Street",
+    answer: "treorchy",
+    img: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Treorchy_High_Street.jpg"
+  },
+  {
+    name: "Pontypridd Old Bridge",
+    answer: "pontypridd",
+    img: "https://upload.wikimedia.org/wikipedia/commons/8/8c/Old_Bridge%2C_Pontypridd.jpg"
+  },
+  {
+    name: "Dare Valley Country Park",
+    answer: "dare valley",
+    img: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Dare_Valley_Country_Park.jpg"
   },
   {
     name: "Bwlch Mountain Road",
     answer: "bwlch",
-    img: "https://images.unsplash.com/photo-1500534314211-0a24cd03f2c0?auto=format&fit=crop&w=1200&q=80"
+    img: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Bwlch_Mountain_Road.jpg"
   },
   {
-    name: "Rhondda Valley Hills",
-    answer: "rhondda",
-    img: "https://images.unsplash.com/photo-1500534318100-bbd07f2f4f43?auto=format&fit=crop&w=1200&q=80"
+    name: "Ferndale Valley",
+    answer: "ferndale",
+    img: "https://upload.wikimedia.org/wikipedia/commons/4/4f/Ferndale_Rhondda.jpg"
+  },
+  {
+    name: "Penrhys Plateau",
+    answer: "penrhys",
+    img: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Penrhys_Statue.jpg"
+  },
+  {
+    name: "Maerdy Mountain Road",
+    answer: "maerdy",
+    img: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Maerdy_Mountain_Road.jpg"
+  },
+  {
+    name: "Tylorstown Hillside",
+    answer: "tylorstown",
+    img: "https://upload.wikimedia.org/wikipedia/commons/6/6e/Tylorstown_Landslip.jpg"
   }
 ];
 
-let mode = "world";
 let current = null;
 let score = 0;
 let rounds = 0;
 let revealed = false;
 
-const worldBtn = document.getElementById("worldBtn");
-const rhonddaBtn = document.getElementById("rhonddaBtn");
 const placeImage = document.getElementById("placeImage");
 const overlayLabel = document.getElementById("overlayLabel");
 const guessInput = document.getElementById("guessInput");
@@ -277,27 +248,8 @@ const scoreEl = document.getElementById("score");
 const roundsEl = document.getElementById("rounds");
 const imageWrap = document.getElementById("imageWrap");
 
-function setMode(newMode) {
-  mode = newMode;
-  worldBtn.classList.toggle("active", mode === "world");
-  rhonddaBtn.classList.toggle("active", mode === "rhondda");
-  statusEl.textContent = mode === "world"
-    ? "World mode: guess the country."
-    : "Rhondda mode: guess the place.";
-  overlayLabel.textContent = "Tap “Drop Me” to start";
-  imageWrap.classList.remove("revealed");
-  placeImage.src = "";
-  current = null;
-  guessInput.value = "";
-}
-
-function getPool() {
-  return mode === "world" ? worldLocations : rhonddaLocations;
-}
-
 function randomLocation() {
-  const pool = getPool();
-  return pool[Math.floor(Math.random() * pool.length)];
+  return rhonddaLocations[Math.floor(Math.random() * rhonddaLocations.length)];
 }
 
 function startRound() {
@@ -305,7 +257,7 @@ function startRound() {
   revealed = false;
   imageWrap.classList.remove("revealed");
   placeImage.src = current.img;
-  overlayLabel.textContent = mode === "world" ? "Where in the world is this?" : "Where in the Rhondda is this?";
+  overlayLabel.textContent = "Where in the Rhondda is this?";
   statusEl.textContent = "Make your guess, then hit Reveal.";
   guessInput.value = "";
   guessInput.focus();
@@ -332,9 +284,9 @@ function reveal() {
     msg = `You didn’t guess. It was: ${current.name}`;
   } else if (guess === correct || correct.includes(guess) || guess.includes(correct)) {
     score += 100;
-    msg = `✅ Nice! You were right — ${current.name}`;
+    msg = `✅ Correct — ${current.name}`;
   } else {
-    msg = `❌ Close, but no. It was: ${current.name}`;
+    msg = `❌ Nope — it was ${current.name}`;
   }
 
   rounds += 1;
@@ -343,8 +295,6 @@ function reveal() {
   statusEl.innerHTML = `${msg}<span class="sub">Tap “Drop Me” to play again.</span>`;
 }
 
-worldBtn.addEventListener("click", () => setMode("world"));
-rhonddaBtn.addEventListener("click", () => setMode("rhondda"));
 dropBtn.addEventListener("click", startRound);
 revealBtn.addEventListener("click", reveal);
 skipBtn.addEventListener("click", () => {
@@ -359,13 +309,8 @@ skipBtn.addEventListener("click", () => {
 });
 
 guessInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    reveal();
-  }
+  if (e.key === "Enter") reveal();
 });
-
-// initial state
-setMode("world");
 </script>
 
 </body>
