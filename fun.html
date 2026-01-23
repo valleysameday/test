@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>RCT-X Fun Map — Drop Anywhere</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style>
+* { box-sizing:border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+body {
+  margin:0;
+  background:#0f172a;
+  color:#e5e7eb;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+header {
+  background:#020617;
+  padding:12px 14px;
+  border-bottom:1px solid #1e293b;
+}
+
+header h1 {
+  font-size:18px;
+  margin:0;
+}
+
+header p {
+  font-size:13px;
+  margin:4px 0 0;
+  color:#94a3b8;
+}
+
+#controls {
+  display:flex;
+  gap:8px;
+  padding:10px;
+  background:#020617;
+  border-bottom:1px solid #1e293b;
+}
+
+#searchBar {
+  flex:1;
+  padding:10px;
+  font-size:15px;
+  border-radius:8px;
+  border:1px solid #1e293b;
+  background:#020617;
+  color:#e5e7eb;
+  outline:none;
+}
+
+button {
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  background:#2563eb;
+  color:white;
+  white-space:nowrap;
+}
+
+button.random {
+  background:#16a34a;
+}
+
+#map {
+  flex:1;
+}
+
+.panel {
+  background:#020617;
+  border-top:1px solid #1e293b;
+  padding:10px;
+}
+
+.coords {
+  font-size:12px;
+  color:#94a3b8;
+  margin-bottom:6px;
+}
+
+#street {
+  width:100%;
+  height:160px;
+  border-radius:10px;
+  overflow:hidden;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🗺️ RCT-X Fun Map</h1>
+  <p>Drop anywhere & check it out 🌍</p>
+</header>
+
+<div id="controls">
+  <input id="searchBar" placeholder="🔍 Search anywhere">
+  <button class="random" id="randomBtn">🎲 Random</button>
+</div>
+
+<div id="map"></div>
+
+<div class="panel">
+  <div class="coords" id="coords">Tap the map, search, or go random</div>
+  <div id="street"></div>
+</div>
+
+<script type="module">
+let map, marker, streetView, apiKey;
+
+/* -------- LOAD KEY -------- */
+async function loadKey(){
+  const res = await fetch('/.netlify/functions/maps-key');
+  const data = await res.json();
+  apiKey = data.key;
+  loadGoogleMaps();
+}
+
+/* -------- LOAD MAPS -------- */
+function loadGoogleMaps(){
+  const s = document.createElement('script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+  s.defer = true;
+  s.onload = initMap;
+  document.head.appendChild(s);
+}
+
+function initMap(){
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 20, lng: 0 },
+    zoom: 2,
+    mapTypeControl:false,
+    gestureHandling:'greedy'
+  });
+
+  streetView = new google.maps.StreetViewPanorama(
+    document.getElementById("street"),
+    { visible:true }
+  );
+  map.setStreetView(streetView);
+
+  map.addListener("click", e => dropPin(e.latLng));
+
+  setupSearch();
+  setupRandom();
+}
+
+/* -------- SEARCH -------- */
+function setupSearch(){
+  const input = document.getElementById("searchBar");
+  const searchBox = new google.maps.places.SearchBox(input);
+
+  searchBox.addListener("places_changed", () => {
+    const places = searchBox.getPlaces();
+    if (!places || !places.length) return;
+
+    const place = places[0];
+    if (!place.geometry) return;
+
+    map.panTo(place.geometry.location);
+    map.setZoom(16);
+    dropPin(place.geometry.location);
+  });
+}
+
+/* -------- RANDOM PLACE -------- */
+function setupRandom(){
+  document.getElementById("randomBtn").onclick = () => {
+    const lat = (Math.random() * 170) - 85;     // avoid poles
+    const lng = (Math.random() * 360) - 180;
+
+    const loc = new google.maps.LatLng(lat, lng);
+    map.panTo(loc);
+    map.setZoom(16);
+    dropPin(loc);
+  };
+}
+
+/* -------- DROP PIN -------- */
+function dropPin(latLng){
+  if (marker) marker.setMap(null);
+
+  marker = new google.maps.Marker({
+    map,
+    position: latLng,
+    animation: google.maps.Animation.DROP
+  });
+
+  streetView.setPosition(latLng);
+
+  document.getElementById("coords").textContent =
+    `📍 ${latLng.lat().toFixed(5)}, ${latLng.lng().toFixed(5)}`;
+}
+
+loadKey();
+</script>
+
+</body>
+</html>
