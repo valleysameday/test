@@ -86,8 +86,10 @@ async function renderSellerProfile(seller, sellerId) {
   const isOwner = window.currentUser?.uid === sellerId;
 
   // Name + reliability
-  document.getElementById("sellerName").textContent =
-    seller.name || "Unknown Seller";
+  const sellerDisplayName =
+  seller.firstName?.trim() || seller.name?.trim() || "Unknown Seller";
+
+document.getElementById("sellerName").textContent = sellerDisplayName;
   document.getElementById("sellerReliability").textContent =
     seller.reliability || "";
 
