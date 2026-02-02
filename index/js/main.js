@@ -9,16 +9,22 @@ import { initUI } from "/index/js/ui.js";
 const viewModules = {};
 let currentView = null;
 
+/* ==========================
+   PWA INSTALL PROMPT
+========================== */
 let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
 
-  // Show your custom install button
-  document.getElementById('install-btn').style.display = 'block';
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.style.display = "block";
 });
 
+/* ==========================
+   LOAD VIEW MODULES
+========================== */
 async function ensureViewScript(view) {
   if (viewModules[view]) return viewModules[view];
   const mod = await import(`/views/${view}.js`);
@@ -30,14 +36,12 @@ export async function loadView(view, addToHistory = true) {
   const app = document.getElementById("app");
   if (!app) return;
 
-  // 🔁 Push browser history (required for mobile back button)
   if (addToHistory && currentView !== view) {
     history.pushState({ view }, "", `#${view}`);
   }
 
   currentView = view;
 
-  // Load HTML
   try {
     const res = await fetch(`/views/${view}.html`);
     if (!res.ok) throw new Error("View not found");
@@ -48,20 +52,18 @@ export async function loadView(view, addToHistory = true) {
     return;
   }
 
-  // Load JS
   const mod = await ensureViewScript(view);
   if (typeof mod.init === "function") mod.init();
 }
 
-// Make available globally
 window.loadView = loadView;
 
 /* ==========================
-   BROWSER / MOBILE BACK BUTTON
+   BROWSER BACK BUTTON
 ========================== */
 window.addEventListener("popstate", (e) => {
   const view = e.state?.view || "home";
-  loadView(view, false); // ❗ do NOT add history again
+  loadView(view, false);
 });
 
 /* ==========================
@@ -70,10 +72,31 @@ window.addEventListener("popstate", (e) => {
 function startApp() {
   initUI();
 
-  // Load view from URL hash or default to home
   const initialView = location.hash.replace("#", "") || "home";
-
   loadView(initialView, false);
+
+  // Hide loading screen
+  const loader = document.getElementById("loading-screen");
+  if (loader) loader.style.display = "none";
+
+  // Install button click handler
+  const installBtn = document.getElementById("install-btn");
+  if (installBtn) {
+    installBtn.addEventListener("click", () => {
+      if (!deferredPrompt) return;
+
+      deferredPrompt.prompt();
+
+      deferredPrompt.userChoice.then((choiceResult) => {
+        console.log(
+          choiceResult.outcome === "accepted"
+            ? "User accepted the install prompt"
+            : "User dismissed the install prompt"
+        );
+        deferredPrompt = null;
+      });
+    });
+  }
 }
 
 getFirebase().then(() => {
@@ -84,23 +107,6 @@ getFirebase().then(() => {
   }
 });
 
-window.addEventListener('load', () => {
-  document.getElementById('loading-screen').style.display = 'none';
-});
-document.getElementById('install-btn').addEventListener('click', () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      deferredPrompt = null;
-    });
-  }
-});
 /* ==========================
    HELPERS
 ========================== */
