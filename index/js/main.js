@@ -74,6 +74,10 @@ getFirebase().then(() => {
   }
 });
 
+window.addEventListener('load', () => {
+  document.getElementById('loading-screen').style.display = 'none';
+});
+
 /* ==========================
    HELPERS
 ========================== */
