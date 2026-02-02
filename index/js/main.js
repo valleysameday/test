@@ -77,7 +77,20 @@ getFirebase().then(() => {
 window.addEventListener('load', () => {
   document.getElementById('loading-screen').style.display = 'none';
 });
+document.getElementById('install-btn').addEventListener('click', () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
 
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
+      deferredPrompt = null;
+    });
+  }
+});
 /* ==========================
    HELPERS
 ========================== */
