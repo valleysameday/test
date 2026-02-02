@@ -4,8 +4,8 @@ const ASSETS = [
   "/",
   "/offline.html",
   "/manifest.json",
-  "/main.css",
-  "/main.js"
+  "/index/css/main.css",
+  "/index/js/main.js"
 ];
 
 // Install → cache core files
