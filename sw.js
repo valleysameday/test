@@ -2,7 +2,6 @@ const CACHE_NAME = "rctx-cache-v1";
 
 const ASSETS = [
   "/",
-  "/index.html",
   "/offline.html",
   "/manifest.json",
   "/main.css",
