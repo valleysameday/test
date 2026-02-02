@@ -9,6 +9,16 @@ import { initUI } from "/index/js/ui.js";
 const viewModules = {};
 let currentView = null;
 
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Show your custom install button
+  document.getElementById('install-btn').style.display = 'block';
+});
+
 async function ensureViewScript(view) {
   if (viewModules[view]) return viewModules[view];
   const mod = await import(`/views/${view}.js`);
