@@ -1,0 +1,494 @@
+// ======================================
+// BUSINESS UPLOADS
+// ======================================
+
+import { currentBusinessId } from "./business-manager.js";
+
+
+// ======================================
+// INIT
+// ======================================
+
+export function initUploads(options) {
+
+  const {
+    storage,
+    db,
+    MAX_GALLERY_IMAGES = 10
+  } = options;
+
+
+  const MAX_FILE_SIZE_MB = 3;
+
+
+  const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+
+  console.log("[UPLOADS] Initialised");
+
+
+  // ======================================
+  // HELPERS
+  // ======================================
+
+  function getBusinessId() {
+
+    if (!currentBusinessId) {
+
+      alert(
+        "Please open a business before uploading images."
+      );
+
+      return null;
+
+    }
+
+    return currentBusinessId;
+
+  }
+
+
+
+  function compressImage(
+    file,
+    maxSize = 800
+  ) {
+
+    return new Promise(resolve => {
+
+
+      const img = new Image();
+
+
+      img.onload = () => {
+
+
+        const canvas =
+          document.createElement("canvas");
+
+
+        const scale =
+          Math.min(
+            1,
+            maxSize /
+            Math.max(
+              img.width,
+              img.height
+            )
+          );
+
+
+        canvas.width =
+          img.width * scale;
+
+
+        canvas.height =
+          img.height * scale;
+
+
+
+        const ctx =
+          canvas.getContext("2d");
+
+
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+
+        canvas.toBlob(
+          blob => {
+
+            resolve(blob);
+
+          },
+          "image/jpeg",
+          0.8
+        );
+
+
+      };
+
+
+      img.src =
+        URL.createObjectURL(file);
+
+
+    });
+
+  }
+
+
+
+  function validateFile(file) {
+
+
+    if (
+      !ALLOWED_IMAGE_TYPES.includes(
+        file.type
+      )
+    ) {
+
+      return false;
+
+    }
+
+
+    if (
+      file.size >
+      MAX_FILE_SIZE_MB *
+      1024 *
+      1024
+    ) {
+
+      return false;
+
+    }
+
+
+    return true;
+
+  }
+
+
+
+  // ======================================
+  // LOGO UPLOAD
+  // ======================================
+
+  const logoBtn =
+    document.getElementById(
+      "uploadLogoBtn"
+    );
+
+
+  if (logoBtn) {
+
+
+    logoBtn.addEventListener(
+      "click",
+      async () => {
+
+
+        try {
+
+
+          const businessId =
+            getBusinessId();
+
+
+          if (!businessId) return;
+
+
+
+          const input =
+            document.getElementById(
+              "logoInput"
+            );
+
+
+          const file =
+            input?.files?.[0];
+
+
+          if (!file) return;
+
+
+
+          const status =
+            document.getElementById(
+              "logoStatus"
+            );
+
+
+
+          if (!validateFile(file)) {
+
+
+            if (status) {
+
+              status.textContent =
+                "Only JPG, PNG or WEBP under 3MB allowed.";
+
+            }
+
+            return;
+
+          }
+
+
+
+          const compressed =
+            await compressImage(file);
+
+
+
+          const ref =
+            storage.ref(
+              `logos/${businessId}.jpg`
+            );
+
+
+
+          await ref.put(
+            compressed
+          );
+
+
+
+          const url =
+            await ref.getDownloadURL();
+
+
+
+          await db
+            .collection("businesses")
+            .doc(businessId)
+            .update({
+
+              logoUrl:url
+
+            });
+
+
+
+          if (status) {
+
+            status.textContent =
+              "Logo uploaded successfully.";
+
+          }
+
+
+
+        } catch(err) {
+
+
+          console.error(
+            "[LOGO UPLOAD ERROR]",
+            err
+          );
+
+
+          document.getElementById(
+            "logoStatus"
+          ).textContent =
+            "Logo upload failed.";
+
+
+        }
+
+
+      }
+    );
+
+
+  }
+
+
+
+  // ======================================
+  // GALLERY UPLOAD
+  // ======================================
+
+
+  const galleryBtn =
+    document.getElementById(
+      "uploadGalleryBtn"
+    );
+
+
+  if (galleryBtn) {
+
+
+    galleryBtn.addEventListener(
+      "click",
+      async () => {
+
+
+        try {
+
+
+          const businessId =
+            getBusinessId();
+
+
+          if (!businessId) return;
+
+
+
+          const input =
+            document.getElementById(
+              "galleryInput"
+            );
+
+
+          const files =
+            input?.files;
+
+
+
+          if (!files || !files.length) {
+            return;
+          }
+
+
+
+          const status =
+            document.getElementById(
+              "galleryStatus"
+            );
+
+
+
+          if (
+            files.length >
+            MAX_GALLERY_IMAGES
+          ) {
+
+
+            if(status) {
+
+              status.textContent =
+              `Maximum ${MAX_GALLERY_IMAGES} images allowed.`;
+
+            }
+
+            return;
+
+          }
+
+
+
+          for (
+            const file of files
+          ) {
+
+
+            if (
+              !validateFile(file)
+            ) {
+
+
+              if(status) {
+
+                status.textContent =
+                `${file.name} is invalid.`;
+
+              }
+
+
+              return;
+
+            }
+
+
+          }
+
+
+
+          const galleryUrls = [];
+
+
+
+          for (
+            const file of files
+          ) {
+
+
+            const compressed =
+              await compressImage(file);
+
+
+
+            const imageId =
+              Date.now() +
+              "-" +
+              Math.random()
+              .toString(36)
+              .substring(2);
+
+
+
+            const ref =
+              storage.ref(
+                `gallery/${businessId}/${imageId}.jpg`
+              );
+
+
+
+            await ref.put(
+              compressed
+            );
+
+
+
+            const url =
+              await ref.getDownloadURL();
+
+
+
+            galleryUrls.push(url);
+
+
+          }
+
+
+
+          await db
+            .collection("businesses")
+            .doc(businessId)
+            .update({
+
+              gallery:
+                firebase.firestore.FieldValue.arrayUnion(
+                  ...galleryUrls
+                )
+
+            });
+
+
+
+          if(status) {
+
+            status.textContent =
+              "Gallery uploaded successfully.";
+
+          }
+
+
+
+        } catch(err) {
+
+
+          console.error(
+            "[GALLERY UPLOAD ERROR]",
+            err
+          );
+
+
+          document.getElementById(
+            "galleryStatus"
+          ).textContent =
+            "Gallery upload failed.";
+
+
+        }
+
+
+      }
+    );
+
+
+  }
+
+
+}
