@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+
+<title>RCTX Admin Panel</title>
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
+
+<meta name="robots"
+      content="noindex,nofollow">
+
+<meta name="theme-color"
+      content="#111827">
+
+<link rel="stylesheet"
+      href="/css/admin.css">
+
+      <link rel="preload" href="/admin/css/admin-email.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<link rel="stylesheet" href="/admin/HolidaySite/owners.css">
+      <link rel="stylesheet" href="/admin/HolidaySite/property-editor.css">
+<noscript>
+  <link rel="stylesheet" href="/admin/css/admin-email.css">
+</noscript>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+</head>
+      <!-- =========================================
+     LOGIN SCREEN
+========================================= -->
+
+<section id="loginSection" class="login-screen">
+
+  <div class="login-card">
+
+    <h1>Admin Login</h1>
+
+    <div class="field">
+      <label for="adminEmail">Email</label>
+
+      <input
+        id="adminEmail"
+        type="email"
+        autocomplete="email">
+    </div>
+
+    <div class="field">
+      <label for="adminPassword">Password</label>
+
+      <input
+        id="adminPassword"
+        type="password"
+        autocomplete="current-password">
+    </div>
+
+    <button
+      id="loginBtn"
+      class="btn btn-primary">
+
+      Login
+
+    </button>
+
+    <div
+      id="loginMessage"
+      class="admin-message error">
+    </div>
+
+  </div>
+
+</section>
+
+<body class="admin-page">
+
+<!-- =========================================
+     TOPBAR
+========================================= -->
+
+<header class="admin-topbar">
+
+  <div class="admin-topbar-inner">
+
+    <a href="/"
+       class="logo-wrap">
+
+      <div class="logo">
+        RCT<span>X</span>
+      </div>
+
+      <div class="logo-tag">
+        ADMIN CONTROL PANEL
+      </div>
+
+    </a>
+
+    <div class="admin-topbar-right">
+
+      <div class="admin-status online">
+        <span class="status-dot"></span>
+        System Online
+      </div>
+
+    </div>
+
+  </div>
+
+</header>
+
+<!-- =========================================
+     PAGE WRAPPER
+========================================= -->
+
+<div
+  class="admin-shell"
+  id="adminContainer"
+  style="display:none;">
+
+  <!-- =========================================
+       SIDEBAR
+  ========================================= -->
+
+  <aside class="admin-sidebar">
+
+    <div class="sidebar-section">
+
+      <div class="sidebar-title">
+        Navigation
+      </div>
+
+      <nav class="admin-nav">
+            <li class="admin-link">
+  <a href="/dashboard/">
+    <span class="icon">📊</span>
+    <span>Analytics Dashboard</span>
+  </a>
+            </li>
+
+        <button class="admin-tab active"
+                data-tab="dashboard">
+
+          <span>Dashboard</span>
+
+        </button>
+
+        <button class="admin-tab"
+                data-tab="businesses">
+
+          <span>Businesses</span>
+
+        </button>
+
+        <button class="admin-tab"
+                data-tab="marketing">
+
+          <span>Marketing</span>
+
+        </button>
+
+            
+<button class="admin-tab" data-tab="propertyJson">
+  Property Editor
+</button>
+            <button
+    class="admin-tab"
+    data-tab="owners">
+
+    Owners
+
+            </button>
+            
+            <button class="admin-tab" data-tab="property">Property</button>
+            <button class="admin-tab" data-tab="propertyCreate">Create Property</button>
+            
+        <button class="admin-tab"
+                data-tab="settings">
+
+          <span>Settings</span>
+
+        </button>
+<button
+  class="admin-tab"
+  data-tab="emails"
+>
+  Emails
+</button>
+      </nav>
+
+    </div>
+
+  </aside>
+
+  <!-- =========================================
+       MAIN CONTENT
+  ========================================= -->
+
+  <main class="admin-main">
+
+    <!-- =========================================
+         DASHBOARD
+    ========================================= -->
+
+    <section id="dashboard"
+             class="admin-panel">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Dashboard</h1>
+          <p>
+            Review submissions, claims, edits and moderation activity.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="admin-grid">
+
+        <!-- Pending Submissions -->
+        <article class="admin-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Pending Submissions</h2>
+              <p>
+                Businesses waiting for approval.
+              </p>
+            </div>
+
+            <span class="admin-badge">
+              Moderation
+            </span>
+
+          </div>
+
+          <div id="pendingList"
+               class="card-content pending-list">
+
+            <div class="loading-state">
+              Loading submissions...
+            </div>
+
+          </div>
+
+        </article>
+
+        <!-- Pending Claims -->
+        <article class="admin-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Pending Claims</h2>
+              <p>
+                Ownership requests awaiting review.
+              </p>
+            </div>
+
+            <span class="admin-badge">
+              Claims
+            </span>
+
+          </div>
+
+          <div id="claimsList"
+               class="card-content">
+
+            <div class="loading-state">
+              Loading claims...
+            </div>
+
+          </div>
+
+        </article>
+
+        <!-- Pending Owner Edits -->
+        <article class="admin-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Pending Owner Edits</h2>
+              <p>
+                Requested changes submitted by business owners.
+              </p>
+            </div>
+
+            <span class="admin-badge">
+              Edits
+            </span>
+
+          </div>
+
+          <div id="pendingChangesList"
+               class="card-content">
+
+            <div class="loading-state">
+              Loading owner edits...
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+          <div class="publish-box">
+
+  <h3>Directory Publishing</h3>
+
+<p id="publishCount"></p>
+
+<button id="publishDirectoryBtn" class="btn btn-primary">
+  Publish Directory
+</button>
+
+<div id="publishStatus" class="admin-message" style="margin-top:10px;"></div>
+
+    </section>
+
+    <!-- =========================================
+         BUSINESSES
+    ========================================= -->
+
+    <section id="businesses"
+             class="admin-panel"
+             style="display:none;">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Business Manager</h1>
+          <p>
+            Search, manage and edit live directory listings.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- SEARCH PANEL -->
+      <article class="admin-card">
+
+        <div class="section-head">
+
+          <div>
+            <h2>Business Search</h2>
+            <p>
+              Filter listings by name, town or category.
+            </p>
+          </div>
+
+          <span class="admin-badge">
+            Directory
+          </span>
+
+        </div>
+
+        <div class="form-grid">
+
+          <div class="field">
+            <label for="bmSearch">
+              Search
+            </label>
+            <input id="bmSearch"
+                   type="text"
+                   placeholder="Business name, keyword, town">
+          </div>
+
+          <div class="field">
+            <label for="bmTownFilter">
+              Town
+            </label>
+            <input id="bmTownFilter"
+                   type="text"
+                   placeholder="Treorchy">
+          </div>
+
+          <div class="field">
+            <label for="bmCategoryFilter">
+              Category
+            </label>
+            <input id="bmCategoryFilter"
+                   type="text"
+                   placeholder="electricians, cafés, shops">
+          </div>
+
+        </div>
+
+        <div id="bmList"
+             class="pending-list card-content">
+
+          <div class="loading-state">
+            Loading businesses...
+          </div>
+
+        </div>
+
+      </article>
+
+      <!-- EDIT PANEL -->
+      <article id="bmEditPanel"
+               class="admin-card"
+               style="display:none;">
+
+        <div class="section-head">
+
+          <div>
+            <h2>Edit Business</h2>
+            <p>
+              Update listing information and SEO fields.
+            </p>
+          </div>
+
+        </div>
+
+        <button id="bmBackBtn"
+                class="btn btn-secondary">
+
+          ← Back to Businesses
+
+        </button>
+
+        <p id="bmEditId"
+           class="hint"></p>
+
+        <div id="bmEditErrors"
+             class="admin-message error"></div>
+
+        <!-- BASIC INFO -->
+        <div class="review-section">
+
+          <h3>Basic Information</h3>
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="bmName">Business Name</label>
+              <input id="bmName">
+            </div>
+
+            <div class="field">
+              <label for="bmCategorySlug">Category Slug</label>
+              <input id="bmCategorySlug">
+            </div>
+
+            <div class="field">
+              <label for="bmTown">Town</label>
+              <input id="bmTown">
+            </div>
+
+            <div class="field">
+              <label for="bmTownSlug">Town Slug</label>
+              <input id="bmTownSlug">
+            </div>
+
+            <div class="field">
+              <label for="bmSlug">Business Slug</label>
+              <input id="bmSlug">
+            </div>
+
+          </div>
+
+          <div class="field full">
+            <label>
+              Directory URL
+            </label>
+
+            <div id="bmUrlPreview"
+                 class="url-preview"></div>
+          </div>
+
+        </div>
+
+        <!-- DESCRIPTION -->
+        <div class="review-section">
+
+          <h3>Description</h3>
+
+          <div class="field full">
+            <label for="bmDescription">
+              Business Description
+            </label>
+
+            <textarea id="bmDescription"
+                      rows="5"></textarea>
+          </div>
+
+        </div>
+
+        <!-- KEYWORDS -->
+        <div class="review-section">
+
+          <h3>SEO Keywords</h3>
+
+          <div class="field full">
+
+  <label>
+    Keywords
+  </label>
+
+  <div id="bmKeywordEditor"
+       class="keyword-editor">
+  </div>
+
+  <button id="bmAddKeywordBtn"
+          class="btn btn-secondary"
+          type="button">
+    + Add Keyword
+  </button>
+
+          </div>
+
+          <button id="bmAutoKeywordsBtn"
+                  class="btn btn-secondary">
+
+            Auto Generate Keywords
+
+          </button>
+
+        </div>
+
+            <!-- ===========================
+     BUSINESS IMAGES
+=========================== -->
+
+<section class="admin-card">
+
+  <div class="section-head">
+    <div>
+      <h3>Business Images</h3>
+      <p>Upload logo and gallery images.</p>
+    </div>
+  </div>
+
+
+  <!-- LOGO -->
+
+  <div class="upload-block">
+
+    <label>
+      Business Logo
+    </label>
+
+    <input
+      type="file"
+      id="logoInput"
+      accept="image/jpeg,image/png,image/webp"
+    >
+
+    <button
+      type="button"
+      id="uploadLogoBtn"
+      class="btn btn-primary"
+    >
+      Upload Logo
+    </button>
+
+
+    <p
+      id="logoStatus"
+      class="upload-status"
+    ></p>
+
+  </div>
+
+
+
+  <!-- GALLERY -->
+
+  <div class="upload-block">
+
+    <label>
+      Gallery Images
+    </label>
+
+
+    <input
+      type="file"
+      id="galleryInput"
+      accept="image/jpeg,image/png,image/webp"
+      multiple
+    >
+
+
+    <button
+      type="button"
+      id="uploadGalleryBtn"
+      class="btn btn-primary"
+    >
+      Upload Gallery
+    </button>
+
+
+    <p
+      id="galleryStatus"
+      class="upload-status"
+    ></p>
+
+  </div>
+
+
+</section>
+
+            <!-- SERVICES -->
+
+<div class="review-section">
+
+<h3>Services</h3>
+
+<div class="field full">
+
+<label>
+Services offered
+</label>
+
+<div id="bmServicesEditor"
+     class="keyword-editor">
+</div>
+
+
+<button id="bmAddServiceBtn"
+        class="btn btn-secondary"
+        type="button">
+
++ Add Service
+
+</button>
+
+</div>
+
+</div>
+
+        <!-- CONTACT -->
+        <div class="review-section">
+
+          <h3>Contact Information</h3>
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="bmEmail">Email</label>
+              <input id="bmEmail">
+            </div>
+
+            <div class="field">
+              <label for="bmPhone">Phone</label>
+              <input id="bmPhone">
+            </div>
+
+            <div class="field">
+              <label for="bmWebsite">Website</label>
+              <input id="bmWebsite">
+            </div>
+
+            <div class="field">
+              <label for="bmAddress">Address</label>
+              <input id="bmAddress">
+            </div>
+
+          </div>
+
+        </div>
+
+            <!-- =========================================
+     DANGER ZONE
+========================================= -->
+
+<section class="review-section danger-zone">
+
+    <h3>⚠ Danger Zone</h3>
+
+    <p class="danger-text">
+        Permanently delete this business and all associated data.
+        This action cannot be undone.
+    </p>
+
+    <div class="field">
+
+        <label for="bmDeleteConfirm">
+            Type <strong>DELETE</strong> to enable deletion.
+        </label>
+
+        <input
+            id="bmDeleteConfirm"
+            type="text"
+            autocomplete="off"
+            placeholder="DELETE">
+
+    </div>
+
+    <button
+        id="bmDeleteBtn"
+        class="btn btn-danger"
+        disabled>
+
+        Permanently Delete Business
+
+    </button>
+
+</section>
+
+        <div class="action-row">
+
+          <button id="bmSaveBtn"
+                  class="btn btn-primary">
+
+            Save Changes
+
+          </button>
+
+        </div>
+
+      </article>
+
+    </section>
+
+    <!-- =========================================
+         REVIEW PANEL
+    ========================================= -->
+
+    <section id="reviewPanel"
+             class="admin-Subpanel"
+             style="display:none;">
+
+      <article class="admin-card">
+
+        <div class="section-head">
+
+          <div>
+            <h2>Review & Approve Business</h2>
+            <p>
+              Validate business information before publishing.
+            </p>
+          </div>
+
+          <span class="admin-badge">
+            Approval
+          </span>
+
+        </div>
+
+        <button id="backToDashboardBtn"
+                class="btn btn-secondary">
+
+          ← Back to Dashboard
+
+        </button>
+
+        <div id="reviewErrors"
+             class="admin-message error"></div>
+
+        <!-- BUSINESS INFO -->
+        <div class="review-section">
+
+          <h3>Business Information</h3>
+
+          <div class="info-grid">
+
+            <p><strong>Name:</strong> <span id="reviewName"></span></p>
+            <p><strong>Raw Category:</strong> <span id="reviewCategoryRaw"></span></p>
+            <p><strong>Town:</strong> <span id="reviewTown"></span></p>
+            <p><strong>Description:</strong> <span id="reviewDescription"></span></p>
+            <p><strong>Email:</strong> <span id="reviewEmail"></span></p>
+            <p><strong>Phone:</strong> <span id="reviewPhone"></span></p>
+            <p><strong>Website:</strong> <span id="reviewWebsite"></span></p>
+            <p><strong>Address:</strong> <span id="reviewAddress"></span></p>
+
+          </div>
+
+        </div>
+
+        <!-- KEYWORDS -->
+<div class="review-section">
+  <h3>SEO Keywords</h3>
+
+  <div class="field full">
+    <label>Submitted Keywords</label>
+    <div id="reviewKeywordsRaw" class="url-preview"></div>
+  </div>
+
+  <div class="field full">
+    <label>Editable Keywords</label>
+    <div id="keywordEditor" class="keyword-editor"></div>
+
+    <button id="addKeywordBtn" class="btn btn-secondary" style="margin-top:10px;">
+      + Add Keyword
+    </button>
+  </div>
+
+  <div class="field full">
+    <label>Final Keywords</label>
+    <div id="reviewKeywordsFinal" class="url-preview"></div>
+  </div>
+</div>
+
+        <!-- URLS -->
+        <div class="review-section">
+
+          <h3>Slugs & URL Structure</h3>
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="reviewCategorySelect">
+                Category
+              </label>
+              <select id="reviewCategorySelect"></select>
+            </div>
+
+            <div class="field">
+              <label for="reviewCategorySlug">
+                Category Slug
+              </label>
+              <input id="reviewCategorySlug">
+            </div>
+
+            <div class="field">
+              <label for="reviewTownSlug">
+                Town Slug
+              </label>
+              <input id="reviewTownSlug">
+            </div>
+
+            <div class="field">
+              <label for="reviewBusinessSlug">
+                Business Slug
+              </label>
+              <input id="reviewBusinessSlug">
+            </div>
+
+          </div>
+
+          <div class="field full">
+
+            <label>
+              Final URL
+            </label>
+
+            <div id="urlPreview"
+                 class="url-preview"></div>
+
+          </div>
+
+        </div>
+
+        <div class="review-actions">
+
+          <button id="rejectBtn"
+                  class="btn btn-danger">
+
+            Reject
+
+          </button>
+
+          <button id="approveBtn"
+                  class="btn btn-primary">
+
+            Approve & Publish
+
+          </button>
+
+        </div>
+
+      </article>
+
+    </section>
+      
+        <div id="property" class="admin-panel"></div>
+        <section id="propertyJson" class="admin-panel" style="display:none;"></section>
+      
+        <section
+    id="owners"
+    class="admin-panel"
+    style="display:none;">
+        </section>
+<div id="propertyCreate" class="admin-panel"></div>
+    <!-- =========================================
+         MARKETING
+    ========================================= -->
+
+    <section id="marketing"
+             class="admin-panel"
+             style="display:none;">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Marketing Tools</h1>
+          <p>
+            Seed listings, discover businesses and manage outreach.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="admin-grid">
+
+        <!-- QUICK ADD -->
+        <article class="admin-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Quick Add Business</h2>
+              <p>
+                Add a business directly into the system.
+              </p>
+            </div>
+
+          </div>
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="name">Business Name</label>
+              <input id="name">
+            </div>
+
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email">
+            </div>
+
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input id="phone">
+            </div>
+
+            <div class="field">
+              <label for="town">Town</label>
+              <input id="town">
+            </div>
+
+            <div class="field full">
+              <label for="category">Category</label>
+              <select id="category"></select>
+            </div>
+
+            <div class="field full">
+
+              <label class="checkbox-wrap">
+
+                <input id="sendEmail"
+                       type="checkbox"
+                       checked>
+
+                Send introduction email
+
+              </label>
+
+            </div>
+
+          </div>
+<div class="field full">
+  <label>Keywords (optional)</label>
+
+  <p class="text-xs text-dim" style="margin-bottom:8px;">
+    Add a few words customers would type when looking for this business.
+    Keep it simple — things like <em>“barber”, “skin fade”, “gift shop”, “balloons”, “plumber near me”</em>.
+  </p>
+
+  <div id="marketingKeywordEditor" class="keyword-editor"></div>
+
+  <button id="marketingAddKeywordBtn"
+          type="button"
+          class="btn btn-secondary"
+          style="margin-top:10px;">
+    + Add Keyword
+  </button>
+</div>
+
+              <div class="field full">
+
+  <label>Services</label>
+
+  <p class="text-xs text-dim" style="margin-bottom:8px;">
+    Add the services this business provides.
+  </p>
+
+  <div id="marketingServices"></div>
+
+  <button
+    id="addServiceBtn"
+    type="button"
+    class="btn btn-secondary"
+    style="margin-top:10px;">
+    + Add Service
+  </button>
+
+              </div>
+              
+          <button id="addBusinessBtn"
+                  class="btn btn-primary">
+
+            Add Business
+
+          </button>
+
+          <div id="result"
+               class="card-content"></div>
+
+        </article>
+
+        <!-- FINDER -->
+        <article class="admin-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Smart Business Finder</h2>
+              <p>
+                Find businesses with weak online presence.
+              </p>
+            </div>
+
+          </div>
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label for="finderCategory">Category</label>
+              <input id="finderCategory">
+            </div>
+
+            <div class="field">
+              <label for="finderTown">Town</label>
+              <input id="finderTown">
+            </div>
+
+          </div>
+
+          <button id="finderSearchBtn"
+                  class="btn btn-primary">
+
+            Find Businesses
+
+          </button>
+
+          <div id="finderResults"
+               class="card-content"></div>
+
+        </article>
+
+        <!-- GOOGLE PLACES -->
+        <article class="admin-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Google Places Usage</h2>
+              <p>
+                Track Places API usage and quotas.
+              </p>
+            </div>
+
+          </div>
+
+          <div id="placesUsageBox"
+               class="card-content">
+
+            <div class="loading-state">
+              Loading usage...
+            </div>
+
+          </div>
+
+        </article>
+
+        <!-- FUTURE -->
+        <article class="admin-card empty-card">
+
+          <div class="section-head">
+
+            <div>
+              <h2>Coming Soon</h2>
+              <p>
+                Additional marketing and automation tools.
+              </p>
+            </div>
+
+          </div>
+
+        </article>
+
+      </div>
+
+    </section>
+
+        
+<div
+  id="emails"
+  class="admin-panel"
+  style="display:none;"
+></div>
+    <!-- =========================================
+         SETTINGS
+    ========================================= -->
+
+    <section id="settings"
+             class="admin-panel"
+             style="display:none;">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Settings</h1>
+          <p>
+            Manage admin configuration and platform settings.
+          </p>
+        </div>
+
+      </div>
+
+      <article class="admin-card">
+
+        <div class="section-head">
+
+          <div>
+            <h2>System Settings</h2>
+            <p>
+              More admin configuration options coming soon.
+            </p>
+          </div>
+
+        </div>
+
+      </article>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script type="module"
+        src="admin.js"></script>
+
+</body>
+</html>
