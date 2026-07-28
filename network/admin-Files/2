@@ -1,0 +1,501 @@
+// ======================================
+// ADMIN PANEL (MODULAR ROUTER)
+// ======================================
+
+let auth = null;
+let db = null;
+
+// Prevent duplicate module initialisation
+const loadedModules = new Set();
+
+// ======================================
+// FIREBASE INIT
+// ======================================
+
+async function initFirebase() {
+
+  const res = await fetch("/.netlify/functions/firebaseConfig");
+
+  if (!res.ok) {
+    throw new Error("Firebase config failed");
+  }
+
+  const config = await res.json();
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(config);
+  }
+
+  return {
+    auth: firebase.auth(),
+    db: firebase.firestore()
+  };
+
+}
+
+// ======================================
+// DOM ELEMENTS
+// ======================================
+
+const loginSection = document.getElementById("loginSection");
+
+const loginBtn =
+  document.getElementById("loginBtn");
+
+const loginMessage =
+  document.getElementById("loginMessage");
+
+const adminContainer =
+  document.getElementById("adminContainer");
+
+// ======================================
+// ROUTES
+// ======================================
+
+const ROUTES = {
+
+  // ====================================
+  // DASHBOARD
+  // ====================================
+
+  dashboard: async () => {
+
+    // Prevent duplicate listeners/rendering
+    if (!loadedModules.has("dashboard")) {
+
+      const moderation =
+        await import("./moderation.js");
+
+      if (moderation.initModeration) {
+
+        await moderation.initModeration({
+          db,
+          auth,
+          container: document.getElementById("dashboard")
+        });
+
+      }
+
+      const pending =
+        await import("./pending.js");
+
+      if (pending.initPending) {
+
+        await pending.initPending({
+          db,
+          auth
+        });
+
+      }
+
+      const publisher =
+        await import("./publisher.js");
+
+      await publisher.initPublisher({
+        db,
+        auth
+      });
+
+      loadedModules.add("dashboard");
+
+    }
+
+  },
+
+  // ====================================
+  // BUSINESSES
+  // ====================================
+
+  businesses: async () => {
+
+    if (!loadedModules.has("businesses")) {
+
+      const businessManager =
+        await import("./business-manager.js");
+
+      if (businessManager.initBusinessManager) {
+
+        await businessManager.initBusinessManager({
+          db,
+          auth,
+          container: document.getElementById("businesses")
+        });
+      }
+
+        const uploads =
+  await import("./uploads.js");
+
+uploads.initUploads({
+  db,
+  storage: firebase.storage()
+});
+
+      loadedModules.add("businesses");
+    }
+  },
+
+  // ====================================
+  // MARKETING
+  // ====================================
+
+  marketing: async () => {
+
+    if (!loadedModules.has("marketing")) {
+
+      const marketing =
+        await import("./marketing.js");
+
+      if (marketing.initMarketing) {
+
+        await marketing.initMarketing({
+          db,
+          auth,
+          container: document.getElementById("marketing")
+        });
+
+      }
+
+      const finder =
+        await import("./finder.js");
+
+      if (finder.initFinder) {
+
+        await finder.initFinder({
+          db,
+          auth,
+          container: document.getElementById("marketing")
+        });
+
+      }
+
+      loadedModules.add("marketing");
+
+    }
+
+  },
+
+  // ====================================
+  // EMAILS
+  // ====================================
+
+  emails: async () => {
+
+    if (!loadedModules.has("emails")) {
+
+      const emails =
+        await import("./emails.js");
+
+      if (emails.initEmails) {
+
+        await emails.initEmails({
+          db,
+          auth,
+          container:
+            document.getElementById("emails")
+        });
+
+      }
+
+      loadedModules.add("emails");
+
+    }
+
+  },
+
+  propertyJson: async () => {
+
+  if (!loadedModules.has("propertyJson")) {
+
+    const mod = await import("/admin/HolidaySite/property-json-editor.js");
+
+    await mod.initPropertyJsonEditor({
+      db,
+      auth,
+      container: document.getElementById("propertyJson")
+    });
+
+    loadedModules.add("propertyJson");
+  }
+},
+
+  owners: async () => {
+
+    if (!loadedModules.has("owners")) {
+
+        const mod = await import("/admin/HolidaySite/create-owner.js");
+
+        await mod.initOwnerSystem({
+            db,
+            auth,
+            container: document.getElementById("owners")
+        });
+
+        loadedModules.add("owners");
+
+    }
+
+},
+
+  property: async () => {
+  if (!loadedModules.has("property")) {
+    const mod = await import("/admin/HolidaySite/property-editor.js");
+    await mod.initPropertyEditor({
+      db,
+      auth,
+      container: document.getElementById("property")
+    });
+    loadedModules.add("property");
+  }
+  },
+
+  propertyCreate: async () => {
+  if (!loadedModules.has("propertyCreate")) {
+
+    const mod = await import("/admin/HolidaySite/property-create.js");
+
+    await mod.initPropertyCreator({
+      db,
+      auth,
+      container: document.getElementById("propertyCreate")
+    });
+
+    loadedModules.add("propertyCreate");
+  }
+},
+  
+  // ====================================
+  // SETTINGS
+  // ====================================
+
+  settings: async () => {
+
+    // Future settings module
+
+  }
+
+};
+
+// ======================================
+// INIT APP
+// ======================================
+
+(async function initApp() {
+
+  try {
+
+    const services = await initFirebase();
+
+    auth = services.auth;
+    db = services.db;
+
+    setupAuth();
+    setupSidebarNavigation();
+
+  } catch (err) {
+
+    console.error("[ADMIN INIT ERROR]", err);
+
+    if (loginMessage) {
+      loginMessage.textContent =
+        "System failed to initialise";
+    }
+
+  }
+
+})();
+
+// ======================================
+// AUTH
+// ======================================
+
+function setupAuth() {
+
+  // ====================================
+  // LOGIN
+  // ====================================
+
+  loginBtn?.addEventListener("click", async () => {
+
+    const email =
+      document.getElementById("adminEmail")
+      ?.value
+      ?.trim();
+
+    const password =
+      document.getElementById("adminPassword")
+      ?.value
+      ?.trim();
+
+    if (!email || !password) {
+
+      loginMessage.textContent =
+        "Enter email and password";
+
+      return;
+
+    }
+
+    loginMessage.textContent = "";
+
+    try {
+
+      await auth.signInWithEmailAndPassword(
+        email,
+        password
+      );
+
+    } catch (err) {
+
+      console.error("[LOGIN ERROR]", err);
+
+      loginMessage.textContent =
+        "Invalid login credentials";
+
+    }
+
+  });
+
+  // ====================================
+  // AUTH STATE
+  // ====================================
+
+  auth.onAuthStateChanged(async (user) => {
+
+    // NOT LOGGED IN
+    if (!user) {
+
+      if (loginSection) {
+        loginSection.style.display = "block";
+      }
+
+      if (adminContainer) {
+        adminContainer.style.display = "none";
+      }
+
+      hideAllSections();
+
+      return;
+
+    }
+
+    // LOGGED IN
+    if (loginSection) {
+      loginSection.style.display = "none";
+    }
+
+    if (adminContainer) {
+      adminContainer.style.display = "block";
+    }
+
+    await navigateTo("dashboard");
+
+  });
+
+}
+
+// ======================================
+// SIDEBAR NAVIGATION
+// ======================================
+
+function setupSidebarNavigation() {
+
+  document.addEventListener("click", async (e) => {
+
+    const btn =
+      e.target.closest(".admin-tab");
+
+    if (!btn) return;
+
+    const tab =
+      btn.dataset.tab;
+
+    if (!tab) return;
+
+    await navigateTo(tab);
+
+  });
+
+}
+
+// ======================================
+// ROUTER
+// ======================================
+
+async function navigateTo(section) {
+
+  // Invalid route protection
+  if (!section) return;
+
+  // Hide all panels
+  hideAllSections();
+
+  // Set active nav button
+  setActiveTab(section);
+
+  // Show current panel
+  const target =
+    document.getElementById(section);
+
+  if (target) {
+    target.style.display = "block";
+  }
+
+  // Run module
+  if (ROUTES[section]) {
+
+    try {
+
+      await ROUTES[section]();
+
+    } catch (err) {
+
+      console.error(
+        `[ROUTER ERROR] ${section}`,
+        err
+      );
+
+    }
+
+  }
+
+  // Scroll top on route change
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+// ======================================
+// HELPERS
+// ======================================
+
+function hideAllSections() {
+
+  adminContainer
+    ?.querySelectorAll(".admin-panel")
+    .forEach(section => {
+
+      section.style.display = "none";
+
+    });
+
+}
+
+function setActiveTab(tabId) {
+
+  document
+    .querySelectorAll(".admin-tab")
+    .forEach(btn => {
+
+      btn.classList.remove("active");
+
+    });
+
+  document
+    .querySelector(
+      `.admin-tab[data-tab="${tabId}"]`
+    )
+    ?.classList.add("active");
+
+}
